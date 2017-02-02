@@ -3,29 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/Resources/views/default/adminHome.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Resources/public/js/jquery.js</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Form/ParametrosType.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/Resources/views/parametros/new.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/config/routing.yml</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Resources/public/css/sb-admin-rtl.css</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/Resources/views/parametros/edit.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/config/parameters.yml</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Entity/TipoParametro.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/AppKernel.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/composer.json</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Entity/Parametros.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Entity/Notificaciones.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Form/TipoParametroType.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Resources/public/css/sb-admin.css</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Controller/DefaultController.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Controller/ParametrosController.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/config/security.yml</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Entity/Contrato.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/src/AppBundle/Entity/Archivos.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/config/config.yml</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/Resources/views/base.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/contratosCcas/app/Resources/views/base1.html.twig</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin-rtl.css</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/config/config.yml</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Controller/DefaultController.php</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/default/adminHome.html.twig</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/AppKernel.php</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/base1.html.twig</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin.css</file>
         </group>
     </open-files>
 </project-private>

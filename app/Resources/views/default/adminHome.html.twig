@@ -1,6 +1,97 @@
 {% extends 'base1.html.twig' %}
 
 {% block content %}
-    Hola {{ usuarioLogueado }}
-    <a href="#" class="btn btn-success" >BOTON BOOSTRAP</a>
+            <div class="container-fluid">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Estadisticas</h3>
+                </div>
+                <div class="panel-body">
+                    {# Formulario de búsqueda #}
+                    <div class="col-md-12">
+                        <form id="formClear" >
+                            <div class="form-group">
+                                <label class="sr-only">Icono FechaIn</label>
+                                <div class="col-md-2" style="margin:0;padding:0;">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="sr-only">Icono FechaFin</label>
+                                <div class="col-md-2">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                                    </div>
+                                </div>
+                            </div>     
+                        </form>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary" id="search" >Generaaaaar</button>
+                            <button class="btn btn-primary" id="clear" >Limpiar</button>
+                        </div>
+
+                    </div>
+                    <div class="clearfix"></div> 
+                    <div class="col-md-12" id="totalText" style="padding:10px 0 0 0;" >    
+                        <div class="panel panel-default total_tec">
+                            <div class="panel-body" style="margin:0 0 0 10px; padding:0;">
+                                <h4>Total Registros<span id="fecEntrega" ></span>: <span id="totalEntregas" ></span></h4>
+                            </div>
+                        </div>
+                    </div>
+                            
+                    {# Grafico #}
+                    <div class="col-md-12" style="padding: 10px;" >
+                        <div class="panel panel-default">                            
+                            <div class="panel-body">
+                                <div class="col-md-6">
+                                    <div id="ind_entregas_bar" ></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="ind_entregas_pie" ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {# Fin Grafico #}
+                    {# Tabla oculta construcción del gráfico PIE#}
+                    <table id="lectEntregaPie" class="hidden" >      
+                        
+                    </table>
+                    {# Tabla oculta construcción del gráfico Column #}
+                    <table id="lectEntregaBar" class="hidden" > 
+                        
+                    </table>
+                    <div class="clearfix"></div>
+                    
+                    {# Tabla detalle de consulta #}
+                    <div class="col-md-12" id="graficoDetalle" >
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"></h3>
+                            </div>
+                            <div class="panel-body" id="tabla_detalle" style="width:100%;" >
+                                
+                            </div>
+                        </div>
+                    </div>
+                    {# Fin Tabla detalle de consulta #}
+                    
+                </div>
+            </div>
+        </div>
+        {# Fin Container-Fluid #}
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+                <script>
+                    $(document).ready(function() {
+                        $('.datepicker').datepicker();
+                        alert('entra2');
+                    });
+                </script>
 {% endblock %}

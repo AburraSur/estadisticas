@@ -81,4 +81,5 @@ assetic:
         jquery_and_ui:
             inputs:
                 - '@AppBundle/Resources/public/js/jquery.js'
-                - '@AppBundle/Resources/public/js/jquery.ui.js'       
+                - '@AppBundle/Resources/public/js/jquery.ui.js'
+                - '@AppBundle/Resources/public/js/jquery-3.1.1.min.js'

@@ -8,6 +8,57 @@
                 <link rel="stylesheet" href="{{ asset_url }}" />
             {% endstylesheets %}
         {% endblock %}
+        <style>
+        table th {
+            text-transform: uppercase;
+        }
+        table td a{
+            color:#69a5d7;
+            text-transform: uppercase;
+        }
+        table td a:hover{
+            color:#0388f6;
+            text-decoration: none;
+        }
+        table td {
+            color:#8896a0;
+        }
+        tfoot input {
+            width: 100%;
+            padding: 3px;
+            box-sizing: border-box;
+        }
+        tfoot {
+            display: table-header-group;
+        }
+
+        div.DTTT { margin-bottom: 0.5em; float: right; }
+        div.dataTables_wrapper { clear: both; }
+        .input-group input{
+                height:34px;
+                border-radius: 4px;
+        }
+        
+        .error{
+            border:2px solid #FF0000;
+        }
+        .glyphicon-ok:before {
+            content: "\e013";
+        }
+        .check-mark {
+            color:#888;
+        }
+        .total_tec {
+           background: -webkit-linear-gradient(left, #5c9bd1, #88d4f4); /* For Safari 5.1 to 6.0 */
+           background: -o-linear-gradient(right, #5c9bd1, #88d4f4); /* For Opera 11.1 to 12.0 */
+           background: -moz-linear-gradient(right, #5c9bd1, #88d4f4); /* For Firefox 3.6 to 15 */
+           background: linear-gradient(to right, #5c9bd1, #88d4f4); /* Standard syntax (must be last) */
+           color:#ffffff;
+        }
+        .total_tec h4 {
+            color:#ffffff;
+        }
+        </style>
     </head>
     <body>
         {% block content %}
@@ -20,12 +71,6 @@
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
             
-            <script>
-                $(document).ready(function() {
-                    $('.datepicker').datepicker({
-                        format: 'yyyy-mm-dd'
-                    });
-                });
-            </script>
+            
         {% endblock %} 
 </html>
