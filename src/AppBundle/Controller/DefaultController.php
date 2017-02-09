@@ -18,16 +18,16 @@ class DefaultController extends Controller
         $router = $this->container->get('router');
         $rol = $this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN');
         if($rol){
-            return new RedirectResponse($router->generate('homepage2'), 307);
+            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
         }else{
             return new RedirectResponse($router->generate('supervisores'), 307);
         }
     }
     
     /**
-     * @Route("/home2", name="homepage2")
+     * @Route("/estadisticasGenerales", name="estadisticasGenerales")
      */
-    public function home2Action(Request $request)
+    public function estadisticasGeneralesAction(Request $request)
     {
         
         $user = $this->get('security.token_storage')->getToken()->getUser();

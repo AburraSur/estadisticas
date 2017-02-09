@@ -1,10 +1,10 @@
-{% extends 'base1.html.twig' %}
+{% extends 'base2.html.twig' %}
 
-{% block content %}
+{% block body %}
             <div class="container-fluid">
             <div class="panel panel-primary">
                 <div class="panel-heading">
-                  <h3 class="panel-title">Estadisticas</h3>
+                  <h3 class="panel-title">Estadisticas Generales</h3>
                 </div>
                 <div class="panel-body">
                     {# Formulario de búsqueda #}
@@ -29,7 +29,7 @@
                                 </div>
                             </div>     
                         </form>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             <button class="btn btn-primary" id="search" >Generar</button>
                             <button class="btn btn-primary" id="clear" >Limpiar</button>
                         </div>
@@ -88,12 +88,19 @@
 {% endblock %}
 {% block javascripts %}
     {{ parent() }}
-                <script>
-                    $(document).ready(function() {
-                        $('.datepicker').datepicker();
-                        $('search').click(function(){
-                            
-                        });
-                    });
-                </script>
+    <script>
+        $(document).ready(function() {
+            $('.datepicker').datepicker();
+            $('#search').click(function(){
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                
+                if(fecIni != '' && fecEnd != ''){
+                    alert('entra');
+                }else{
+                    alert('faltan datos');
+                }
+            });
+        });
+    </script>
 {% endblock %}

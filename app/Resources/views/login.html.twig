@@ -1,0 +1,55 @@
+{% extends 'PortalPacienteBundle:Default:base.html.twig' %}
+{% block title %}
+    <title>Patient login</title>
+{% endblock title %}
+{% block scripts %}
+    <script type="text/javascript" src="{{ asset('bundles/portalPaciente/js/portalPaciente.js') }}"></script>
+    <script>
+        var urlLogin = '{{ path('portal_paciente_login') }}';      
+        var SrcGif = '{{ asset('bundles/utilities/images/anim_gif.gif') }}';
+        
+    </script>
+{% endblock scripts %}    
+{% block content %}
+    <div class="logoLogin container containerLogin">
+        <img src="{{ asset('bundles/portalpaciente/images/ppacienteLogin.svg') }}" alt="logo" class="logoLogin">
+    </div>
+    <div class="container containerLogin">
+        <div class="panel panel-default panelLogin">
+            <div class="panel-body">
+                <form class="form-horizontal" action="{{ path('portal_paciente_homepage') }}" method="post" >
+                    <div class="form-group">
+                        <label for="inputEmail" class="col-sm-12 col-xs-12">Email</label>
+                        <div class="col-sm-12">
+                            <input type="email" class="form-control" id="inputEmail" name="inputEmail" autofocus required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPassword" class="col-sm-12 col-xs-12">Contrase&ntilde;a</label>
+                        <div class="col-sm-12">
+                            <input type="password" class="form-control" id="inputPassword" name="inputPassword" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-12 col-xs-12">
+                            <button type="submit" class="btn btn-success form-control">Iniciar sesi&oacute;n</button>
+                        </div>
+                    </div>
+                    {% if error is defined %}
+                    <div class="form-group">
+                        <div class="col-sm-12 col-xs-12">
+                            <div id="divAlert" class="alert alert-danger alert-dismissible fade in " role="alert" >
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span> </button>
+                                Usuario y/o contraseña incorrectos
+                            </div>
+                        </div>    
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xs-12 text-center">
+            <p><small>Powered By </small><a href="http://imexhs.com" target="_blank"><img src="{{ asset('bundles/portalpaciente/images/logoImex.svg') }}" alt="ImExHS" class="logoImex"></a></p>
+        </div>
+    </div>
+{% endblock content %}
