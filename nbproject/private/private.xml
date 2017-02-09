@@ -3,13 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin-rtl.css</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/config/config.yml</file>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Controller/DefaultController.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/default/adminHome.html.twig</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin.css</file>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/AppKernel.php</file>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/base1.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin.css</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/config/config.yml</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/config/parameters.yml</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin-rtl.css</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/default/adminHome.html.twig</file>
         </group>
     </open-files>
 </project-private>
