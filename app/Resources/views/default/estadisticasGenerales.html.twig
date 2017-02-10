@@ -89,14 +89,22 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        $(document).ready(function() {
-            $('.datepicker').datepicker();
+        $(document).ready(function() {            
             $('#search').click(function(){
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
                 
                 if(fecIni != '' && fecEnd != ''){
-                    alert('entra');
+                    $.ajax({
+                        url: '{{ path('estadisticasGenerales') }}',
+                        type: 'POST',
+                        data: $('#formClear').serialize(),
+                        success: function(data){
+                            console.log(data);
+                            var resp = JSON.parse(data);
+                        }
+                    })
+                    return false;
                 }else{
                     alert('faltan datos');
                 }

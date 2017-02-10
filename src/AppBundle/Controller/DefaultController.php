@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class DefaultController extends Controller
@@ -29,9 +30,33 @@ class DefaultController extends Controller
      */
     public function estadisticasGeneralesAction(Request $request)
     {
-        
-        $user = $this->get('security.token_storage')->getToken()->getUser();
-        return $this->render('default/adminHome.html.twig',array('usuarioLogueado'=>$user));
+        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
+            $SIIem =  $this->getDoctrine()->getManager('sii');
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+//            $consulta = $SIIem->createQuery("SELECT * FROM mreg_est_matriculados WHERE fecmatricula between :fecIni AND :fecEnd  ")
+//                    ->setParameter('fecIni',$fecIni)
+//                    ->setParameter('fecEnd',$fecEnd);
+//            $rowConsulta = $consulta->getResult();
+            $sql = "SELECT * FROM mreg_est_matriculados WHERE fecmatricula between :fecIni AND :fecEnd";
+            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);
+            $stmt = $SIIem->getConnection()->prepare($sql);
+            $stmt->execute($params);
+            $results = $stmt->fetchAll();
+            
+            for($i=0;$i<sizeof($results);$i++){
+                if(isset($arreglo[$results[$i]['muncom']][$results[$i]['organizacion']])){
+                    $arreglo[$results[$i]['muncom']][$results[$i]['organizacion']] = $arreglo[$results[$i]['muncom']][$results[$i]['organizacion']]+1;
+                }else{
+                    $arreglo[$results[$i]['muncom']][$results[$i]['organizacion']] = 1;
+                }
+            }
+            
+            
+            return new Response(json_encode(array('fechaIni' => $fecIni , 'fechaFin' => $fecEnd , 'arreglo' => $arreglo)));
+        }else{
+            return $this->render('default/estadisticasGenerales.html.twig');
+        }
     }
     
     /**

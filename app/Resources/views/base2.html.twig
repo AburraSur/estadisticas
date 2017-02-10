@@ -39,6 +39,7 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="#">Estadisticas Cámara de Comercio Aburrá Sur</a>
+                <a href="{{ asset('/logout') }}" >Salir</a>
             </div>
             <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
             <div class="collapse navbar-collapse navbar-ex1-collapse">
@@ -79,8 +80,12 @@
                 '@AppBundle/Resources/public/js/*' %}
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
-            
             <script>
+                $(document).ready(function(){
+                    $('.datepicker').datepicker({
+                        dateFormat: "yy-mm-dd"
+                    });
+                });
             </script>
         {% endblock %}
 

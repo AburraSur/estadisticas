@@ -5,16 +5,9 @@
         <group>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Controller/DefaultController.php</file>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/base2.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin.css</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/AppKernel.php</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/base.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/base1.html.twig</file>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/config/config.yml</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/index.html_1.twig</file>
+            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/default/estadisticasGenerales.html.twig</file>
             <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/config/parameters.yml</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/src/AppBundle/Resources/public/css/sb-admin-rtl.css</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/app/Resources/views/default/adminHome.html.twig</file>
-            <file>file:/C:/Bitnami/wampstack-5.6.29-0/apache2/htdocs/estadisticas/vendor/friendsofsymfony/user-bundle/Resources/views/Security/login.html.twig</file>
         </group>
     </open-files>
 </project-private>
