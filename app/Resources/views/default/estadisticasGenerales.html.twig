@@ -1,8 +1,13 @@
 {% extends 'base2.html.twig' %}
-
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
 {% block body %}
             <div class="container-fluid">
-            <div class="panel panel-primary">
+            <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">Estadisticas Generales</h3>
                 </div>
@@ -35,65 +40,145 @@
                         </div>
 
                     </div>
-                    <div class="clearfix"></div> 
-                    <div class="col-md-12" id="totalText" style="padding:10px 0 0 0;" >    
-                        <div class="panel panel-default total_tec">
-                            <div class="panel-body" style="margin:0 0 0 10px; padding:0;">
-                                <h4>Total Registros<span id="fecEntrega" ></span>: <span id="totalEntregas" ></span></h4>
-                            </div>
-                        </div>
-                    </div>
-                            
-                    {# Grafico #}
-                    <div class="col-md-12" style="padding: 10px;" >
-                        <div class="panel panel-default">                            
-                            <div class="panel-body">
-                                <div class="col-md-6">
-                                    <div id="ind_entregas_bar" ></div>
+                    <div class="clearfix"><hr></div>
+                    {# Menu Relaciones #}
+                    <div class="form-group" style="margin-top: 10px;" >
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#home"><h3>Matriculados</h3></a></li>
+                        <li><a data-toggle="tab" href="#menu1"><h3>Renovados</h3></a></li>
+                        <li><a data-toggle="tab" href="#menu2"><h3>Cancelados</h3></a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="home" class="tab-pane fade in active">
+                            <div class="clearfix"><hr></div>
+                            <div class="col-md-12" id="graficoDetalle" >
+                                <div class="panel panel-info">
+                                    <div class="panel-heading">
+                                        <h3>Matriculados<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >
+                                        <table id='relmatriculados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Municipio</th>
+                                                    <th>P. Naturales</th>
+                                                    <th>Establecimientos</th>
+                                                    <th>Sociedades</th>
+                                                    <th>Agencias - Sucursales</th>
+                                                    <th>ESAL</th>
+                                                    <th>Civil</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div id="ind_entregas_pie" ></div>
+                            </div>
+                        </div>  
+                        <div id="menu1" class="tab-pane fade">
+                            <div class="clearfix"><hr></div>
+                            <div class="col-md-12" id="graficoDetalle" >
+                                <div class="panel panel-warning">
+                                    <div class="panel-heading">
+                                        <h3>Renovados<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_renovados" style="width:100%;" >
+                                        <table id='relrenovados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Municipio</th>
+                                                    <th>P. Naturales</th>
+                                                    <th>Establecimientos</th>
+                                                    <th>Sociedades</th>
+                                                    <th>Agencias - Sucursales</th>
+                                                    <th>ESAL</th>
+                                                    <th>Civil</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {# Fin Grafico #}
-                    {# Tabla oculta construcción del gráfico PIE#}
-                    <table id="lectEntregaPie" class="hidden" >      
-                        
-                    </table>
-                    {# Tabla oculta construcción del gráfico Column #}
-                    <table id="lectEntregaBar" class="hidden" > 
-                        
-                    </table>
-                    <div class="clearfix"></div>
-                    
-                    {# Tabla detalle de consulta #}
-                    <div class="col-md-12" id="graficoDetalle" >
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"></h3>
-                            </div>
-                            <div class="panel-body" id="tabla_detalle" style="width:100%;" >
-                                
+                        <div id="menu2" class="tab-pane fade">
+                           <div class="clearfix"><hr></div>
+                            <div class="col-md-12" id="graficoDetalle" >
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">
+                                        {# <div class="panel-heading text-center"> #}
+                                            <h3>Cancelados<span class="periodo" ></span></h3>
+                                        {# </div>    #}
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_cancelados" style="width:100%;" >
+                                        <table id='relcancelados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Municipio</th>
+                                                    <th>P. Naturales</th>
+                                                    <th>Establecimientos</th>
+                                                    <th>Sociedades</th>
+                                                    <th>Agencias - Sucursales</th>
+                                                    <th>ESAL</th>
+                                                    <th>Civil</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        {# Fin Tabla detalle de consulta #}
+
                     </div>
-                    {# Fin Tabla detalle de consulta #}
-                    
-                </div>
+                </div>    
             </div>
-        </div>
+        </div>   
+                </div>         
         {# Fin Container-Fluid #}
 {% endblock %}
 {% block javascripts %}
     {{ parent() }}
+        <script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/blockUI.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/jquery.dataTables.min.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/dataTables.buttons.min.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.flash.min.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/jszip.min.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/pdfmake.min.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/vfs_fonts.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.html5.min.js') }} ">
+	</script>
+	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.print.min.js') }} ">
+	</script>
     <script>
-        $(document).ready(function() {            
+        $(document).ready(function() {    
+            
+            $(".nav-tabs a").click(function(){
+                $(this).tab('show');
+            });
+            $('.estadisticasGenerales').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
             $('#search').click(function(){
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
-                
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });
                 if(fecIni != '' && fecEnd != ''){
                     $.ajax({
                         url: '{{ path('estadisticasGenerales') }}',
@@ -102,11 +187,38 @@
                         success: function(data){
                             console.log(data);
                             var resp = JSON.parse(data);
+                            $.unblockUI();
+                            $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('#tabla_matriculados').html(resp.tablaMatri.matriculados);
+                            $('#tabla_renovados').html(resp.tablaMatri.renovados);
+                            $('#tabla_cancelados').html(resp.tablaMatri.cancelados);
+                            $('#relmatriculados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $('#relrenovados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $('#relcancelados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
                         }
                     })
                     return false;
                 }else{
-                    alert('faltan datos');
+                    $.blockUI({
+                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                    });
+                    
+                    setTimeout($.unblockUI,3000);
                 }
             });
         });
