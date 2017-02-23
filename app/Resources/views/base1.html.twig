@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Estadisticas</title>
         {% block title %}
         {% endblock title %}
        {% block stylesheets %}
@@ -9,55 +10,96 @@
             {% endstylesheets %}
         {% endblock %}
         <style>
-        table th {
-            text-transform: uppercase;
-        }
-        table td a{
-            color:#69a5d7;
-            text-transform: uppercase;
-        }
-        table td a:hover{
-            color:#0388f6;
-            text-decoration: none;
-        }
-        table td {
-            color:#8896a0;
-        }
-        tfoot input {
-            width: 100%;
-            padding: 3px;
-            box-sizing: border-box;
-        }
-        tfoot {
-            display: table-header-group;
-        }
-
-        div.DTTT { margin-bottom: 0.5em; float: right; }
-        div.dataTables_wrapper { clear: both; }
-        .input-group input{
+            @font-face {
+                font-family: "Roboto";
+                src: url(Roboto/Roboto-light.ttf) format("truetype");
+            }
+            html {
+              position: relative;
+              min-height: 100%;
+            }
+            body{
+                background:#f9f9f9;
+                font-family: 'Roboto', sans-serif;
+                font-weight:300;
+                /* Margin bottom by footer height */
+                margin-bottom: 60px;
+                color:#333;
+            }
+            h1,h2,h3,h4,h5,h6{
+                font-weight:300;
+                margin:0;
+            }
+            hr{
+                margin:5px;
+            }
+            
+            label{
+                font-weight:400;
+                font-size:1.2em;
+            }
+            .form-control{
                 height:34px;
-                border-radius: 4px;
-        }
-        
-        .error{
-            border:2px solid #FF0000;
-        }
-        .glyphicon-ok:before {
-            content: "\e013";
-        }
-        .check-mark {
-            color:#888;
-        }
-        .total_tec {
-           background: -webkit-linear-gradient(left, #5c9bd1, #88d4f4); /* For Safari 5.1 to 6.0 */
-           background: -o-linear-gradient(right, #5c9bd1, #88d4f4); /* For Opera 11.1 to 12.0 */
-           background: -moz-linear-gradient(right, #5c9bd1, #88d4f4); /* For Firefox 3.6 to 15 */
-           background: linear-gradient(to right, #5c9bd1, #88d4f4); /* Standard syntax (must be last) */
-           color:#ffffff;
-        }
-        .total_tec h4 {
-            color:#ffffff;
-        }
+                font-size:1.2em;
+            }
+            .logoLogin{
+                margin-bottom:20px;
+                max-width:250px;
+            }
+            @media screen and (min-width: 960px) {
+                .containerLogin:first-child{
+                    margin-top:200px;
+                }
+                .panelLogin{
+                    margin-bottom:50px;
+                }
+                .navbar{
+                    font-size:1.5em;
+                }
+                .glyphicon-nav{
+                    font-size:1.3em;
+                }
+                .glyphicon-table{
+                    font-size:1.5em;
+                }
+                .table{
+                    font-size:1.1em;
+                }
+                .table > thead > tr > td{
+                    font-weight:bold;
+                }
+            }
+            @media screen and (max-width: 960px) {
+                input{
+                    box-shadow:none;
+                }
+                .containerLogin{
+                    margin-top:50px;
+                }
+                .panelLogin{
+                    margin-bottom:30px;
+                }
+                .dataTables_length{
+                    display:none;
+                }
+                .glyphicon-nav{
+                    font-size:2em;
+                }
+                .glyphicon-table{
+                    font-size:1.5em;
+                }
+                div.dataTables_wrapper div.dataTables_length, div.dataTables_wrapper div.dataTables_filter, div.dataTables_wrapper div.dataTables_info, div.dataTables_wrapper div.dataTables_paginate {
+                    text-align: right;
+                }
+            }
+            @media screen and (max-width: 380px) {
+                .containerLogin{
+                    margin-top:20px;
+                }
+                .panelLogin{
+                    margin-bottom:30px;
+                }
+            }
         </style>
     </head>
     <body>

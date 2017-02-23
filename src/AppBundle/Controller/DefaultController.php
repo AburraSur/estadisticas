@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use AppBundle\Controller\UtilitiesController;
 
 class DefaultController extends Controller
 {
@@ -34,26 +35,43 @@ class DefaultController extends Controller
             $SIIem =  $this->getDoctrine()->getManager('sii');
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
-//            $consulta = $SIIem->createQuery("SELECT * FROM mreg_est_matriculados WHERE fecmatricula between :fecIni AND :fecEnd  ")
-//                    ->setParameter('fecIni',$fecIni)
-//                    ->setParameter('fecEnd',$fecEnd);
-//            $rowConsulta = $consulta->getResult();
-            $sql = "SELECT * FROM mreg_est_matriculados WHERE fecmatricula between :fecIni AND :fecEnd";
+            
+//          Consulta para los matriculados en el rango de fechas consultado  
+            $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, bm.ciudad FROM mreg_est_matriculados mem INNER JOIN bas_municipios bm WHERE mem.fecmatricula between :fecIni AND :fecEnd AND bm.codigomunicipio=mem.muncom AND mem.estmatricula IN ('MA','MI','IA') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            
+//          Consulta para las matriculas renovadas en el rango de fechas consultado  
+            $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, bm.ciudad FROM mreg_est_matriculados mem INNER JOIN bas_municipios bm WHERE mem.fecmatricula < :fecIni AND mem.fecrenovacion between :fecIni AND :fecEnd AND bm.codigomunicipio=mem.muncom AND mem.estmatricula IN ('MA','MI','IA') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            
+//          Consulta para las matriculas canceladas en el rango de fechas consultado
+            $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, bm.ciudad FROM mreg_est_matriculados mem INNER JOIN bas_municipios bm WHERE mem.feccancelacion between :fecIni AND :fecEnd AND bm.codigomunicipio=mem.muncom AND mem.estmatricula = 'MC' AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            
+            
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);
-            $stmt = $SIIem->getConnection()->prepare($sql);
+            
+//            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+            $stmt = $SIIem->getConnection()->prepare($sqlMat);
+            $strv = $SIIem->getConnection()->prepare($sqlRen);
+            $stcn = $SIIem->getConnection()->prepare($sqlCan);
+            
+//            Ejecución de las consultas
             $stmt->execute($params);
-            $results = $stmt->fetchAll();
+            $strv->execute($params);
+            $stcn->execute($params);
             
-            for($i=0;$i<sizeof($results);$i++){
-                if(isset($arreglo[$results[$i]['muncom']][$results[$i]['organizacion']])){
-                    $arreglo[$results[$i]['muncom']][$results[$i]['organizacion']] = $arreglo[$results[$i]['muncom']][$results[$i]['organizacion']]+1;
-                }else{
-                    $arreglo[$results[$i]['muncom']][$results[$i]['organizacion']] = 1;
-                }
-            }
+//            Se invoca objeto constructor de las tablas resumen como parametros se envia el resultado de la consulta y la categoria Matriculados-Renovados-Cancelados 
+            $tabla = new UtilitiesController();
             
+            $resultadosMat = $stmt->fetchAll();
+            $tablaMatri['matriculados'] = $tabla->construirTablaResumen($resultadosMat, 'matriculados');
             
-            return new Response(json_encode(array('fechaIni' => $fecIni , 'fechaFin' => $fecEnd , 'arreglo' => $arreglo)));
+            $resultadosRen = $strv->fetchAll();
+            $tablaMatri['renovados'] = $tabla->construirTablaResumen($resultadosRen, 'renovados');
+            
+            $resultadosCan = $stcn->fetchAll();
+            $tablaMatri['cancelados'] = $tabla->construirTablaResumen($resultadosCan, 'cancelados');
+
+            
+            return new Response(json_encode(array('tablaMatri' => $tablaMatri )));
         }else{
             return $this->render('default/estadisticasGenerales.html.twig');
         }
