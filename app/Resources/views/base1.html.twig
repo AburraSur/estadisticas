@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Estadisticas</title>
         {% block title %}
+            
+        <title>Login Estadisticas</title>
         {% endblock title %}
        {% block stylesheets %}
             {% stylesheets 'bundles/app/css/*' filter='cssrewrite' %}
                 <link rel="stylesheet" href="{{ asset_url }}" />
             {% endstylesheets %}
-        {% endblock %}
         <style>
-            @font-face {
-                font-family: "Roboto";
-                src: url(Roboto/Roboto-light.ttf) format("truetype");
-            }
+            
             html {
               position: relative;
               min-height: 100%;
@@ -45,6 +42,9 @@
             .logoLogin{
                 margin-bottom:20px;
                 max-width:250px;
+            }
+            .clearfix{
+                margin: 15px;
             }
             @media screen and (min-width: 960px) {
                 .containerLogin:first-child{
@@ -101,6 +101,8 @@
                 }
             }
         </style>
+    
+        {% endblock %}    
     </head>
     <body>
         {% block content %}
