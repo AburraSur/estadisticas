@@ -33,17 +33,20 @@ class DefaultController extends Controller
     {
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
             $SIIem =  $this->getDoctrine()->getManager('sii');
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
 //          Consulta para los matriculados en el rango de fechas consultado  
-            $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, bm.ciudad FROM mreg_est_matriculados mem INNER JOIN bas_municipios bm WHERE mem.fecmatricula between :fecIni AND :fecEnd AND bm.codigomunicipio=mem.muncom AND mem.estmatricula IN ('MA','MI','IA') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren  FROM mreg_est_matriculados mem  WHERE mem.fecmatricula between :fecIni AND :fecEnd  AND mem.estmatricula IN ('MA','MI','IA', 'MC') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
             
 //          Consulta para las matriculas renovadas en el rango de fechas consultado  
-            $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, bm.ciudad FROM mreg_est_matriculados mem INNER JOIN bas_municipios bm WHERE mem.fecmatricula < :fecIni AND mem.fecrenovacion between :fecIni AND :fecEnd AND bm.codigomunicipio=mem.muncom AND mem.estmatricula IN ('MA','MI','IA') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren FROM mreg_est_matriculados mem  WHERE mem.fecmatricula < :fecIni AND mem.fecrenovacion between :fecIni AND :fecEnd  AND mem.estmatricula IN ('MA','MI','IA') AND mem.matricula IS NOT NULL AND mem.matricula !='' AND mem.ultanoren='".$fechaInicial[0]."' ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
-            $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, bm.ciudad FROM mreg_est_matriculados mem INNER JOIN bas_municipios bm WHERE mem.feccancelacion between :fecIni AND :fecEnd AND bm.codigomunicipio=mem.muncom AND mem.estmatricula = 'MC' AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren FROM mreg_est_matriculados mem  WHERE mem.feccancelacion between :fecIni AND :fecEnd AND mem.estmatricula IN ('MC','IC') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
             
             
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);
@@ -58,20 +61,43 @@ class DefaultController extends Controller
             $strv->execute($params);
             $stcn->execute($params);
             
+            $tablaDetalle = " <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                            <thead>
+                                <tr>
+                                    <th>Matricula</th>
+                                    <th>Organizacion</th>
+                                    <th>Categoria</th>
+                                    <th>Razón Social</th>
+                                    <th>Municipio</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Matricula</th>
+                                    <th>Fecha Renovacion</th>
+                                    <th>Fecha Cancelación</th>
+                                    <th>UAR</th>
+                                </tr>
+                            </thead>
+                            <tbody>";
+            
 //            Se invoca objeto constructor de las tablas resumen como parametros se envia el resultado de la consulta y la categoria Matriculados-Renovados-Cancelados 
             $tabla = new UtilitiesController();
             
             $resultadosMat = $stmt->fetchAll();
-            $tablaMatri['matriculados'] = $tabla->construirTablaResumen($resultadosMat, 'matriculados');
+            $resumenMat = $tabla->construirTablaResumen($resultadosMat, 'matriculados',$tablaDetalle);
+            $tablaMatri['matriculados'] = $resumenMat['tabla'];
+            $tablaDetalle = $resumenMat['tablaDetalle'];
             
             $resultadosRen = $strv->fetchAll();
-            $tablaMatri['renovados'] = $tabla->construirTablaResumen($resultadosRen, 'renovados');
+            $resumenRen = $tabla->construirTablaResumen($resultadosRen, 'renovados', $tablaDetalle);
+            $tablaMatri['renovados'] = $resumenRen['tabla'];
+            $tablaDetalle = $resumenRen['tablaDetalle'];
             
             $resultadosCan = $stcn->fetchAll();
-            $tablaMatri['cancelados'] = $tabla->construirTablaResumen($resultadosCan, 'cancelados');
+            $resumenCan = $tabla->construirTablaResumen($resultadosCan, 'cancelados', $tablaDetalle);
+            $tablaMatri['cancelados'] = $resumenCan['tabla'];
+            $tablaDetalle = $resumenCan['tablaDetalle'];
 
             
-            return new Response(json_encode(array('tablaMatri' => $tablaMatri )));
+            return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'tablaDetalle' => $tablaDetalle )));
         }else{
             return $this->render('default/estadisticasGenerales.html.twig');
         }

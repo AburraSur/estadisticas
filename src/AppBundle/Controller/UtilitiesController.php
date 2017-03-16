@@ -10,8 +10,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class UtilitiesController extends Controller
 {
-    public function construirTablaResumen($results, $categoria) {
-        $municipios = array('CALDAS','ENVIGADO','ITAGUI','LA ESTRELLA','SABANETA'); 
+    public function construirTablaResumen($results, $categoria, $tablaDetalle) {
+        $municipios = array('05129','05266','05360','05380','05631');
+        $codMuni = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA'); 
             $sociedades = array('03','04','05','06','07','08','09','11','14','15','16');
             
             foreach ($municipios as $value) {
@@ -31,10 +32,10 @@ class UtilitiesController extends Controller
             
             for($i=0;$i<sizeof($results);$i++){
                 
-                if(!in_array($results[$i]['ciudad'], $municipios)){
-                    $posMunic = 'ITAGUI';
+                if((!in_array($results[$i]['muncom'], $municipios)) || $results[$i]['muncom'] =='' || $results[$i]['muncom'] == NULL){
+                    $posMunic = '05360';
                 }else{
-                    $posMunic = $results[$i]['ciudad'];
+                    $posMunic = $results[$i]['muncom'];
                 }
                 if($results[$i]['organizacion']=='01'){
                     $arregloMatriculados[$posMunic.$categoria]['PN']++;
@@ -57,6 +58,19 @@ class UtilitiesController extends Controller
                 }
                 $totalMunicipio[$posMunic.$categoria] = $totalMunicipio[$posMunic.$categoria]+1;
                 $granTotal++;
+                $estado = strtoupper(str_replace("s", "", $categoria));
+                $tablaDetalle .= "<tr>
+                            <td>".$results[$i]['matricula']."</td>
+                            <td>".$results[$i]['organizacion']."</td>
+                            <td>".$results[$i]['categoria']."</td>
+                            <td>".$results[$i]['razonsocial']."</td>
+                            <td>".$codMuni[$posMunic]."</td>
+                            <td>".$estado."</td>
+                            <td>".$results[$i]['fecmatricula']."</td>
+                            <td>".$results[$i]['fecrenovacion']."</td>
+                            <td>".$results[$i]['feccancelacion']."</td>
+                            <td>".$results[$i]['ultanoren']."</td>
+                        </tr>  ";
             }
             
             $tabla = " <table id='rel$categoria' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
@@ -75,7 +89,7 @@ class UtilitiesController extends Controller
                             <tbody>";
             foreach ($municipios as $valueMun) {
                 $tabla .="<tr>
-                            <th>$valueMun</th>
+                            <th>$codMuni[$valueMun]</th>
                             <td>".$arregloMatriculados[$valueMun.$categoria]['PN']."</td>
                             <td>".$arregloMatriculados[$valueMun.$categoria]['EST']."</td>
                             <td>".$arregloMatriculados[$valueMun.$categoria]['SOC']."</td>
@@ -101,6 +115,6 @@ class UtilitiesController extends Controller
                     </tbody>
                 </table>";
             
-            return $tabla;
+            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle);
     }
 }
