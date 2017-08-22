@@ -59,10 +59,14 @@ class DefaultController extends Controller
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
             $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
                     . "FROM mreg_est_matriculados mem  "
-                    . "WHERE mem.feccancelacion between :fecIni AND :fecEnd "
-                    . "AND mem.estmatricula IN ('MC','IC') "
+                    . "INNER JOIN mreg_est_inscripciones mei "
+                    . "WHERE mem.matricula = mei.matricula "
+                    . "AND mei.fecharegistro between :fecIni AND :fecEnd "
+                    . "AND mem.estmatricula IN ('MC','IC','MF') "
                     . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' ";
+                    . "AND mem.matricula !='' "
+                    . "AND libro IN ('RM15' , 'RM51', 'RM53', 'RM54', 'RM55', 'RM13') "
+                    . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
             
             
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);
