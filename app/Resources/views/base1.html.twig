@@ -9,108 +9,17 @@
             {% stylesheets 'bundles/app/css/*' filter='cssrewrite' %}
                 <link rel="stylesheet" href="{{ asset_url }}" />
             {% endstylesheets %}
-        <style>
-            
-            html {
-              position: relative;
-              min-height: 100%;
-            }
-            body{
-                background:#f9f9f9;
-                font-family: 'Roboto', sans-serif;
-                font-weight:300;
-                /* Margin bottom by footer height */
-                margin-bottom: 60px;
-                color:#333;
-            }
-            h1,h2,h3,h4,h5,h6{
-                font-weight:300;
-                margin:0;
-            }
-            hr{
-                margin:5px;
-            }
-            
-            label{
-                font-weight:400;
-                font-size:1.2em;
-            }
-            .form-control{
-                height:34px;
-                font-size:1.2em;
-            }
-            .logoLogin{
-                margin-bottom:20px;
-                max-width:250px;
-            }
-            .clearfix{
-                margin: 15px;
-            }
-            @media screen and (min-width: 960px) {
-                .containerLogin:first-child{
-                    margin-top:200px;
-                }
-                .panelLogin{
-                    margin-bottom:50px;
-                }
-                .navbar{
-                    font-size:1.5em;
-                }
-                .glyphicon-nav{
-                    font-size:1.3em;
-                }
-                .glyphicon-table{
-                    font-size:1.5em;
-                }
-                .table{
-                    font-size:1.1em;
-                }
-                .table > thead > tr > td{
-                    font-weight:bold;
-                }
-            }
-            @media screen and (max-width: 960px) {
-                input{
-                    box-shadow:none;
-                }
-                .containerLogin{
-                    margin-top:50px;
-                }
-                .panelLogin{
-                    margin-bottom:30px;
-                }
-                .dataTables_length{
-                    display:none;
-                }
-                .glyphicon-nav{
-                    font-size:2em;
-                }
-                .glyphicon-table{
-                    font-size:1.5em;
-                }
-                div.dataTables_wrapper div.dataTables_length, div.dataTables_wrapper div.dataTables_filter, div.dataTables_wrapper div.dataTables_info, div.dataTables_wrapper div.dataTables_paginate {
-                    text-align: right;
-                }
-            }
-            @media screen and (max-width: 380px) {
-                .containerLogin{
-                    margin-top:20px;
-                }
-                .panelLogin{
-                    margin-bottom:30px;
-                }
-            }
-        </style>
     
         {% endblock %}    
     </head>
     <body>
-        {% block content %}
-        {% endblock content %}
+        <div class="container" >
+            {% block content %}
+            {% endblock content %}
+        </div>    
     </body>
     {% block javascripts %}
             {% javascripts 
-                '@jquery_and_ui'
                 '@AppBundle/Resources/public/js/*' %}
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}

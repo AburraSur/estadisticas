@@ -89,9 +89,3 @@ assetic:
     use_controller: '%kernel.debug%'
     filters:
         cssrewrite: ~
-    assets:
-        jquery_and_ui:
-            inputs:
-                - '@AppBundle/Resources/public/js/jquery.js'
-                - '@AppBundle/Resources/public/js/jquery.ui.js'
-                - '@AppBundle/Resources/public/js/jquery-3.1.1.min.js'

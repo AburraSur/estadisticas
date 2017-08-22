@@ -3005,7 +3005,7 @@ a.ui-button:active,
 
 
 @media (min-width: 768px){
-  #wrapper {padding-right: 225px; padding-left: 0;}
+  #wrapper {padding-right: 0; padding-left: 0;}
   .side-nav{right: 0;left: auto;}
 }
 /*!

@@ -40,13 +40,29 @@ class DefaultController extends Controller
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
 //          Consulta para los matriculados en el rango de fechas consultado  
-            $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren  FROM mreg_est_matriculados mem  WHERE mem.fecmatricula between :fecIni AND :fecEnd  AND mem.estmatricula IN ('MA','MI','IA', 'MC') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren  "
+                    . "FROM mreg_est_matriculados mem  "
+                    . "WHERE mem.fecmatricula between :fecIni AND :fecEnd  "
+                    . "AND mem.estmatricula NOT IN ('NA','NM') "
+                    . "AND mem.matricula IS NOT NULL "
+                    . "AND mem.matricula !='' ";
             
 //          Consulta para las matriculas renovadas en el rango de fechas consultado  
-            $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren FROM mreg_est_matriculados mem  WHERE mem.fecmatricula < :fecIni AND mem.fecrenovacion between :fecIni AND :fecEnd  AND mem.estmatricula IN ('MA','MI','IA') AND mem.matricula IS NOT NULL AND mem.matricula !='' AND mem.ultanoren='".$fechaInicial[0]."' ";
+            $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
+                    . "FROM mreg_est_matriculados mem  "
+                    . "WHERE mem.fecmatricula < :fecIni "
+                    . "AND mem.fecrenovacion between :fecIni AND :fecEnd  "
+                    . "AND mem.matricula IS NOT NULL "
+                    . "AND mem.matricula !='' "
+                    . "AND mem.ultanoren ='".$fechaFinal[0]."' ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
-            $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren FROM mreg_est_matriculados mem  WHERE mem.feccancelacion between :fecIni AND :fecEnd AND mem.estmatricula IN ('MC','IC') AND mem.matricula IS NOT NULL AND mem.matricula !='' ";
+            $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
+                    . "FROM mreg_est_matriculados mem  "
+                    . "WHERE mem.feccancelacion between :fecIni AND :fecEnd "
+                    . "AND mem.estmatricula IN ('MC','IC') "
+                    . "AND mem.matricula IS NOT NULL "
+                    . "AND mem.matricula !='' ";
             
             
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);

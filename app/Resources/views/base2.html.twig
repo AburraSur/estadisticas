@@ -72,8 +72,8 @@
     </div>
         {% block javascripts %}
             {% javascripts 
-                '@jquery_and_ui'
-                '@AppBundle/Resources/public/js/*' %}
+                '@AppBundle/Resources/public/js/jquery.js'
+                '@AppBundle/Resources/public/js/*'%}
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
             <script>

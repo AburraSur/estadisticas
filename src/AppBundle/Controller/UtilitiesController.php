@@ -12,8 +12,8 @@ class UtilitiesController extends Controller
 {
     public function construirTablaResumen($results, $categoria, $tablaDetalle) {
         $municipios = array('05129','05266','05360','05380','05631');
-        $codMuni = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA'); 
-            $sociedades = array('03','04','05','06','07','08','09','11','14','15','16');
+        $codMuni = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA','otroDom' => 'otroDomicilio'); 
+            $sociedades = array('03','04','05','06','07','09','11','15','16');
             
             foreach ($municipios as $value) {
                 $arregloMatriculados[$value.$categoria]['PN'] = 0;
@@ -22,6 +22,15 @@ class UtilitiesController extends Controller
                 $arregloMatriculados[$value.$categoria]['AGSUC'] = 0;
                 $arregloMatriculados[$value.$categoria]['ESAL'] = 0;
                 $arregloMatriculados[$value.$categoria]['CIVILES'] = 0;
+                
+                $arregloMatriculados['otroDom'.$categoria]['PN'] = 0;
+                $arregloMatriculados['otroDom'.$categoria]['EST'] = 0;
+                $arregloMatriculados['otroDom'.$categoria]['SOC'] = 0;
+                $arregloMatriculados['otroDom'.$categoria]['AGSUC'] = 0;
+                $arregloMatriculados['otroDom'.$categoria]['ESAL'] = 0;
+                $arregloMatriculados['otroDom'.$categoria]['CIVILES'] = 0;
+                
+                $totalMunicipio['otroDom'.$categoria] = 0;
                 $totalMunicipio[$value.$categoria] = 0;
                 
             }
@@ -33,7 +42,7 @@ class UtilitiesController extends Controller
             for($i=0;$i<sizeof($results);$i++){
                 
                 if((!in_array($results[$i]['muncom'], $municipios)) || $results[$i]['muncom'] =='' || $results[$i]['muncom'] == NULL){
-                    $posMunic = '05360';
+                    $posMunic = 'otroDom';
                 }else{
                     $posMunic = $results[$i]['muncom'];
                 }
@@ -43,18 +52,27 @@ class UtilitiesController extends Controller
                 }elseif($results[$i]['organizacion']=='02'){
                     $arregloMatriculados[$posMunic.$categoria]['EST']++;
                     $totalEST++;
-                }elseif(in_array($results[$i]['organizacion'], $sociedades) && ($results[$i]['categoria']==0 || $results[$i]['categoria']==1) ){
+                }elseif(in_array($results[$i]['organizacion'], $sociedades) && $results[$i]['categoria']==1 ){
                     $arregloMatriculados[$posMunic.$categoria]['SOC']++;
                     $totalSOC++;
                 }elseif(in_array($results[$i]['organizacion'], $sociedades) && ($results[$i]['categoria']==2 || $results[$i]['categoria']==3) ){
                     $arregloMatriculados[$posMunic.$categoria]['AGSUC']++;
                     $totalAGSUC++;
+                }elseif($results[$i]['organizacion']=='08'){
+                    $arregloMatriculados[$posMunic.$categoria]['AGSUC']++;
+                    $totalAGSUC++;
                 }elseif($results[$i]['organizacion']=='10' && $results[$i]['categoria']==1 ){
                     $arregloMatriculados[$posMunic.$categoria]['CIVILES']++;
                     $totalCV++;
-                }elseif($results[$i]['organizacion']=='12' && $results[$i]['categoria']==1 ){
+                }elseif($results[$i]['organizacion']=='10' && ($results[$i]['categoria']==2 || $results[$i]['categoria']==3) ){
+                    $arregloMatriculados[$posMunic.$categoria]['AGSUC']++;
+                    $totalAGSUC++;
+                }elseif(($results[$i]['organizacion']=='12' || $results[$i]['organizacion']=='14' )&& $results[$i]['categoria']==1 ){
                     $arregloMatriculados[$posMunic.$categoria]['ESAL']++;
                     $totalESAL++;
+                }elseif(($results[$i]['organizacion']=='12' || $results[$i]['organizacion']=='14' )&& ($results[$i]['categoria']==2 || $results[$i]['categoria']==3) ){
+                    $arregloMatriculados[$posMunic.$categoria]['AGSUC']++;
+                    $totalAGSUC++;
                 }
                 $totalMunicipio[$posMunic.$categoria] = $totalMunicipio[$posMunic.$categoria]+1;
                 $granTotal++;
@@ -96,7 +114,7 @@ class UtilitiesController extends Controller
                             <td>".$arregloMatriculados[$valueMun.$categoria]['AGSUC']."</td>
                             <td>".$arregloMatriculados[$valueMun.$categoria]['ESAL']."</td>
                             <td>".$arregloMatriculados[$valueMun.$categoria]['CIVILES']."</td>
-                            <td>".$totalMunicipio[$valueMun.$categoria]."</td>
+                            <td><b>".$totalMunicipio[$valueMun.$categoria]."</b></td>
                         </tr>  ";
 
             }
@@ -104,13 +122,13 @@ class UtilitiesController extends Controller
                                
             $tabla .="<tr>
                             <th>TOTAL</th>
-                            <td>".$totalPN."</td>
-                            <td>".$totalEST."</td>
-                            <td>".$totalSOC."</td>
-                            <td>".$totalAGSUC."</td>
-                            <td>".$totalESAL."</td>
-                            <td>".$totalCV."</td>
-                            <td>".$granTotal."</td>
+                            <th>".$totalPN."</th>
+                            <th>".$totalEST."</th>
+                            <th>".$totalSOC."</th>
+                            <th>".$totalAGSUC."</th>
+                            <th>".$totalESAL."</th>
+                            <th>".$totalCV."</th>
+                            <th>".$granTotal."</th>
                         </tr>
                     </tbody>
                 </table>";
