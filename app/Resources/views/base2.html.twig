@@ -73,16 +73,14 @@
         {% block javascripts %}
             {% javascripts 
                 '@AppBundle/Resources/public/js/jquery.js'
-                '@AppBundle/Resources/public/js/*'%}
+                '@AppBundle/Resources/public/js/jquery.ui.js'
+                '@AppBundle/Resources/public/js/jquery-3.1.1.min.js'
+                '@AppBundle/Resources/public/js/bootstrap.min.js'
+                '@AppBundle/Resources/public/js/bootstrap-datepicker.js'
+                '@AppBundle/Resources/public/js/bootstrap-datepicker.min.js'
+                '@AppBundle/Resources/public/js/bootstrap-datepicker.es.min.js'%}
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
-            <script>
-                $(document).ready(function(){
-                    $('.datepicker').datepicker({
-                        dateFormat: "yy-mm-dd"
-                    });
-                });
-            </script>
         {% endblock %}
 
 </body>

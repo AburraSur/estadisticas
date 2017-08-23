@@ -179,10 +179,12 @@
 	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.print.min.js') }} ">
 	</script>
     <script>
-        $(document).ready(function() {    
-            
-            $(".nav-tabs a").click(function(){
-               // $(this).tab('show');
+        $(document).ready(function() {  
+            $('.datepicker').datepicker({
+                language: 'es',
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                
             });
             $('.estadisticasGenerales').DataTable( {
                                 dom: 'Bfrtip',
