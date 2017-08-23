@@ -46,5 +46,5 @@
 
 # Backup entities generated with doctrine:generate:entities command
 */Entity/*~
-nbproject/private/private.xml
-src/AppBundle/Resources/public/css/sb-admin-rtl.css
+/nbproject/private/*
+web/
