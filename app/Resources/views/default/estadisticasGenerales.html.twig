@@ -160,24 +160,10 @@
 {% endblock %}
 {% block javascripts %}
     {{ parent() }}
-        <script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/blockUI.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/jquery.dataTables.min.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/dataTables.buttons.min.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.flash.min.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/jszip.min.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/pdfmake.min.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/vfs_fonts.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.html5.min.js') }} ">
-	</script>
-	<script type="text/javascript" language="javascript" src="{{ asset('bundles/app/datatable/js/buttons.print.min.js') }} ">
-	</script>
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
     <script>
         $(document).ready(function() {  
             $('.datepicker').datepicker({

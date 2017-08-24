@@ -134,5 +134,68 @@ class DefaultController extends Controller
         ]);
     }
     
+    /**
+     * @Route("/extraeservicios", name="extraeservicios")
+     */
+    public function extraeserviciosAction(Request $request)
+    {
+        
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        
+        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            $impServi = "'".implode("','",$_POST['servicio'])."'";
+            
+//          Consulta para los servicios seleccionados en el rango de fechas consultado  
+            $sqlMat = "SELECT mrr.identificacion, mrr.nombre, mrr.operador, mrr.numerooperacion,ms.nombre, mrr.cantidad, mrr.valor "
+                    . "FROM mreg_est_recibos mrr "
+                    . "INNER JOIN mreg_servicios ms "
+                    . "WHERE mrr.servicio = ms.idservicio "
+                    . "AND mrr. fecoperacion BETWEEN :fecIni AND :fecEnd "
+                    . "AND mrr.servicio IN ($impServi)";
+            
+//          
+            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
+            
+//            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+            $stmt = $SIIem->getConnection()->prepare($sqlMat);
+//            Ejecución de las consultas
+            $stmt->execute($params);
+            
+//            Crear tabla con datos de los servicios consultados
+            $tablaDetalle = " <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>";
+
+            
+            
+            return new Response(json_encode(array('servi' => $servi , 'tablaDetalle' => $stmt )));
+        }else{
+            $sqlServ = "SELECT sv.idservicio, sv.nombre FROM mreg_servicios sv WHERE nombre!='' ";
+            $prepareServ = $SIIem->getConnection()->prepare($sqlServ);
+            $prepareServ->execute();
+            $servicios =  $prepareServ->fetchAll();
+            return $this->render('default/extraccionServicios.html.twig',array('Servicios' => $servicios));
+        }
+    }
+    
     
 }
