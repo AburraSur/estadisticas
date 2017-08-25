@@ -17,7 +17,7 @@
                                 <div class="col-md-2" style="margin:0;padding:0;">
                                     <div class="input-group">
                                         <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
-                                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial">
+                                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial" data-date-end-date="0d">
                                     </div>
                                 </div>
                             </div>
@@ -26,15 +26,16 @@
                                 <div class="col-md-2">
                                     <div class="input-group">
                                         <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
-                                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final" data-date-end-date="0d">
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4 form-group">
                                 <select name="servicio[]" id="servicio" class="form-control selectpicker" data-live-search="true" multiple >
-                                   {% for servicio in Servicios %}
-                                       <option value="{{ servicio.idservicio }}" >{{ servicio.idservicio }} - {{ servicio.nombre }}</option>
-                                   {% endfor %}   
+                                   
+                                    {% for servicio in Servicios %}
+                                        <option value="{{ servicio.idservicio }}" >{{ servicio.idservicio }} - {{ servicio.nombre }}</option>
+                                    {% endfor %}   
                                 </select>    
                             </div>
                         </form>
@@ -45,14 +46,36 @@
 
                     </div>
                     <div class="clearfix"><hr></div>
-                    <div class="panel panel-info">
+                    <div class="form-group" style="margin-top: 10px;" >
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a data-toggle="tab" href="#home"><h3>Totales</h3></a></li>
+                            <li><a data-toggle="tab" href="#detallado"><h3>Detallado</h3></a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="home" class="tab-pane fade in active">
+                                <div class="clearfix"><hr></div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading">
+                                        <h3>Informe Resumido<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_totales" style="width:100%;" >
+
+                                    </div>
+                                </div>
+                            </div> 
+                            <div id="detallado" class="tab-pane fade">
+                                <div class="clearfix"><hr></div>
+                                <div class="panel panel-success">
                                     <div class="panel-heading">
                                         <h3>Informe Detallado<span class="periodo" ></span></h3>
                                     </div>
-                                    <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >
-                                        
+                                    <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
+
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>        
 {% endblock %}
 {% block javascripts %}
     {{ parent() }}
@@ -85,6 +108,7 @@
                             var resp = JSON.parse(data);
                             $.unblockUI();
                             $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('#tabla_totales').html(resp.tablaTotales);
                             $('#tabla_detallada').html(resp.tablaDetalle);
                             
                             $('#tablaDetalle').DataTable( {
@@ -93,6 +117,15 @@
                                     'excel'
                                 ]
                             } ); 
+                            
+                            $('#tablaTotales').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $("#tablaDetalle > tbody > tr.odd").css("background-color","#d6e9c6");
+                            //$('#tableTotales tbody tr:odd').css({'background-color','#d6e9c6'});
                         }
                     })
                     return false;

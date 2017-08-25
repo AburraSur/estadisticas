@@ -217,12 +217,17 @@
                                 ]
                             } ); 
                             
-                            $('#tablaDetalle').DataTable( {
+                            var table = $('#tablaDetalle').DataTable( {
                                 dom: 'Bfrtip',
                                 buttons: [
-                                    'excel'
+                                    'copyHtml5',
+                                    'excelHtml5',
+                                    'csvHtml5',
+                                    'pdfHtml5'
                                 ]
                             } ); 
+                            
+                            var data = table.buttons.exportData();
                         }
                     })
                     return false;
