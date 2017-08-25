@@ -1,0 +1,142 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="col-md-12">
+        <h2 class="h2" >Extracción por Servicio</h2>
+    </div>
+                    {# Formulario de búsqueda #}
+                    <div class="col-md-12">
+                        <form id="formClear" >
+                            <div class="form-group">
+                                <label class="sr-only">Icono FechaIn</label>
+                                <div class="col-md-2" style="margin:0;padding:0;">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial" data-date-end-date="0d">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="sr-only">Icono FechaFin</label>
+                                <div class="col-md-2">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final" data-date-end-date="0d">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <select name="servicio[]" id="servicio" class="form-control selectpicker" data-live-search="true" multiple >
+                                   
+                                    {% for servicio in Servicios %}
+                                        <option value="{{ servicio.idservicio }}" >{{ servicio.idservicio }} - {{ servicio.nombre }}</option>
+                                    {% endfor %}   
+                                </select>    
+                            </div>
+                        </form>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary" id="search" >Generar</button>
+                            <button class="btn btn-primary" id="clear" >Limpiar</button>
+                        </div>
+
+                    </div>
+                    <div class="clearfix"><hr></div>
+                    <div class="form-group" style="margin-top: 10px;" >
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a data-toggle="tab" href="#home"><h3>Totales</h3></a></li>
+                            <li><a data-toggle="tab" href="#detallado"><h3>Detallado</h3></a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="home" class="tab-pane fade in active">
+                                <div class="clearfix"><hr></div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading">
+                                        <h3>Informe Resumido<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_totales" style="width:100%;" >
+
+                                    </div>
+                                </div>
+                            </div> 
+                            <div id="detallado" class="tab-pane fade">
+                                <div class="clearfix"><hr></div>
+                                <div class="panel panel-success">
+                                    <div class="panel-heading">
+                                        <h3>Informe Detallado<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>        
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+    <script>
+        $(document).ready(function() {  
+            $('.datepicker').datepicker({
+                language: 'es',
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                
+            });
+            
+            $('#search').click(function(){
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });
+                if(fecIni != '' && fecEnd != ''){
+                    $.ajax({
+                        url: '{{ path('extraeservicios') }}',
+                        type: 'POST',
+                        data: $('#formClear').serialize(),
+                        success: function(data){
+                            console.log(data);
+                            var resp = JSON.parse(data);
+                            $.unblockUI();
+                            $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('#tabla_totales').html(resp.tablaTotales);
+                            $('#tabla_detallada').html(resp.tablaDetalle);
+                            
+                            $('#tablaDetalle').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            
+                            $('#tablaTotales').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $("#tablaDetalle > tbody > tr.odd").css("background-color","#d6e9c6");
+                            //$('#tableTotales tbody tr:odd').css({'background-color','#d6e9c6'});
+                        }
+                    })
+                    return false;
+                }else{
+                    $.blockUI({
+                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                    });
+                    
+                    setTimeout($.unblockUI,3000);
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="col-md-12">
+        <h2 class="h2" >Estadisticas Generales</h2>
+    </div>
+                    {# Formulario de búsqueda #}
+                    <div class="col-md-12">
+                        <form id="formClear" >
+                            <div class="form-group">
+                                <label class="sr-only">Icono FechaIn</label>
+                                <div class="col-md-2" style="margin:0;padding:0;">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="sr-only">Icono FechaFin</label>
+                                <div class="col-md-2">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                                    </div>
+                                </div>
+                            </div>     
+                        </form>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary" id="search" >Generar</button>
+                            <button class="btn btn-primary" id="clear" >Limpiar</button>
+                        </div>
+
+                    </div>
+                    <div class="clearfix"><hr></div>
+                    {# Menu Relaciones #}
+                    <div class="form-group" style="margin-top: 10px;" >
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#home"><h3>Matriculados</h3></a></li>
+                        <li><a data-toggle="tab" href="#menu1"><h3>Renovados</h3></a></li>
+                        <li><a data-toggle="tab" href="#menu2"><h3>Cancelados</h3></a></li>
+                        <li><a data-toggle="tab" href="#menu3"><h3>Detallado</h3></a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="home" class="tab-pane fade in active">
+                            <div class="clearfix"><hr></div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading">
+                                        <h3>Matriculados<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >
+                                        <table id='relmatriculados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Municipio</th>
+                                                    <th>P. Naturales</th>
+                                                    <th>Establecimientos</th>
+                                                    <th>Sociedades</th>
+                                                    <th>Agencias - Sucursales</th>
+                                                    <th>ESAL</th>
+                                                    <th>Civil</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        </div>  
+                        <div id="menu1" class="tab-pane fade">
+                            <div class="clearfix"><hr></div>
+                                <div class="panel panel-warning">
+                                    <div class="panel-heading">
+                                        <h3>Renovados<span class="periodo" ></span></h3>
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_renovados" style="width:100%;" >
+                                        <table id='relrenovados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Municipio</th>
+                                                    <th>P. Naturales</th>
+                                                    <th>Establecimientos</th>
+                                                    <th>Sociedades</th>
+                                                    <th>Agencias - Sucursales</th>
+                                                    <th>ESAL</th>
+                                                    <th>Civil</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        </div>
+                        <div id="menu2" class="tab-pane fade">
+                           <div class="clearfix"><hr></div>
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">
+                                        {# <div class="panel-heading text-center"> #}
+                                            <h3>Cancelados<span class="periodo" ></span></h3>
+                                        {# </div>    #}
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_cancelados" style="width:100%;" >
+                                        <table id='relcancelados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Municipio</th>
+                                                    <th>P. Naturales</th>
+                                                    <th>Establecimientos</th>
+                                                    <th>Sociedades</th>
+                                                    <th>Agencias - Sucursales</th>
+                                                    <th>ESAL</th>
+                                                    <th>Civil</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        </div>
+                        <div id="menu3" class="tab-pane fade">
+                           <div class="clearfix"><hr></div>
+                                <div class="panel panel-success">
+                                    <div class="panel-heading">
+                                        {# <div class="panel-heading text-center"> #}
+                                            <h3>Detalle de consulta<span class="periodo" ></span></h3>
+                                        {# </div>    #}
+                                    </div>
+                                    <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
+                                        <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Matricula</th>
+                                                    <th>Organizacion</th>
+                                                    <th>Categoria</th>
+                                                    <th>Razón Social</th>
+                                                    <th>Municipio</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha Matricula</th>
+                                                    <th>Fecha Renovacion</th>
+                                                    <th>Fecha Cancelación</th>
+                                                    <th>UAR</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        </div>            
+                        {# Fin Tabla detalle de consulta #}
+
+                    </div>
+                </div> 
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+    <script>
+        $(document).ready(function() {  
+            $('.datepicker').datepicker({
+                language: 'es',
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                
+            });
+            $('.estadisticasGenerales').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+            $('#search').click(function(){
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });
+                if(fecIni != '' && fecEnd != ''){
+                    $.ajax({
+                        url: '{{ path('estadisticasGenerales') }}',
+                        type: 'POST',
+                        data: $('#formClear').serialize(),
+                        success: function(data){
+                            console.log(data);
+                            var resp = JSON.parse(data);
+                            $.unblockUI();
+                            $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('#tabla_matriculados').html(resp.tablaMatri.matriculados);
+                            $('#tabla_renovados').html(resp.tablaMatri.renovados);
+                            $('#tabla_cancelados').html(resp.tablaMatri.cancelados);
+                            $('#tabla_detallada').html(resp.tablaDetalle);
+                            $('#relmatriculados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $('#relrenovados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $('#relcancelados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            
+                            var table = $('#tablaDetalle').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'copyHtml5',
+                                    'excelHtml5',
+                                    'csvHtml5',
+                                    'pdfHtml5'
+                                ]
+                            } ); 
+                            
+                            var data = table.buttons.exportData();
+                        }
+                    })
+                    return false;
+                }else{
+                    $.blockUI({
+                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                    });
+                    
+                    setTimeout($.unblockUI,3000);
+                }
+            });
+        });
+    </script>
+{% endblock %}

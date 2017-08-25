@@ -1,0 +1,108 @@
+{% extends 'PortalPacienteBundle:Default:base.html.twig' %}
+{% block title %}
+    <title>Patient portal</title>
+{% endblock title %}
+
+{% block scripts %}
+    <script>
+        var name = '{{ nombrePaciente }}';
+        var url = '{{ path('SendEmail') }}';
+        var error = '{{ 'messages.ajax.error'|trans([], 'LocalizationBundle') }}';
+    </script>
+    <script src="{{ asset('bundles/portalpaciente/js/portalPaciente.js') }}"></script>
+{% endblock scripts %}
+
+{% block content %}
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+            </div>
+            <div class="navimg">
+                <img src="{{ asset('bundles/portalpaciente/images/ppaciente.svg') }}" alt="medical bag">
+            </div>
+            
+            <div class="hidden-lg">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="pull-right"><a href="{{ path('portal_paciente_login') }}"> <span class="glyphicon glyphicon-off glyphicon-nav"></span></a></li>
+                </ul>
+            </div>
+            <div class="visible-lg">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            {{ nombrePaciente }} <span class="glyphicon glyphicon-user"></span> <span class="caret"></span></a>
+                        <ul class="dropdown-menu text-right">
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{{ path('portal_paciente_login') }}"><span class="glyphicon glyphicon-off"></span>Cerrar sesi&oacute;n</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div><!-- /.navbar-collapse -->
+            </div>
+        </div><!-- /.container-fluid -->
+    </nav>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <span class="visible-xs visible-sm visble-md text-uppercase"><h4>{{ nombrePaciente }}</h4><hr></span>
+                <div class="card">
+                    {# <table id="patientResults" class="table table-hover table-condensed table-striped table-bordered dt-responsive" cellspacing="0" width="100%">
+                        
+                    </table> #}
+                    {{ tablaEstudios|raw }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Modal #}
+    <div class="modal fade compartir">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Compartir im&aacute;genes</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <form id="formEmail" autocomplete="off">
+                            <label for="email">Email m&eacute;dico remitente</label>
+                            <input id="email" type="email" name="email" class="form-control" required="required">
+                            <label for="comment">Comentario</label>
+                            <textarea name="comment" id="comment" class="form-control" rows="4" style="resize: none;" maxlength="280"></textarea>
+                            <div class="clearfix"></div>
+                            <button class="btn btn-primary" type="submit" style="margin-top: 20px;">Compartir</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    {# /.Modal #}
+
+    <footer class="footer hidden-xs">
+        <div class="container-fluid">
+            <p class="text-muted">Powered by <a href="http://imexhs.com" target="_blank"><img src="{{ asset('bundles/portalpaciente/images/logoImex.svg') }}" alt="ImExHS" style="max-width:80px;"></a></p>
+        </div>
+    </footer>
+    <script>
+        $(document).ready(function() {
+            $('#patientResults').DataTable();
+        });
+        $.sessionTimeout({
+            message: 'Su sesión será bloqueada en un minuto.',
+            keepAliveUrl: '/PatientPortal/home',
+            logoutUrl: '/PatientPortal/home',
+            redirUrl: '/PatientPortal/home',
+            warnAfter: 280000,
+            redirAfter: 300000,
+            title: '¡Su sesión está a punto de caducar!',
+            logoutButton: 'Salir',
+            keepAliveButton: 'Cancelar',
+        });
+    </script>
+{% endblock content %}
