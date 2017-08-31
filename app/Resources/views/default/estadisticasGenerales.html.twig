@@ -133,14 +133,14 @@
                                         {# </div>    #}
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
-                                        <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                                        <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
                                             <thead>
                                                 <tr>
                                                     <th>Matricula</th>
                                                     <th>Organizacion</th>
                                                     <th>Categoria</th>
-                                                    <th>Razón Social</th>
                                                     <th>Municipio</th>
+                                                    <th>Razón Social</th>
                                                     <th>Estado</th>
                                                     <th>Fecha Matricula</th>
                                                     <th>Fecha Renovacion</th>
@@ -148,7 +148,20 @@
                                                     <th>UAR</th>
                                                 </tr>
                                             </thead>
-                                            <tbody></tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Matricula</th>
+                                                    <th>Organizacion</th>
+                                                    <th>Categoria</th>
+                                                    <th>Municipio</th>
+                                                    <th>Razón Social</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha Matricula</th>
+                                                    <th>Fecha Renovacion</th>
+                                                    <th>Fecha Cancelación</th>
+                                                    <th>UAR</th>
+                                                </tr>
+                                            </tfoot>
                                         </table>
                                     </div>
                                 </div>
@@ -178,13 +191,55 @@
                                     'excel'
                                 ]
                             } ); 
+                            
             $('#search').click(function(){
+                var tablaDetalle = $('#tablaDetalle').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
                 $.blockUI({
                     message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
                 });
                 if(fecIni != '' && fecEnd != ''){
+                    
+                    $('#tablaDetalle th').each(function (i) {
+                        if( i==3 ){
+                            var select = $('<select id="codMun"><option value=""><option></option><option value="05129" >CALDAS</option><option value="05266" >ENVIGADO</option><option value="05360" >ITAGUI</option><option value="05380" >LA ESTRELLA</option><option value="05631" >SABANETA</option><option value="otroDom" >otroDomicilio</option></select>');
+                            $(this).html(select);                           
+                        }
+                        if( i==5 ){
+                            var select = $('<select id="estado"><option value=""><option></option><option>MATRICULADO</option><option>RENOVADO</option><option>CANCELADO</option></select>');
+                            $(this).html(select);                           
+                        }
+                        /*else{
+                            var title = $('#tablaDetalle th').eq($(this).index()).text();
+                            $(this).html('<input type="text" />');
+                        }*/
+                    });
+                    
+                    var tablaDetalle = $('#tablaDetalle').DataTable( {
+                       dom: 'Bfrtip',
+                        buttons: [],
+                        "ordering": false,
+                        "processing": true,
+                        "serverSide": true,
+                        "ajax": {
+                            "url": '{{ path('tabladetalle') }}',
+                            "type": 'POST',
+                            "data": {dateInit:fecIni , dateEnd:fecEnd },
+                        }
+                    } );
+                    
+                    $('.dataTables_filter').css({ 'display': 'none' });
+                    
+                    $( tablaDetalle.table().container() ).on( 'change', 'select', function () {
+                        tablaDetalle
+                            .column( 1 )
+                            .search( $('#codMun').val() )
+                            .column( 0 )
+                            .search( $('#estado').val() )
+                            .draw();
+                    } );
+                    
                     $.ajax({
                         url: '{{ path('estadisticasGenerales') }}',
                         type: 'POST',
@@ -197,7 +252,7 @@
                             $('#tabla_matriculados').html(resp.tablaMatri.matriculados);
                             $('#tabla_renovados').html(resp.tablaMatri.renovados);
                             $('#tabla_cancelados').html(resp.tablaMatri.cancelados);
-                            $('#tabla_detallada').html(resp.tablaDetalle);
+                            //$('#tabla_detallada').html(resp.tablaDetalle);
                             $('#relmatriculados').DataTable( {
                                 dom: 'Bfrtip',
                                 buttons: [
@@ -217,20 +272,11 @@
                                 ]
                             } ); 
                             
-                            var table = $('#tablaDetalle').DataTable( {
-                                dom: 'Bfrtip',
-                                buttons: [
-                                    'copyHtml5',
-                                    'excelHtml5',
-                                    'csvHtml5',
-                                    'pdfHtml5'
-                                ]
-                            } ); 
-                            
-                            var data = table.buttons.exportData();
                         }
                     })
                     return false;
+                    
+                     
                 }else{
                     $.blockUI({
                         message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
