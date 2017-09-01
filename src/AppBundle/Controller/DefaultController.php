@@ -137,9 +137,6 @@ class DefaultController extends Controller
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
-            $_POST= $_REQUEST;
-
-
             $columns = array( 
             // datatable column index  => database column name
                     0 =>'matricula', 
