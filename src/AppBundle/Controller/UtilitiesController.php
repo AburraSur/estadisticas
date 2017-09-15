@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class UtilitiesController extends Controller
 {
@@ -108,13 +109,13 @@ class UtilitiesController extends Controller
             foreach ($municipios as $valueMun) {
                 $tabla .="<tr>
                             <th>$codMuni[$valueMun]</th>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['PN']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['EST']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['SOC']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['AGSUC']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['ESAL']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['CIVILES']."</td>
-                            <td><b>".$totalMunicipio[$valueMun.$categoria]."</b></td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['PN'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['EST'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['SOC'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['AGSUC'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['ESAL'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['CIVILES'],"0","",".")."</td>
+                            <td><b>".number_format($totalMunicipio[$valueMun.$categoria],"0","",".")."</b></td>
                         </tr>  ";
 
             }
@@ -122,17 +123,51 @@ class UtilitiesController extends Controller
                                
             $tabla .="<tr>
                             <th>TOTAL</th>
-                            <th>".$totalPN."</th>
-                            <th>".$totalEST."</th>
-                            <th>".$totalSOC."</th>
-                            <th>".$totalAGSUC."</th>
-                            <th>".$totalESAL."</th>
-                            <th>".$totalCV."</th>
-                            <th>".$granTotal."</th>
+                            <th>".number_format($totalPN,"0","",".")."</th>
+                            <th>".number_format($totalEST,"0","",".")."</th>
+                            <th>".number_format($totalSOC,"0","",".")."</th>
+                            <th>".number_format($totalAGSUC,"0","",".")."</th>
+                            <th>".number_format($totalESAL,"0","",".")."</th>
+                            <th>".number_format($totalCV,"0","",".")."</th>
+                            <th>".number_format($granTotal,"0","",".")."</th>
                         </tr>
                     </tbody>
                 </table>";
             
-            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle);
+            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal);
+    }
+    
+    public function exportExcel(){
+        $phpExcelObject = $this->get('phpexcel')->createPHPExcelObject();
+
+       $phpExcelObject->getProperties()->setCreator("liuggio")
+           ->setLastModifiedBy("Giulio De Donato")
+           ->setTitle("Office 2005 XLSX Test Document")
+           ->setSubject("Office 2005 XLSX Test Document")
+           ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")
+           ->setKeywords("office 2005 openxml php")
+           ->setCategory("Test result file");
+       $phpExcelObject->setActiveSheetIndex(0)
+           ->setCellValue('A1', 'Hello esto si que funciona')
+           ->setCellValue('B2', 'world!');
+       $phpExcelObject->getActiveSheet()->setTitle('Simple');
+       // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+       $phpExcelObject->setActiveSheetIndex(0);
+
+        // create the writer
+        $writer = $this->get('phpexcel')->createWriter($phpExcelObject, 'Excel2007');
+        // create the response
+        $response = $this->get('phpexcel')->createStreamedResponse($writer);
+        // adding headers
+        $dispositionHeader = $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            'PhpExcelFileSample.xlsx'
+        );
+        $response->headers->set('Content-Type', 'text/vnd.ms-excel; charset=utf-8');
+        $response->headers->set('Pragma', 'public');
+        $response->headers->set('Cache-Control', 'maxage=1');
+        $response->headers->set('Content-Disposition', $dispositionHeader);
+
+        return $response;    
     }
 }

@@ -11,7 +11,7 @@
     </div>
                     {# Formulario de búsqueda #}
                     <div class="col-md-12">
-                        <form id="formClear" >
+                        <form action="{{ path('tabladetalle') }}" method="POST" >
                             <div class="form-group">
                                 <label class="sr-only">Icono FechaIn</label>
                                 <div class="col-md-2" style="margin:0;padding:0;">
@@ -27,11 +27,16 @@
                                     <div class="input-group">
                                         <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
                                         <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                                        {#<input type="text" name="estadoHD" id="estadoHD" value="" />
+                                        <input type="text" name="municipioHD" id="municipioHD" value="" />#}
+                                        <input type="hidden" name="excel" id="excel" value="1" />
                                     </div>
                                 </div>
-                            </div>     
-                        </form>
+                            </div>  
+                        
                         <div class="col-md-4">
+                            <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
+                        </form>    
                             <button class="btn btn-primary" id="search" >Generar</button>
                             <button class="btn btn-primary" id="clear" >Limpiar</button>
                         </div>
@@ -129,9 +134,9 @@
                                 <div class="panel panel-success">
                                     <div class="panel-heading">
                                         {# <div class="panel-heading text-center"> #}
-                                            <h3>Detalle de consulta<span class="periodo" ></span></h3>
-                                            <a href='{{ asset('/exportGenerales.php') }}' class='btn btn-success pull-right' >Excel</a>
-                                        {# </div>    #}
+                                            <h3>Detalle de consulta<span class="periodo" ></span>
+                                        {#     <a href='#' class='btn btn-success pull-right' id="exportExcel" >Excel</a></h3>
+                                        </div>    #}
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
                                         <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
@@ -167,8 +172,7 @@
                                     </div>
                                 </div>
                         </div>            
-                        {# Fin Tabla detalle de consulta #}
-
+                        {# Fin Tabla detalle de consulta #}      
                     </div>
                 </div> 
 {% endblock %}
@@ -226,13 +230,15 @@
                         "ajax": {
                             "url": '{{ path('tabladetalle') }}',
                             "type": 'POST',
-                            "data": {dateInit:fecIni , dateEnd:fecEnd },
+                            "data": {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
                         }
                     } );
                     
                     $('.dataTables_filter').css({ 'display': 'none' });
                     
                     $( tablaDetalle.table().container() ).on( 'change', 'select', function () {
+                        $('#municipioHD').val($('#codMun').val());
+                        $('#estadoHD').val($('#estado').val());
                         tablaDetalle
                             .column( 1 )
                             .search( $('#codMun').val() )
@@ -241,11 +247,13 @@
                             .draw();
                     } );
                     
+                    
                     $.ajax({
                         url: '{{ path('estadisticasGenerales') }}',
                         type: 'POST',
-                        data: $('#formClear').serialize(),
+                        data: {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
                         success: function(data){
+                            $('#excelB').removeClass('hide');
                             console.log(data);
                             var resp = JSON.parse(data);
                             $.unblockUI();
@@ -286,6 +294,21 @@
                     setTimeout($.unblockUI,3000);
                 }
             });
+            
+            {#$('#exportExcel').click(function(){
+                $.blockUI({
+                    message: '<div class="alert alert-success" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });
+                    
+                var dateIni = $('#dateInit').val();
+                var dateEnd = $('#dateEnd').val();
+                var muni = $('#codMun').val();
+                var estado = $('#estado').val();
+                window.location.href = './exportGenerales.php?dateIni='+dateIni+'&dateEnd='+dateEnd+'&estado='+estado+'&municipio='+muni;
+                
+                setTimeout($.unblockUI,3000);
+                
+            });#}
         });
     </script>
 {% endblock %}
