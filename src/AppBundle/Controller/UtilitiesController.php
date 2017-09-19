@@ -137,37 +137,15 @@ class UtilitiesController extends Controller
             return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal);
     }
     
-    public function exportExcel(){
-        $phpExcelObject = $this->get('phpexcel')->createPHPExcelObject();
-
-       $phpExcelObject->getProperties()->setCreator("liuggio")
-           ->setLastModifiedBy("Giulio De Donato")
-           ->setTitle("Office 2005 XLSX Test Document")
-           ->setSubject("Office 2005 XLSX Test Document")
-           ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")
-           ->setKeywords("office 2005 openxml php")
-           ->setCategory("Test result file");
-       $phpExcelObject->setActiveSheetIndex(0)
-           ->setCellValue('A1', 'Hello esto si que funciona')
-           ->setCellValue('B2', 'world!');
-       $phpExcelObject->getActiveSheet()->setTitle('Simple');
-       // Set active sheet index to the first sheet, so Excel opens this as the first sheet
-       $phpExcelObject->setActiveSheetIndex(0);
-
-        // create the writer
-        $writer = $this->get('phpexcel')->createWriter($phpExcelObject, 'Excel2007');
-        // create the response
-        $response = $this->get('phpexcel')->createStreamedResponse($writer);
-        // adding headers
-        $dispositionHeader = $response->headers->makeDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            'PhpExcelFileSample.xlsx'
-        );
-        $response->headers->set('Content-Type', 'text/vnd.ms-excel; charset=utf-8');
-        $response->headers->set('Pragma', 'public');
-        $response->headers->set('Cache-Control', 'maxage=1');
-        $response->headers->set('Content-Disposition', $dispositionHeader);
-
-        return $response;    
+    public function sedes( $em ){
+        
+        $sql = "SELECT id, descripcion FROM mreg_sedes ";
+        $sqlSedes = $em->getConnection()->prepare($sql);
+        $sqlSedes->execute();
+        $sedes = $sqlSedes->fetchAll();
+        for($i=0;$i<sizeof($sedes);$i++){
+            $listaSedes[$sedes[$i]['id']] = $sedes[$i]['descripcion'];
+        }
+        return $listaSedes;    
     }
 }

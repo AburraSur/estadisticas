@@ -467,20 +467,7 @@ class DefaultController extends Controller
             $impServi = "'".implode("','",$_POST['servicio'])."'";
             
             //            Crear tabla con datos de los servicios consultados
-//            $tablaDetalle = " <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
-//                            <thead>
-//                                <tr>
-//                                    <th>ID. Cliente</th>
-//                                    <th>Cliente</th>
-//                                    <th>Operador</th>
-//                                    <th>Operación</th>
-//                                    <th>ID. Servicio</th>
-//                                    <th>Servicio</th>
-//                                    <th>Cantidad</th>
-//                                    <th>Valor</th>
-//                                </tr>
-//                            </thead>
-//                            <tbody>";
+
             $tablaTotales= " <table id='tablaTotales' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
                             <thead>
                                 <tr>
@@ -538,19 +525,8 @@ class DefaultController extends Controller
                     $cantRegistros[$idservAux]=1;
                 }
                 
-//                $tablaDetalle.= " <tr>
-//                                    <td>".$resultadosServicios[$i]['identificacion']."</td>
-//                                    <td>".$resultadosServicios[$i]['Cliente']."</td>
-//                                    <td>".$resultadosServicios[$i]['operador']."</td>
-//                                    <td>".$resultadosServicios[$i]['numerooperacion']."</td>
-//                                    <td>".$resultadosServicios[$i]['idservicio']."</td>
-//                                    <td>".$resultadosServicios[$i]['Servicio']."</td>
-//                                    <td>".number_format($resultadosServicios[$i]['cantidad'])."</td>
-//                                    <td>$".number_format($resultadosServicios[$i]['valor'])."</td>
-//                                </tr>";
             }
            
-//            $tablaDetalle.= " </tbody></table>";
             if(sizeof($resultadosServicios)>0){
                 $tablaTotales.= " <tr>
                                         <td>".$idservAux."</td>
@@ -580,6 +556,9 @@ class DefaultController extends Controller
         
         $SIIem =  $this->getDoctrine()->getManager('sii');
         
+        $sedes = new UtilitiesController();
+        $listaSedes = $sedes->sedes($SIIem);
+        
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
             
@@ -589,13 +568,12 @@ class DefaultController extends Controller
             $impServi = "'".implode("','",$_POST['servicio'])."'";
             
             
+            
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor, sedes.descripcion "
+            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor "
                     . "FROM mreg_est_recibos recibos "
                     . "INNER JOIN mreg_servicios servicios "
-                    . "INNER JOIN mreg_sedes sedes "
                     . "WHERE recibos.servicio = servicios.idservicio "
-                    . "AND recibos.sucursal=sedes.id "
                     . "AND recibos. fecoperacion BETWEEN :fecIni AND :fecEnd "
                     . "AND recibos.servicio IN ($impServi) "
                     . "AND recibos.ctranulacion ='0' "
@@ -644,8 +622,9 @@ class DefaultController extends Controller
                     $nestedData=array();
                     $nestedData[] = $resultadosServicios[$i]['identificacion'];
                     $nestedData[] = $resultadosServicios[$i]['Cliente'];
-                    $nestedData[] = $resultadosServicios[$i]['operador'];
-                    $nestedData[] = $resultadosServicios[$i]['descripcion'];
+                    $nestedData[] = substr($resultadosServicios[$i]['numerooperacion'], 2,3);                    
+                    $sucursal = substr($resultadosServicios[$i]['numerooperacion'], 0,2);
+                    $nestedData[] = $listaSedes[$sucursal];
                     $nestedData[] = $resultadosServicios[$i]['numerooperacion'];
                     $nestedData[] = $resultadosServicios[$i]['idservicio'];
                     $nestedData[] = $resultadosServicios[$i]['Servicio'];
@@ -670,48 +649,8 @@ class DefaultController extends Controller
             }    
             
         
-    }
-    
-    /**
-     * @Route("/exportTest", name="exportTest")
-     */
-//    public function exportTestAction(Request $request)
-//    {
-//        
-//        $SIIem =  $this->getDoctrine()->getManager('sii');
-//        
-//            $fechaInicial = explode("-", $_POST['dateInit']);
-//            $fechaFinal = explode("-", $_POST['dateEnd']);
-//            
-//            $fecIni = str_replace("-", "", $_POST['dateInit']);
-//            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
-//            
-//            $impServi = "'".implode("','",$_POST['servicio'])."'";
-//            
-//            
-////          Consulta para los servicios seleccionados en el rango de fechas consultado  
-//            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor, sedes.descripcion "
-//                    . "FROM mreg_est_recibos recibos "
-//                    . "INNER JOIN mreg_servicios servicios "
-//                    . "INNER JOIN mreg_sedes sedes "
-//                    . "WHERE recibos.servicio = servicios.idservicio "
-//                    . "AND recibos.sucursal=sedes.id "
-//                    . "AND recibos. fecoperacion BETWEEN :fecIni AND :fecEnd "
-//                    . "AND recibos.servicio IN ($impServi) "
-//                    . "AND recibos.ctranulacion ='0' "
-//                    . "AND recibos.tipogasto IN ('0','8')"
-//                    . "AND recibos.cantidad > 0 ";
-//            
-//            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
-//            $stmt = $SIIem->getConnection()->prepare($sqlMat);
-//            $stmt->execute($params);
-//            $resultadosServicios = $stmt->fetchAll();
-//            $totalFiltered = $totalData = sizeof($resultadosServicios);
-//            
-////            $this->exportserviciosDetalleAction($resultadosServicios);
-//            $response = $this->forward('AppBundle:Default:exportserviciosDetalle',array('resultadosServicios'=>$resultadosServicios));
-//            return $response;
-//    }
+    }    
+ 
     /**
      * @Route("/exportExcel", name="exportExcel")
      */
@@ -766,5 +705,137 @@ class DefaultController extends Controller
         return $response;     
     }
     
+    
+    /**
+     * @Route("/extracionLibros", name="extracionLibros")
+     */
+    public function extracionLibrosAction(Request $request)
+    {
+        
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        
+        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            $impServi = "'".implode("','",$_POST['servicio'])."'";
+
+            $tablaTotales= " <table id='tablaTotales' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                            <thead>
+                                <tr>
+                                    <th>ID. Servicio</th>
+                                    <th>Servicio</th>
+                                    <th>Cantidad Registros</th>
+                                    <th>Cantidad</th>
+                                    <th>Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>";
+            
+//          Consulta para los servicios seleccionados en el rango de fechas consultado  
+            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor, recibos.ctranulacion "
+                    . "FROM mreg_est_recibos recibos "
+                    . "INNER JOIN mreg_servicios servicios "
+                    . "WHERE recibos.servicio = servicios.idservicio "
+                    . "AND recibos. fecoperacion BETWEEN :fecIni AND :fecEnd "
+                    . "AND recibos.servicio IN ($impServi) "
+                    . "AND recibos.cantidad > 0 "
+                    . "AND recibos.ctranulacion ='0' "
+                    . "AND recibos.tipogasto IN ('0','8')"
+                    . "ORDER BY idservicio ASC";
+            
+//          
+            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
+            
+//            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+            $stmt = $SIIem->getConnection()->prepare($sqlMat);
+//            Ejecución de las consultas
+            $stmt->execute($params);
+            $resultadosServicios = $stmt->fetchAll();
+           
+//           Ciclo para crear contadores de valores y cantidades por servicio, se construye la tabla detalla con la información consultada 
+            $idservAux = 0;
+            for($i=0;$i<sizeof($resultadosServicios);$i++){
+                if($idservAux == $resultadosServicios[$i]['idservicio']){
+                    $cantServ[$idservAux] = $cantServ[$idservAux] + $resultadosServicios[$i]['cantidad'];
+                    $totalServ[$idservAux] = $totalServ[$idservAux] + $resultadosServicios[$i]['valor'];
+                    $cantRegistros[$idservAux]=$cantRegistros[$idservAux]+1;
+                }else{
+                    if(isset($cantServ[$idservAux])){
+                        $tablaTotales.= " <tr>
+                                            <td>".$idservAux."</td>
+                                            <td>".$servicio."</td>
+                                            <td>".number_format($cantRegistros[$idservAux],"0","",".")."</td>
+                                            <td>".number_format($cantServ[$idservAux],"0","",".")."</td>    
+                                            <td>$".number_format($totalServ[$idservAux],"0","",".")."</td>
+                                        </tr>";
+                    }
+                    $cantServ[$resultadosServicios[$i]['idservicio']] = $resultadosServicios[$i]['cantidad'];
+                    $totalServ[$resultadosServicios[$i]['idservicio']] = $resultadosServicios[$i]['valor'];
+                    $idservAux = $resultadosServicios[$i]['idservicio'];
+                    $servicio = $resultadosServicios[$i]['Servicio'];
+                    $cantRegistros[$idservAux]=1;
+                }
+                
+
+            }
+           
+            if(sizeof($resultadosServicios)>0){
+                $tablaTotales.= " <tr>
+                                        <td>".$idservAux."</td>
+                                        <td>".$servicio."</td>
+                                        <td>".number_format($cantRegistros[$idservAux],"0","",".")."</td>
+                                        <td>".number_format($cantServ[$idservAux],"0","",".")."</td>
+                                        <td>$".number_format($totalServ[$idservAux],"0","",".")."</td>
+                                    </tr>";
+            }
+            $tablaTotales.= "</tbody></table>";
+//            return new Response(json_encode(array('tablaTotales' => $tablaTotales , 'tablaDetalle' => $tablaDetalle )));
+            return new Response(json_encode(array('tablaTotales' => $tablaTotales )));
+        }else{
+            $sqlLibros = "SELECT libros.idlibro, libros.nombre FROM mreg_libros libros";
+            $prepareServ = $SIIem->getConnection()->prepare($sqlLibros);
+            $prepareServ->execute();
+            $libros =  $prepareServ->fetchAll();
+            return $this->render('default/extraccionLibros.html.twig',array('libros' => $libros));
+        }
+    }
+    
+    
+    /**
+     * @Route("/consultaActos" , name="consultaActos" )
+     */
+    public function consultaActosAction(Request $request) {
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        
+        $idlibro = "'".implode("','",$_POST['idlibro'])."'";
+
+        $sqlLibro = "SELECT acto.idacto, acto.nombre as 'acto', acto.idlibro, libro.nombre as 'libro' FROM mreg_actos acto INNER JOIN mreg_libros libro WHERE acto.idlibro=libro.idlibro AND acto.idlibro IN ($idlibro) ORDER BY libro.nombre ASC ";
+    //          
+        $params = array('idlibro'=> $idlibro );
+
+    //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+        $libros = $SIIem->getConnection()->prepare($sqlLibro);
+    //            Ejecución de las consultas
+        $libros->execute($params);
+        $rowLibros = $libros->fetchAll();
+        $listaLibros ='<optgroup label="'.$rowLibros[0]['libro'].'" >';
+        $auxLibro = $rowLibros[0]['idlibro'];
+        for($i=0;$i<sizeof($rowLibros);$i++){
+            if($auxLibro!=$rowLibros[$i]['idlibro']){
+                $listaLibros.='</optgroup><optgroup label="'.$rowLibros[$i]['libro'].'" >';
+                $auxLibro=$rowLibros[$i]['idlibro'];
+            }
+            $listaLibros.="<option value='".$rowLibros[$i]['idacto']."' >".$rowLibros[$i]['acto']."</option>";
+            
+        }
+        
+        $listaLibros.="<opygroup>";
+        return new Response(json_encode(array('Libros' => $listaLibros )));
+           
+    }
     
 }
