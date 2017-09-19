@@ -276,7 +276,7 @@ class DefaultController extends Controller
                     $totalFiltered++;
                 }    
             }
-            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg));
+            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns));
             return $response;
         }else{  
             $t1 = sizeof($matT);
@@ -567,7 +567,7 @@ class DefaultController extends Controller
             
             $impServi = "'".implode("','",$_POST['servicio'])."'";
             
-            
+            $columns = array(0=>'identificacion', 1=>'Cliente', 2=>'operador', 3=>'numerooperacion',4=>'Servicio',5=>'idservicio', 6=>'cantidad', 7=>'valor');
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
             $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor "
@@ -587,7 +587,7 @@ class DefaultController extends Controller
             $totalFiltered = $totalData = sizeof($resultadosServicios);
             
             if($_POST['excel']==1){
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios));
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns));
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -654,7 +654,7 @@ class DefaultController extends Controller
     /**
      * @Route("/exportExcel", name="exportExcel")
      */
-    public function exportExcelAction($resultadosServicios=NULL)
+    public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL)
     {
         
         
@@ -672,10 +672,17 @@ class DefaultController extends Controller
         for($l=65; $l<=90; $l++) {  
             $letra = chr($l);  
             $columns[]=$letra;  
-        }   
+        }
+        
+        $c=0;
+        foreach ($columnas as $value) {
+                $pos = $columns[$c].('1');
+                $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $value);
+                $c++;
+            }
         
         for($i=0;$i<sizeof($resultadosServicios);$i++){
-            $p=$i+1;
+            $p=$i+2;
             $j=0;
             foreach ($resultadosServicios[$i] as $value) {
                 $pos = $columns[$j].($p);

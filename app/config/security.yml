@@ -31,4 +31,5 @@ security:
         - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/admin/, role: ROLE_ADMIN }
         - { path: ^/, role: ROLE_USER }
-        - { path: ^/estadisticasGenerales, role: ROLE_ADMIN }
+        - { path: ^/*, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        #- { path: ^/estadisticasGenerales, role: ROLE_ADMIN }
