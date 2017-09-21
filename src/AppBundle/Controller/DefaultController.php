@@ -757,10 +757,27 @@ class DefaultController extends Controller
             }
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT inscrip.id, inscrip.fecha, inscrip.matricula, inscrip.identificacion, inscrip.nombre as 'comerciante', inscrip.noticia, inscrip.operador, inscrip.numerooperacion, actos.nombre as 'acto', libros.nombre as 'libro'
+            $sqlMat = "SELECT inscrip.id, inscrip.fecha, inscrip.matricula, 
+                       (SELECT 
+                            (CASE
+                                    WHEN numid = '' THEN nit
+                                    ELSE numid
+                                END)
+                        FROM
+                            mreg_est_matriculados
+                        WHERE
+                            mreg_est_matriculados.matricula = inscrip.matricula
+                        LIMIT 1) AS identificacion, 
+                        (SELECT razonsocial
+                        FROM
+                            mreg_est_matriculados
+                        WHERE
+                            mreg_est_matriculados.matricula = inscrip.matricula
+                        LIMIT 1) AS  'comerciante', inscrip.noticia, inscrip.operador, inscrip.numerooperacion, actos.nombre as 'acto', libros.nombre as 'libro'
                        FROM mreg_inscripciones inscrip 
                        INNER JOIN mreg_actos actos 
                        INNER JOIN mreg_libros libros 
+                       INNER JOIN mreg_est_matriculados matriculados 
                        WHERE inscrip.libro=libros.idlibro
                        AND inscrip.acto=actos.idacto                       
                        AND fecha BETWEEN :fecIni AND :fecEnd ";
@@ -785,7 +802,7 @@ class DefaultController extends Controller
 //            Ejecución de las consultas
             $stLibros->execute($params);
             $resultadoLibros = $stLibros->fetchAll();
-            
+            $totalData = $totalFiltered = sizeof($resultadoLibros);
                        
             
             if($_POST['excel']==1){
@@ -795,8 +812,8 @@ class DefaultController extends Controller
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
                         $sqlMat.=" AND ( inscrip.fecha LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR inscrip.matricula LIKE '".$_POST['search']['value']."%' ";    
-                        $sqlMat.=" OR inscrip.identificacion LIKE '".$_POST['search']['value']."%' ";    
-                        $sqlMat.=" OR inscrip.nombre LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR identificacion LIKE '".$_POST['search']['value']."%' ";       
+                        $sqlMat.=" OR razonsocial LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR inscrip.noticia LIKE '".$_POST['search']['value']."%' ";     
                         $sqlMat.=" OR inscrip.operador LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR inscrip.numerooperacion LIKE '".$_POST['search']['value']."%' ";    
@@ -841,7 +858,7 @@ class DefaultController extends Controller
                             "recordsTotal"    => intval( $totalData ),  // total number of records
                             "recordsFiltered" => intval( $totalFiltered ), // total number of records after searching, if there is no searching then totalFiltered = totalData
                             "data"            => $data ,  // total data array
-                            "i"               => $i  
+                            "sql"               => $sqlMat
                             );
 
     //            echo json_encode($json_data);
