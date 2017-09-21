@@ -79,7 +79,7 @@
                         <h3>Informe Detallado<span class="periodo" ></span></h3>
                     </div>
                     <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
-                        <table id='tablaServicios' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                        <table id='tablaActos' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
                             <thead>
                                 <tr>
                                     <th>ID. Cliente</th>
@@ -145,22 +145,22 @@
                 return false;
             });
             
-            $('#exportExcel').click(function(){
+            /*$('#exportExcel').click(function(){
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
-                var servicio = $('#servicio').val();
+                var libroActo = $('#acto').val();
                  $.ajax({
                         url: '{{ path('exportExcel') }}',
                         type: 'POST',
-                        data: {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio, excel: '1'}                       
+                        data: {dateInit:fecIni , dateEnd:fecEnd , libroActo:libroActo, excel: '1'}                       
                     })
                     return false;
-            });    
+            });*/    
             $('#search').click(function(){
-                var tablaServicios = $('#tablaServicios').dataTable().fnDestroy();
+                var tablalibroActo = $('#tablaActos').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
-                var servicio = $('#servicio').val();
+                var libroActo = $('#acto').val();
                 $.blockUI({
                     message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
                 });          
@@ -168,27 +168,27 @@
                     
                 if(fecIni != '' && fecEnd != ''){
                     
-                    if(servicio != ''){
+                    if(libroActo != ''){
 
-                        var tablaServicios = $('#tablaServicios').DataTable( {
+                        var tablalibroActo = $('#tablaActos').DataTable( {
                            dom: 'Bfrtip',
                             buttons: [],
                             "ordering": false,
                             "processing": false,
                             "serverSide": true,
                             "ajax": {
-                                "url": '{{ path('extraeserviciosDetalle') }}',
+                                "url": '{{ path('extraeLibroActosDetalle') }}',
                                 "type": 'POST',
-                                "data": {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio, excel: '0'},
+                                "data": {dateInit:fecIni , dateEnd:fecEnd , libroActo:libroActo, excel: '0'},
                             }
                         } );
 
 
 
                         $.ajax({
-                            url: '{{ path('extraeservicios') }}',
+                            url: '{{ path('extracionLibros') }}',
                             type: 'POST',
-                            data: {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio},
+                            data: {dateInit:fecIni , dateEnd:fecEnd , libroActo:libroActo},
                             success: function(data){
                                 $('#excelB').removeClass('hide');
                                 console.log(data);

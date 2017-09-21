@@ -649,7 +649,209 @@ class DefaultController extends Controller
             }    
             
         
-    }    
+    }
+
+    
+    /**
+     * @Route("/extracionLibros", name="extracionLibros")
+     */
+    public function extracionLibrosAction(Request $request)
+    {
+        
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        
+        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            foreach ($_POST['libroActo'] as $value) {
+                $registro = explode("-", $value);
+                $libros[$registro[0]][] = $registro[1];
+            }
+            
+            
+            //$impServi = "'".implode("','",$_POST['libroActo'])."'";
+
+            $tablaTotales= " <table id='tablaTotales' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                            <thead>
+                                <tr>
+                                    <th>ID Libro</th>
+                                    <th>Libro</th>
+                                    <th>ID Acto</th>
+                                    <th>Acto</th>
+                                    <th>Total Actos</th>
+                                </tr>
+                            </thead>
+                            <tbody>";
+            
+//          Consulta para los servicios seleccionados en el rango de fechas consultado  
+            $sqlMat = "SELECT libro,acto ,COUNT(acto) as 'totalActos' FROM mreg_inscripciones WHERE fecha BETWEEN :fecIni AND :fecEnd ";
+            
+//          
+            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
+            $sw=0;
+            foreach ($libros as $key => $value) {
+                $actos = implode("','", $value);
+                if($sw==0){
+                    $sqlMat.="AND (libro='$key' AND acto IN('$actos')) ";
+                    $sw++;
+                }else{
+                    $sqlMat.="OR (libro='$key' AND acto IN('$actos')) ";
+                }
+                
+                
+            }
+            
+            $sqlMat.="GROUP BY acto";
+//            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+            $stLibros = $SIIem->getConnection()->prepare($sqlMat);
+//            Ejecución de las consultas
+            $stLibros->execute($params);
+            $resultadoLibros = $stLibros->fetchAll();
+            
+            for($i=0;$i<sizeof($resultadoLibros);$i++){
+                $sqlLibroActos = "SELECT libro.nombre as 'nomLibro', acto.nombre as 'nomActo' FROM mreg_libros libro INNER JOIN mreg_actos acto WHERE libro.idlibro=acto.idlibro AND acto.idacto='".$resultadoLibros[$i]['acto']."' AND libro.idlibro='".$resultadoLibros[$i]['libro']."' ";
+                $stnombres = $SIIem->getConnection()->prepare($sqlLibroActos);
+                $stnombres->execute();
+                $nombreLibroActo = $stnombres->fetchAll();
+                $tablaTotales.= "<tr>"
+                        . "<td>".$resultadoLibros[$i]['libro']."</td>"
+                        . "<td>".$nombreLibroActo[0]['nomLibro']."</td>"
+                        . "<td>".$resultadoLibros[$i]['acto']."</td>"
+                        . "<td>".$nombreLibroActo[0]['nomActo']."</td>"
+                        . "<td>".$resultadoLibros[$i]['totalActos']."</td>";
+            }
+           
+//           
+            $tablaTotales.= "</tbody></table>";
+            return new Response(json_encode(array('tablaTotales' => $tablaTotales , 'libros'=>$libros , 'sql'=>$sqlMat)));
+        }else{
+            $sqlLibros = "SELECT libros.idlibro, libros.nombre FROM mreg_libros libros";
+            $prepareServ = $SIIem->getConnection()->prepare($sqlLibros);
+            $prepareServ->execute();
+            $libros =  $prepareServ->fetchAll();
+            return $this->render('default/extraccionLibros.html.twig',array('libros' => $libros));
+        }
+    }
+    
+    /**
+     * @Route("/extraeLibroActosDetalle", name="extraeLibroActosDetalle")
+     */
+    public function extraeLibroActosDetalleAction(Request $request)
+    {
+        
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            foreach ($_POST['libroActo'] as $value) {
+                $registro = explode("-", $value);
+                $libros[$registro[0]][] = $registro[1];
+            }
+            
+//          Consulta para los servicios seleccionados en el rango de fechas consultado  
+            $sqlMat = "SELECT inscrip.id, inscrip.fecha, inscrip.matricula, inscrip.identificacion, inscrip.nombre as 'comerciante', inscrip.noticia, inscrip.operador, inscrip.numerooperacion, actos.nombre as 'acto', libros.nombre as 'libro'
+                       FROM mreg_inscripciones inscrip 
+                       INNER JOIN mreg_actos actos 
+                       INNER JOIN mreg_libros libros 
+                       WHERE inscrip.libro=libros.idlibro
+                       AND inscrip.acto=actos.idacto                       
+                       AND fecha BETWEEN :fecIni AND :fecEnd ";
+            
+//          
+            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
+            $sw=0;
+            foreach ($libros as $key => $value) {
+                $actos = implode("','", $value);
+                if($sw==0){
+                    $sqlMat.="AND (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
+                    $sw++;
+                }else{
+                    $sqlMat.="OR (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
+                }
+                
+                
+            }
+            
+//            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+            $stLibros = $SIIem->getConnection()->prepare($sqlMat);
+//            Ejecución de las consultas
+            $stLibros->execute($params);
+            $resultadoLibros = $stLibros->fetchAll();
+            
+                       
+            
+            if($_POST['excel']==1){
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns));
+                return $response;
+            }else{
+                if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
+                        $sqlMat.=" AND ( inscrip.fecha LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR inscrip.matricula LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR inscrip.identificacion LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR inscrip.nombre LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR inscrip.noticia LIKE '".$_POST['search']['value']."%' ";     
+                        $sqlMat.=" OR inscrip.operador LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR inscrip.numerooperacion LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR actos.nombre LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR libros.nombre LIKE '".$_POST['search']['value']."%' )";    
+                }
+
+                $stmt = $SIIem->getConnection()->prepare($sqlMat);
+    //            Ejecución de las consultas
+                $stmt->execute($params);
+                $resultadosServicios = $stmt->fetchAll();
+                $totalFiltered = sizeof($resultadosServicios);
+
+                $sqlMat.=" ORDER BY inscrip.id ASC LIMIT ".$_POST['start']." ,".$_POST['length']."   ";
+
+
+    //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+                $stmt = $SIIem->getConnection()->prepare($sqlMat);
+    //            Ejecución de las consultas
+                $stmt->execute($params);
+                $resultadoLibros = $stmt->fetchAll();
+
+    //           Ciclo para crear contadores de valores y cantidades por servicio, se construye la tabla detalla con la información consultada 
+                $idservAux = 0;
+                for($i=0;$i<sizeof($resultadoLibros);$i++){
+                    $nestedData=array();
+                    $nestedData[] = $resultadoLibros[$i]['fecha'];
+                    $nestedData[] = $resultadoLibros[$i]['matricula'];
+                    $nestedData[] = $resultadoLibros[$i]['identificacion'];                    
+                    $nestedData[] = $resultadoLibros[$i]['comerciante'];
+                    $nestedData[] = $resultadoLibros[$i]['noticia'];
+                    $nestedData[] = $resultadoLibros[$i]['operador'];
+                    $nestedData[] = $resultadoLibros[$i]['numerooperacion'];
+                    $nestedData[] = $resultadoLibros[$i]['acto'];
+                    $nestedData[] = $resultadoLibros[$i]['libro'];
+
+                    $data[] = $nestedData;
+                }           
+
+                $json_data = array(
+                            "draw"            => intval( $_POST['draw'] ),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+                            "recordsTotal"    => intval( $totalData ),  // total number of records
+                            "recordsFiltered" => intval( $totalFiltered ), // total number of records after searching, if there is no searching then totalFiltered = totalData
+                            "data"            => $data ,  // total data array
+                            "i"               => $i  
+                            );
+
+    //            echo json_encode($json_data);
+            
+            
+                return new Response(json_encode($json_data ));
+            }    
+            
+        
+    }
  
     /**
      * @Route("/exportExcel", name="exportExcel")
@@ -710,108 +912,8 @@ class DefaultController extends Controller
         $response->headers->set('Content-Disposition', $dispositionHeader);
 
         return $response;     
-    }
-    
-    
-    /**
-     * @Route("/extracionLibros", name="extracionLibros")
-     */
-    public function extracionLibrosAction(Request $request)
-    {
+    } 
         
-        $SIIem =  $this->getDoctrine()->getManager('sii');
-        
-        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
-            $fechaInicial = explode("-", $_POST['dateInit']);
-            $fechaFinal = explode("-", $_POST['dateEnd']);
-            
-            $fecIni = str_replace("-", "", $_POST['dateInit']);
-            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
-            
-            $impServi = "'".implode("','",$_POST['servicio'])."'";
-
-            $tablaTotales= " <table id='tablaTotales' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
-                            <thead>
-                                <tr>
-                                    <th>ID. Servicio</th>
-                                    <th>Servicio</th>
-                                    <th>Cantidad Registros</th>
-                                    <th>Cantidad</th>
-                                    <th>Valor Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>";
-            
-//          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor, recibos.ctranulacion "
-                    . "FROM mreg_est_recibos recibos "
-                    . "INNER JOIN mreg_servicios servicios "
-                    . "WHERE recibos.servicio = servicios.idservicio "
-                    . "AND recibos. fecoperacion BETWEEN :fecIni AND :fecEnd "
-                    . "AND recibos.servicio IN ($impServi) "
-                    . "AND recibos.cantidad > 0 "
-                    . "AND recibos.ctranulacion ='0' "
-                    . "AND recibos.tipogasto IN ('0','8')"
-                    . "ORDER BY idservicio ASC";
-            
-//          
-            $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
-            
-//            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
-            $stmt = $SIIem->getConnection()->prepare($sqlMat);
-//            Ejecución de las consultas
-            $stmt->execute($params);
-            $resultadosServicios = $stmt->fetchAll();
-           
-//           Ciclo para crear contadores de valores y cantidades por servicio, se construye la tabla detalla con la información consultada 
-            $idservAux = 0;
-            for($i=0;$i<sizeof($resultadosServicios);$i++){
-                if($idservAux == $resultadosServicios[$i]['idservicio']){
-                    $cantServ[$idservAux] = $cantServ[$idservAux] + $resultadosServicios[$i]['cantidad'];
-                    $totalServ[$idservAux] = $totalServ[$idservAux] + $resultadosServicios[$i]['valor'];
-                    $cantRegistros[$idservAux]=$cantRegistros[$idservAux]+1;
-                }else{
-                    if(isset($cantServ[$idservAux])){
-                        $tablaTotales.= " <tr>
-                                            <td>".$idservAux."</td>
-                                            <td>".$servicio."</td>
-                                            <td>".number_format($cantRegistros[$idservAux],"0","",".")."</td>
-                                            <td>".number_format($cantServ[$idservAux],"0","",".")."</td>    
-                                            <td>$".number_format($totalServ[$idservAux],"0","",".")."</td>
-                                        </tr>";
-                    }
-                    $cantServ[$resultadosServicios[$i]['idservicio']] = $resultadosServicios[$i]['cantidad'];
-                    $totalServ[$resultadosServicios[$i]['idservicio']] = $resultadosServicios[$i]['valor'];
-                    $idservAux = $resultadosServicios[$i]['idservicio'];
-                    $servicio = $resultadosServicios[$i]['Servicio'];
-                    $cantRegistros[$idservAux]=1;
-                }
-                
-
-            }
-           
-            if(sizeof($resultadosServicios)>0){
-                $tablaTotales.= " <tr>
-                                        <td>".$idservAux."</td>
-                                        <td>".$servicio."</td>
-                                        <td>".number_format($cantRegistros[$idservAux],"0","",".")."</td>
-                                        <td>".number_format($cantServ[$idservAux],"0","",".")."</td>
-                                        <td>$".number_format($totalServ[$idservAux],"0","",".")."</td>
-                                    </tr>";
-            }
-            $tablaTotales.= "</tbody></table>";
-//            return new Response(json_encode(array('tablaTotales' => $tablaTotales , 'tablaDetalle' => $tablaDetalle )));
-            return new Response(json_encode(array('tablaTotales' => $tablaTotales )));
-        }else{
-            $sqlLibros = "SELECT libros.idlibro, libros.nombre FROM mreg_libros libros";
-            $prepareServ = $SIIem->getConnection()->prepare($sqlLibros);
-            $prepareServ->execute();
-            $libros =  $prepareServ->fetchAll();
-            return $this->render('default/extraccionLibros.html.twig',array('libros' => $libros));
-        }
-    }
-    
-    
     /**
      * @Route("/consultaActos" , name="consultaActos" )
      */
@@ -836,7 +938,7 @@ class DefaultController extends Controller
                 $listaLibros.='</optgroup><optgroup label="'.$rowLibros[$i]['libro'].'" >';
                 $auxLibro=$rowLibros[$i]['idlibro'];
             }
-            $listaLibros.="<option value='".$rowLibros[$i]['idacto']."' >".$rowLibros[$i]['acto']."</option>";
+            $listaLibros.="<option value='".$rowLibros[$i]['idlibro']."-".$rowLibros[$i]['idacto']."' >".$rowLibros[$i]['idlibro']." - ".$rowLibros[$i]['acto']."</option>";
             
         }
         

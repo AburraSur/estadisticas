@@ -56,7 +56,7 @@
                             <div class="clearfix"><hr></div>
                                 <div class="panel panel-info">
                                     <div class="panel-heading">
-                                        <h3>Matriculados<span class="periodo" ></span></h3>
+                                        <h3>Matriculados<span class="periodo" ></span><b><span class="total pull-right" ></span></b></h3>
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >
                                         <table id='relmatriculados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
@@ -81,7 +81,7 @@
                             <div class="clearfix"><hr></div>
                                 <div class="panel panel-warning">
                                     <div class="panel-heading">
-                                        <h3>Renovados<span class="periodo" ></span></h3>
+                                        <h3>Renovados<span class="periodo" ></span><b><span class="total pull-right" ></span></b></h3>
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_renovados" style="width:100%;" >
                                         <table id='relrenovados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
@@ -258,6 +258,7 @@
                             var resp = JSON.parse(data);
                             $.unblockUI();
                             $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('.total').html('Total Matriculados + Renovados: '+resp.totalMatRen);
                             $('#tabla_matriculados').html(resp.tablaMatri.matriculados);
                             $('#tabla_renovados').html(resp.tablaMatri.renovados);
                             $('#tabla_cancelados').html(resp.tablaMatri.cancelados);
