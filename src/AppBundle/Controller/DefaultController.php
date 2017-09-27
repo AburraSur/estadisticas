@@ -757,30 +757,26 @@ class DefaultController extends Controller
             }
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT inscrip.id, inscrip.fecha, inscrip.matricula, 
-                       (SELECT 
-                            (CASE
-                                    WHEN numid = '' THEN nit
-                                    ELSE numid
-                                END)
+            $sqlMat = "SELECT 
+                            inscrip.id,
+                            inscrip.fecha,
+                            inscrip.matricula,
+                            matriculados.numid AS 'identificacion',    
+                            matriculados.razonsocial AS 'comerciante',
+                            inscrip.noticia,
+                            inscrip.operador,
+                            inscrip.numerooperacion,
+                            actos.nombre AS 'acto',
+                            libros.nombre AS 'libro'
                         FROM
-                            mreg_est_matriculados
-                        WHERE
-                            mreg_est_matriculados.matricula = inscrip.matricula
-                        LIMIT 1) AS identificacion, 
-                        (SELECT razonsocial
-                        FROM
-                            mreg_est_matriculados
-                        WHERE
-                            mreg_est_matriculados.matricula = inscrip.matricula
-                        LIMIT 1) AS  'comerciante', inscrip.noticia, inscrip.operador, inscrip.numerooperacion, actos.nombre as 'acto', libros.nombre as 'libro'
-                       FROM mreg_inscripciones inscrip 
-                       INNER JOIN mreg_actos actos 
-                       INNER JOIN mreg_libros libros 
-                       INNER JOIN mreg_est_matriculados matriculados 
-                       WHERE inscrip.libro=libros.idlibro
-                       AND inscrip.acto=actos.idacto                       
-                       AND fecha BETWEEN :fecIni AND :fecEnd ";
+                            mreg_inscripciones inscrip
+                                LEFT JOIN
+                            mreg_actos actos ON inscrip.acto=actos.idacto
+                                LEFT JOIN
+                            mreg_libros libros ON inscrip.libro=libros.idlibro
+                                LEFT JOIN
+                            mreg_est_matriculados matriculados ON inscrip.matricula=matriculados.matricula
+                       WHERE inscrip.fecha BETWEEN :fecIni AND :fecEnd ";
             
 //          
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
@@ -797,6 +793,7 @@ class DefaultController extends Controller
                 
             }
             
+            $sqlMat.=" GROUP BY inscrip.id ";
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stLibros = $SIIem->getConnection()->prepare($sqlMat);
 //            Ejecución de las consultas
@@ -827,7 +824,7 @@ class DefaultController extends Controller
                 $resultadosServicios = $stmt->fetchAll();
                 $totalFiltered = sizeof($resultadosServicios);
 
-                $sqlMat.=" ORDER BY inscrip.id ASC LIMIT ".$_POST['start']." ,".$_POST['length']."   ";
+                $sqlMat.=" LIMIT ".$_POST['start']." ,".$_POST['length']."   ";
 
 
     //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
@@ -865,9 +862,9 @@ class DefaultController extends Controller
             
             
                 return new Response(json_encode($json_data ));
-            }    
+            } 
             
-        
+            return new Response(json_encode(array("sql"=>$sqlMat)));
     }
  
     /**
