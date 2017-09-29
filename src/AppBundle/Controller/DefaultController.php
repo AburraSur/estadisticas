@@ -23,7 +23,7 @@ class DefaultController extends Controller
         if($rol){
             return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
         }else{
-            return new RedirectResponse($router->generate('supervisores'), 307);
+            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
         }
     }
     
