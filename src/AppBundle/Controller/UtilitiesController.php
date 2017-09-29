@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class UtilitiesController extends Controller
 {
@@ -108,13 +109,13 @@ class UtilitiesController extends Controller
             foreach ($municipios as $valueMun) {
                 $tabla .="<tr>
                             <th>$codMuni[$valueMun]</th>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['PN']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['EST']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['SOC']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['AGSUC']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['ESAL']."</td>
-                            <td>".$arregloMatriculados[$valueMun.$categoria]['CIVILES']."</td>
-                            <td><b>".$totalMunicipio[$valueMun.$categoria]."</b></td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['PN'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['EST'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['SOC'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['AGSUC'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['ESAL'],"0","",".")."</td>
+                            <td>".number_format($arregloMatriculados[$valueMun.$categoria]['CIVILES'],"0","",".")."</td>
+                            <td><b>".number_format($totalMunicipio[$valueMun.$categoria],"0","",".")."</b></td>
                         </tr>  ";
 
             }
@@ -122,17 +123,29 @@ class UtilitiesController extends Controller
                                
             $tabla .="<tr>
                             <th>TOTAL</th>
-                            <th>".$totalPN."</th>
-                            <th>".$totalEST."</th>
-                            <th>".$totalSOC."</th>
-                            <th>".$totalAGSUC."</th>
-                            <th>".$totalESAL."</th>
-                            <th>".$totalCV."</th>
-                            <th>".$granTotal."</th>
+                            <th>".number_format($totalPN,"0","",".")."</th>
+                            <th>".number_format($totalEST,"0","",".")."</th>
+                            <th>".number_format($totalSOC,"0","",".")."</th>
+                            <th>".number_format($totalAGSUC,"0","",".")."</th>
+                            <th>".number_format($totalESAL,"0","",".")."</th>
+                            <th>".number_format($totalCV,"0","",".")."</th>
+                            <th>".number_format($granTotal,"0","",".")."</th>
                         </tr>
                     </tbody>
                 </table>";
             
-            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle);
+            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal);
+    }
+    
+    public function sedes( $em ){
+        
+        $sql = "SELECT id, descripcion FROM mreg_sedes ";
+        $sqlSedes = $em->getConnection()->prepare($sql);
+        $sqlSedes->execute();
+        $sedes = $sqlSedes->fetchAll();
+        for($i=0;$i<sizeof($sedes);$i++){
+            $listaSedes[$sedes[$i]['id']] = $sedes[$i]['descripcion'];
+        }
+        return $listaSedes;    
     }
 }

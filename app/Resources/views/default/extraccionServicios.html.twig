@@ -7,11 +7,12 @@
 {% endblock %} 
 {% block body %}
     <div class="col-md-12">
-        <h2 class="h2" >Extracción por Servicio</h2>
+        <h2 class="h2" ><span class="glyphicon glyphicon-open-file" aria-hidden="true"></span>Extracción por Servicio</h2>
     </div>
                     {# Formulario de búsqueda #}
                     <div class="col-md-12">
-                        <form id="formClear" >
+                       {# <form id="formClear" > #}
+                       <form action="{{ path('extraeserviciosDetalle') }}" method="POST" >
                             <div class="form-group">
                                 <label class="sr-only">Icono FechaIn</label>
                                 <div class="col-md-2" style="margin:0;padding:0;">
@@ -31,15 +32,18 @@
                                 </div>
                             </div>
                             <div class="col-md-4 form-group">
-                                <select name="servicio[]" id="servicio" class="form-control selectpicker" data-live-search="true" multiple >
-                                   
+                                <select name="servicio[]" id="servicio" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple >
+                                   <option value="" selected disabled>Seleccionar Servicios</option>
                                     {% for servicio in Servicios %}
                                         <option value="{{ servicio.idservicio }}" >{{ servicio.idservicio }} - {{ servicio.nombre }}</option>
                                     {% endfor %}   
                                 </select>    
                             </div>
-                        </form>
+                                <input type="hidden" name="excel" value="1" />
+                                
                         <div class="col-md-4">
+                            <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
+                        </form>
                             <button class="btn btn-primary" id="search" >Generar</button>
                             <button class="btn btn-primary" id="clear" >Limpiar</button>
                         </div>
@@ -70,7 +74,34 @@
                                         <h3>Informe Detallado<span class="periodo" ></span></h3>
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
-
+                                        <table id='tablaServicios' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                                            <thead>
+                                                <tr>
+                                                    <th>ID. Cliente</th>
+                                                    <th>Cliente</th>
+                                                    <th>Operador</th>
+                                                    <th>Sede</th>
+                                                    <th>Operación</th>
+                                                    <th>ID. Servicio</th>
+                                                    <th>Servicio</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>ID. Cliente</th>
+                                                    <th>Cliente</th>
+                                                    <th>Operador</th>
+                                                    <th>Sede</th>
+                                                    <th>Operación</th>
+                                                    <th>ID. Servicio</th>
+                                                    <th>Servicio</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Valor</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>    
                                     </div>
                                 </div>
                             </div>
@@ -91,44 +122,78 @@
                 format: 'yyyy-mm-dd',
                 
             });
+            $('.selectpicker').selectpicker();
+            $('.estadisticasGenerales').DataTable(); 
             
-            $('#search').click(function(){
+            $('#exportExcel').click(function(){
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
-                $.blockUI({
-                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
-                });
-                if(fecIni != '' && fecEnd != ''){
-                    $.ajax({
-                        url: '{{ path('extraeservicios') }}',
+                var servicio = $('#servicio').val();
+                 $.ajax({
+                        url: '{{ path('exportExcel') }}',
                         type: 'POST',
-                        data: $('#formClear').serialize(),
-                        success: function(data){
-                            console.log(data);
-                            var resp = JSON.parse(data);
-                            $.unblockUI();
-                            $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
-                            $('#tabla_totales').html(resp.tablaTotales);
-                            $('#tabla_detallada').html(resp.tablaDetalle);
-                            
-                            $('#tablaDetalle').DataTable( {
-                                dom: 'Bfrtip',
-                                buttons: [
-                                    'excel'
-                                ]
-                            } ); 
-                            
-                            $('#tablaTotales').DataTable( {
-                                dom: 'Bfrtip',
-                                buttons: [
-                                    'excel'
-                                ]
-                            } ); 
-                            $("#tablaDetalle > tbody > tr.odd").css("background-color","#d6e9c6");
-                            //$('#tableTotales tbody tr:odd').css({'background-color','#d6e9c6'});
-                        }
+                        data: {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio, excel: '1'}                       
                     })
                     return false;
+            });    
+            $('#search').click(function(){
+                var tablaServicios = $('#tablaServicios').dataTable().fnDestroy();
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                var servicio = $('#servicio').val();
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });          
+                                  
+                    
+                if(fecIni != '' && fecEnd != ''){
+                    
+                    if(servicio != ''){
+
+                        var tablaServicios = $('#tablaServicios').DataTable( {
+                           dom: 'Bfrtip',
+                            buttons: [],
+                            "ordering": false,
+                            "processing": false,
+                            "serverSide": true,
+                            "ajax": {
+                                "url": '{{ path('extraeserviciosDetalle') }}',
+                                "type": 'POST',
+                                "data": {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio, excel: '0'},
+                            }
+                        } );
+
+
+
+                        $.ajax({
+                            url: '{{ path('extraeservicios') }}',
+                            type: 'POST',
+                            data: {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio},
+                            success: function(data){
+                                $('#excelB').removeClass('hide');
+                                console.log(data);
+                                var resp = JSON.parse(data);
+                                $.unblockUI();
+                                $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                                $('#tabla_totales').html(resp.tablaTotales);
+
+                                $('#tablaTotales').DataTable( {
+                                    dom: 'Bfrtip',
+                                    buttons: [
+                                        'excel'
+                                    ]
+                                } ); 
+                                $('#tableTotales tbody tr:odd').css('background-color','#d6e9c6');
+                            }
+                        })
+                        return false;
+                    }else{
+                        $.blockUI({
+                            message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor seleccione al menos un servico.</div>'
+                        });
+
+                        setTimeout($.unblockUI,3000);
+                    }
                 }else{
                     $.blockUI({
                         message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'

@@ -7,11 +7,11 @@
 {% endblock %} 
 {% block body %}
     <div class="col-md-12">
-        <h2 class="h2" >Estadisticas Generales</h2>
+        <h2 class="h2" ><span class="glyphicon glyphicon-home" aria-hidden="true"></span>Estadisticas Generales</h2>
     </div>
                     {# Formulario de búsqueda #}
                     <div class="col-md-12">
-                        <form id="formClear" >
+                        <form action="{{ path('tabladetalle') }}" method="POST" >
                             <div class="form-group">
                                 <label class="sr-only">Icono FechaIn</label>
                                 <div class="col-md-2" style="margin:0;padding:0;">
@@ -27,11 +27,16 @@
                                     <div class="input-group">
                                         <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
                                         <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                                        {#<input type="text" name="estadoHD" id="estadoHD" value="" />
+                                        <input type="text" name="municipioHD" id="municipioHD" value="" />#}
+                                        <input type="hidden" name="excel" id="excel" value="1" />
                                     </div>
                                 </div>
-                            </div>     
-                        </form>
+                            </div>  
+                        
                         <div class="col-md-4">
+                            <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
+                        </form>    
                             <button class="btn btn-primary" id="search" >Generar</button>
                             <button class="btn btn-primary" id="clear" >Limpiar</button>
                         </div>
@@ -51,7 +56,7 @@
                             <div class="clearfix"><hr></div>
                                 <div class="panel panel-info">
                                     <div class="panel-heading">
-                                        <h3>Matriculados<span class="periodo" ></span></h3>
+                                        <h3>Matriculados<span class="periodo" ></span><b><span class="total pull-right" ></span></b></h3>
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >
                                         <table id='relmatriculados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
@@ -76,7 +81,7 @@
                             <div class="clearfix"><hr></div>
                                 <div class="panel panel-warning">
                                     <div class="panel-heading">
-                                        <h3>Renovados<span class="periodo" ></span></h3>
+                                        <h3>Renovados<span class="periodo" ></span><b><span class="total pull-right" ></span></b></h3>
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_renovados" style="width:100%;" >
                                         <table id='relrenovados' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
@@ -129,18 +134,19 @@
                                 <div class="panel panel-success">
                                     <div class="panel-heading">
                                         {# <div class="panel-heading text-center"> #}
-                                            <h3>Detalle de consulta<span class="periodo" ></span></h3>
-                                        {# </div>    #}
+                                            <h3>Detalle de consulta<span class="periodo" ></span>
+                                        {#     <a href='#' class='btn btn-success pull-right' id="exportExcel" >Excel</a></h3>
+                                        </div>    #}
                                     </div>
                                     <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
-                                        <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
+                                        <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
                                             <thead>
                                                 <tr>
                                                     <th>Matricula</th>
                                                     <th>Organizacion</th>
                                                     <th>Categoria</th>
-                                                    <th>Razón Social</th>
                                                     <th>Municipio</th>
+                                                    <th>Razón Social</th>
                                                     <th>Estado</th>
                                                     <th>Fecha Matricula</th>
                                                     <th>Fecha Renovacion</th>
@@ -148,13 +154,25 @@
                                                     <th>UAR</th>
                                                 </tr>
                                             </thead>
-                                            <tbody></tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Matricula</th>
+                                                    <th>Organizacion</th>
+                                                    <th>Categoria</th>
+                                                    <th>Municipio</th>
+                                                    <th>Razón Social</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha Matricula</th>
+                                                    <th>Fecha Renovacion</th>
+                                                    <th>Fecha Cancelación</th>
+                                                    <th>UAR</th>
+                                                </tr>
+                                            </tfoot>
                                         </table>
                                     </div>
                                 </div>
                         </div>            
-                        {# Fin Tabla detalle de consulta #}
-
+                        {# Fin Tabla detalle de consulta #}      
                     </div>
                 </div> 
 {% endblock %}
@@ -178,26 +196,73 @@
                                     'excel'
                                 ]
                             } ); 
+                            
             $('#search').click(function(){
+                var tablaDetalle = $('#tablaDetalle').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
                 $.blockUI({
                     message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
                 });
                 if(fecIni != '' && fecEnd != ''){
+                    
+                    $('#tablaDetalle th').each(function (i) {
+                        if( i==3 ){
+                            var select = $('<select id="codMun"><option value=""><option></option><option value="05129" >CALDAS</option><option value="05266" >ENVIGADO</option><option value="05360" >ITAGUI</option><option value="05380" >LA ESTRELLA</option><option value="05631" >SABANETA</option><option value="otroDom" >otroDomicilio</option></select>');
+                            $(this).html(select);                           
+                        }
+                        if( i==5 ){
+                            var select = $('<select id="estado"><option value=""><option></option><option>MATRICULADO</option><option>RENOVADO</option><option>CANCELADO</option></select>');
+                            $(this).html(select);                           
+                        }
+                        /*else{
+                            var title = $('#tablaDetalle th').eq($(this).index()).text();
+                            $(this).html('<input type="text" />');
+                        }*/
+                    });
+                    
+                    var tablaDetalle = $('#tablaDetalle').DataTable( {
+                       dom: 'Bfrtip',
+                        buttons: [],
+                        "ordering": false,
+                        "processing": true,
+                        "serverSide": true,
+                        "ajax": {
+                            "url": '{{ path('tabladetalle') }}',
+                            "type": 'POST',
+                            "data": {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
+                        }
+                    } );
+                    
+                    $('.dataTables_filter').css({ 'display': 'none' });
+                    
+                    $( tablaDetalle.table().container() ).on( 'change', 'select', function () {
+                        $('#municipioHD').val($('#codMun').val());
+                        $('#estadoHD').val($('#estado').val());
+                        tablaDetalle
+                            .column( 1 )
+                            .search( $('#codMun').val() )
+                            .column( 0 )
+                            .search( $('#estado').val() )
+                            .draw();
+                    } );
+                    
+                    
                     $.ajax({
                         url: '{{ path('estadisticasGenerales') }}',
                         type: 'POST',
-                        data: $('#formClear').serialize(),
+                        data: {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
                         success: function(data){
+                            $('#excelB').removeClass('hide');
                             console.log(data);
                             var resp = JSON.parse(data);
                             $.unblockUI();
                             $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('.total').html('Total Matriculados + Renovados: '+resp.totalMatRen);
                             $('#tabla_matriculados').html(resp.tablaMatri.matriculados);
                             $('#tabla_renovados').html(resp.tablaMatri.renovados);
                             $('#tabla_cancelados').html(resp.tablaMatri.cancelados);
-                            $('#tabla_detallada').html(resp.tablaDetalle);
+                            //$('#tabla_detallada').html(resp.tablaDetalle);
                             $('#relmatriculados').DataTable( {
                                 dom: 'Bfrtip',
                                 buttons: [
@@ -217,20 +282,11 @@
                                 ]
                             } ); 
                             
-                            var table = $('#tablaDetalle').DataTable( {
-                                dom: 'Bfrtip',
-                                buttons: [
-                                    'copyHtml5',
-                                    'excelHtml5',
-                                    'csvHtml5',
-                                    'pdfHtml5'
-                                ]
-                            } ); 
-                            
-                            var data = table.buttons.exportData();
                         }
                     })
                     return false;
+                    
+                     
                 }else{
                     $.blockUI({
                         message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
@@ -239,6 +295,21 @@
                     setTimeout($.unblockUI,3000);
                 }
             });
+            
+            {#$('#exportExcel').click(function(){
+                $.blockUI({
+                    message: '<div class="alert alert-success" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });
+                    
+                var dateIni = $('#dateInit').val();
+                var dateEnd = $('#dateEnd').val();
+                var muni = $('#codMun').val();
+                var estado = $('#estado').val();
+                window.location.href = './exportGenerales.php?dateIni='+dateIni+'&dateEnd='+dateEnd+'&estado='+estado+'&municipio='+muni;
+                
+                setTimeout($.unblockUI,3000);
+                
+            });#}
         });
     </script>
 {% endblock %}
