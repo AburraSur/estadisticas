@@ -45,6 +45,7 @@
                     <option value="" disabled>Seleccionar Actos</option>
                 </select>  
                 <input type="hidden" name="excel" value="1" />
+                <input type="hidden" name="libroActo" name="libroActo" value="1" />
             </div>    
             <div class="col-md-4">
                 <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
@@ -161,6 +162,7 @@
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
                 var libroActo = $('#acto').val();
+                $('libroActo').val(libroActo);
                 $.blockUI({
                     message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
                 });          
