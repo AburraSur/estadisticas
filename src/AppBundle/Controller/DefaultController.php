@@ -751,23 +751,31 @@ class DefaultController extends Controller
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
-            foreach ($_POST['libroActo'] as $value) {
+            if(is_array($_POST['libroActo'])){
+                $libroActo = $_POST['libroActo'];
+            }else{
+                $libroActo = explode(",", $_POST['libroActo']);
+            }
+            
+            foreach ($libroActo as $value) {
                 $registro = explode("-", $value);
                 $libros[$registro[0]][] = $registro[1];
             }
             
+            
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT 
-                            inscrip.id,
+            $sqlMat = "SELECT
+                            inscrip.matricula, 
                             inscrip.fecha,
-                            inscrip.matricula,
                             matriculados.numid AS 'identificacion',    
                             matriculados.razonsocial AS 'comerciante',
                             inscrip.noticia,
                             inscrip.operador,
                             inscrip.numerooperacion,
-                            actos.nombre AS 'acto',
-                            libros.nombre AS 'libro'
+                            inscrip.libro AS 'idLibro',
+                            libros.nombre AS 'libro',
+                            inscrip.acto AS 'idActo',
+                            actos.nombre AS 'acto'
                         FROM
                             mreg_inscripciones inscrip
                                 LEFT JOIN
@@ -803,6 +811,7 @@ class DefaultController extends Controller
                        
             
             if($_POST['excel']==1){
+                $columns = array(0=>'Matricula' , 1=>'Fecha inscripción' , 2=>'Identificación' , 3=>'Razón Social' , 4=>'Noticia' , 5=>'Operador' , 6=>'Operación' , 7=>'idLibro' , 8=>'Libro', 9=>'idActo' , 10=>'Acto');
                 $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns));
                 return $response;
             }else{
@@ -837,15 +846,17 @@ class DefaultController extends Controller
                 $idservAux = 0;
                 for($i=0;$i<sizeof($resultadoLibros);$i++){
                     $nestedData=array();
-                    $nestedData[] = $resultadoLibros[$i]['fecha'];
                     $nestedData[] = $resultadoLibros[$i]['matricula'];
+                    $nestedData[] = $resultadoLibros[$i]['fecha'];
                     $nestedData[] = $resultadoLibros[$i]['identificacion'];                    
                     $nestedData[] = $resultadoLibros[$i]['comerciante'];
                     $nestedData[] = $resultadoLibros[$i]['noticia'];
                     $nestedData[] = $resultadoLibros[$i]['operador'];
                     $nestedData[] = $resultadoLibros[$i]['numerooperacion'];
-                    $nestedData[] = $resultadoLibros[$i]['acto'];
+                    $nestedData[] = $resultadoLibros[$i]['idLibro'];
                     $nestedData[] = $resultadoLibros[$i]['libro'];
+                    $nestedData[] = $resultadoLibros[$i]['idActo'];
+                    $nestedData[] = $resultadoLibros[$i]['acto'];
 
                     $data[] = $nestedData;
                 }           
