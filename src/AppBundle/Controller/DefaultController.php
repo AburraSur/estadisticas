@@ -866,6 +866,32 @@ class DefaultController extends Controller
             
             return new Response(json_encode(array("sql"=>$sqlMat)));
     }
+    
+    
+    /**
+     * @Route("/extraccionMatriculados", name="extraccionMatriculados")
+     */
+    
+    public function extraccionMatriculadosAction() {
+        $em = $this->getDoctrine()->getManagger('sii');
+        
+        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            $impServi = "'".implode("','",$_POST['servicio'])."'";
+        }else{
+            $sqlCIIUS = "SELECT ciius.idciiu, ciius.descripcion FROM bas_ciius4 ciius";
+            $prepareCIIUS = $em->getConnection()->prepare($sqlCIIUS);
+            $prepareCIIUS->execute();
+            $ciius =  $prepareCIIUS->fetchAll();
+            return $this->render('default/extraccionMatriculados.html.twig',array('ciius' => $ciius));
+        }    
+            
+    }
  
     /**
      * @Route("/exportExcel", name="exportExcel")
