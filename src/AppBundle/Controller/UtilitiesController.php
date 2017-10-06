@@ -148,4 +148,24 @@ class UtilitiesController extends Controller
         }
         return $listaSedes;    
     }
+    
+    public function usuarios( $em ){
+        
+        $sql = "SELECT idcodigosirepcaja, nombreusuario FROM usuarios ";
+        $sqlUsuario = $em->getConnection()->prepare($sql);
+        $sqlUsuario->execute();
+        $usuario = $sqlUsuario->fetchAll();
+        for($i=0;$i<sizeof($usuario);$i++){
+            $listaUsuarios[$usuario[$i]['idcodigosirepcaja']] = $usuario[$i]['nombreusuario'];
+        }
+        return $listaUsuarios;    
+    }
+    
+    public function ciius($em) {
+        $sqlCIIUS = "SELECT ciius.idciiu, ciius.descripcion FROM bas_ciius ciius";
+            $prepareCIIUS = $em->getConnection()->prepare($sqlCIIUS);
+            $prepareCIIUS->execute();
+            $ciius =  $prepareCIIUS->fetchAll();
+            return $ciius;
+    }
 }

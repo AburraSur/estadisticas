@@ -32,8 +32,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4 form-group">
-                                <select name="servicio[]" id="servicio" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple >
-                                   <option value="" selected disabled>Seleccionar Servicios</option>
+                                <select name="servicio[]" id="servicio" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple title="Seleccionar Servicios">
                                     {% for servicio in Servicios %}
                                         <option value="{{ servicio.idservicio }}" >{{ servicio.idservicio }} - {{ servicio.nombre }}</option>
                                     {% endfor %}   
@@ -79,9 +78,10 @@
                                                 <tr>
                                                     <th>ID. Cliente</th>
                                                     <th>Cliente</th>
-                                                    <th>Operador</th>
                                                     <th>Sede</th>
+                                                    <th>Operador</th>
                                                     <th>Operación</th>
+                                                    <th>Num. recibo</th>
                                                     <th>ID. Servicio</th>
                                                     <th>Servicio</th>
                                                     <th>Cantidad</th>
@@ -92,9 +92,10 @@
                                                 <tr>
                                                     <th>ID. Cliente</th>
                                                     <th>Cliente</th>
-                                                    <th>Operador</th>
                                                     <th>Sede</th>
+                                                    <th>Operador</th>
                                                     <th>Operación</th>
+                                                    <th>Num. recibo</th>
                                                     <th>ID. Servicio</th>
                                                     <th>Servicio</th>
                                                     <th>Cantidad</th>

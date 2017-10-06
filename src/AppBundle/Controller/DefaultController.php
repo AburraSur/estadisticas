@@ -558,6 +558,7 @@ class DefaultController extends Controller
         
         $sedes = new UtilitiesController();
         $listaSedes = $sedes->sedes($SIIem);
+        $listaUsuarios = $sedes->usuarios($SIIem);
         
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -566,11 +567,24 @@ class DefaultController extends Controller
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
             $impServi = "'".implode("','",$_POST['servicio'])."'";
-            
-            $columns = array(0=>'identificacion', 1=>'Cliente', 2=>'operador', 3=>'numerooperacion',4=>'Servicio',5=>'idservicio', 6=>'cantidad', 7=>'valor');
+
+            $columns = ['identificacion',
+                    'Cliente',
+                    'Matricula',
+                    'Organizacion',
+                    'Categoria',
+                    'Sede',
+                    'cod. operador',
+                    'Operador',
+                    'Numero operacion',
+                    'Recibo',
+                    'idservicio',
+                    'Servicio',
+                    'Cantidad',
+                    'Valor'];
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente', recibos.operador, recibos.numerooperacion,servicios.nombre as 'Servicio',servicios.idservicio, recibos.cantidad, recibos.valor "
+            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente',recibos.matricula,recibos.anorenovacion as 'organijuridica',recibos.activos as 'categoria',recibos.sucursal, recibos.operador,recibos.horaoperacion, recibos.numerooperacion,recibos.numerorecibo, servicios.idservicio,servicios.nombre as 'Servicio', recibos.cantidad, recibos.valor "
                     . "FROM mreg_est_recibos recibos "
                     . "INNER JOIN mreg_servicios servicios "
                     . "WHERE recibos.servicio = servicios.idservicio "
@@ -586,7 +600,29 @@ class DefaultController extends Controller
             $resultadosServicios = $stmt->fetchAll();
             $totalFiltered = $totalData = sizeof($resultadosServicios);
             
+            
+            
             if($_POST['excel']==1){
+                for($i=0;$i<sizeof($resultadosServicios);$i++){
+                    if($resultadosServicios[$i]['matricula']!=''){
+                        $sqlOrg = "SELECT organizacion, categoria FROM mreg_est_matriculados WHERE matricula='".$resultadosServicios[$i]['matricula']."' ";
+                        $matri = $SIIem->getConnection()->prepare($sqlOrg);
+                        $matri->execute();
+                        $resultadosOrg = $matri->fetchAll();  
+                        $resultadosServicios[$i]['organijuridica'] = $resultadosOrg[0]['organizacion'];
+                        $resultadosServicios[$i]['categoria'] = $resultadosOrg[0]['categoria'];
+                    }else{
+                        $resultadosServicios[$i]['matricula']='N/A';
+                        $resultadosServicios[$i]['organijuridica'] = 'N/A';
+                        $resultadosServicios[$i]['categoria'] = 'N/A';
+                    }
+                    
+                    $sucursal = substr($resultadosServicios[$i]['numerooperacion'], 0,2);
+                    $resultadosServicios[$i]['sucursal'] = $listaSedes[$sucursal];
+                    $codOpera = substr($resultadosServicios[$i]['numerooperacion'], 2,3);
+                    $resultadosServicios[$i]['horaoperacion'] = $listaUsuarios[$codOpera];
+                   
+                }
                 $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns));
                 return $response;
             }else{
@@ -621,10 +657,10 @@ class DefaultController extends Controller
                 for($i=0;$i<sizeof($resultadosServicios);$i++){
                     $nestedData=array();
                     $nestedData[] = $resultadosServicios[$i]['identificacion'];
-                    $nestedData[] = $resultadosServicios[$i]['Cliente'];
-                    $nestedData[] = substr($resultadosServicios[$i]['numerooperacion'], 2,3);                    
+                    $nestedData[] = $resultadosServicios[$i]['Cliente'];                  
                     $sucursal = substr($resultadosServicios[$i]['numerooperacion'], 0,2);
                     $nestedData[] = $listaSedes[$sucursal];
+                    $nestedData[] = $resultadosServicios[$i]['operador'];  
                     $nestedData[] = $resultadosServicios[$i]['numerooperacion'];
                     $nestedData[] = $resultadosServicios[$i]['idservicio'];
                     $nestedData[] = $resultadosServicios[$i]['Servicio'];
@@ -873,21 +909,110 @@ class DefaultController extends Controller
      */
     
     public function extraccionMatriculadosAction() {
-        $em = $this->getDoctrine()->getManagger('sii');
+        $em = $this->getDoctrine()->getManager('sii');
         
-        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
-            $fechaInicial = explode("-", $_POST['dateInit']);
-            $fechaFinal = explode("-", $_POST['dateEnd']);
+        if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipios']) ){
+                        
+            if($_POST['estadoMat']==1){
+                $estado = "('MA','MI','IA')";
+            }else{
+                $estado = "('MC','IC')";
+            }
             
-            $fecIni = str_replace("-", "", $_POST['dateInit']);
-            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
-            $impServi = "'".implode("','",$_POST['servicio'])."'";
+            if($_POST['organizacion']==4){
+                
+            }else{
+            
+                $sqlExtracMatri = "SELECT 
+                            mei.matricula,
+                            mei.organizacion ,
+                            mei.categoria ,
+                            mei.ctrestmatricula,
+                            mei.numid,
+                            mei.nit,
+                            mei.razonsocial AS 'RAZON SOCIAL',
+                            mei.fecmatricula AS 'FEC-MATRICULA',
+                            mei.feccancelacion AS 'FEC-CANCELACION',
+                            mei.dircom AS 'DIR-COMERCIAL',
+                            mei.muncom AS 'MUNICIPIO',
+                            mei.telcom1 AS 'TEL-COM-1',
+                            mei.telcom2 AS 'TEL-COM-2',
+                            mei.telcom3 AS 'TEL-COM-3',
+                            mei.emailcom AS 'EMAIL-COM',
+                            mei.ciiu1 AS 'CIIU',
+                            mei.acttot AS 'ACTIVO TOTAL',
+                            mei.actvin AS 'VLR-ESTABLECIMIENTO',
+                            mev.numid AS idRepLegal,
+                            mev.nombre AS RepresentanteLegal,
+                            (CASE WHEN mei.organizacion='02' THEN mep.nit 
+                                ELSE mem.nit 
+                            END) AS 'idPropietario',
+                            (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
+                                ELSE mem.razonsocial 
+                            END) AS 'NombrePropietario'
+                        FROM
+                            mreg_est_inscritos mei
+                        LEFT JOIN mreg_est_vinculos mev ON mei.matricula = mev.matricula 
+                        LEFT JOIN mreg_est_matriculados mem ON mei.matricula = mem.matricula
+                        LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
+                        WHERE mei.matricula <> '' 
+                        AND mei.ctrestmatricula IN $estado 
+                        AND (";
+
+                $i=0;
+                foreach($_POST['organizacion'] as $organiza){
+                    if($organiza==0){
+                        $condiOrga = " (mei.organizacion = '01') ";
+                    }elseif($organiza==1){
+                        $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1')) ";
+                    }elseif($organiza==2){
+                        $condiOrga = " (mei.organizacion = '02' OR mei.categoria = '2' OR mei.categoria = '3') ";
+                    }elseif($organiza==3){
+                        $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND mei.categoria IN ('2','3')) ";
+                    }
+                    if($i==0){
+                        $sqlExtracMatri.= $condiOrga;
+                    }else {
+                        $sqlExtracMatri.=" OR $condiOrga";
+                    }
+                    $i++;
+                }
+                
+                $fechaWhere = $_POST['tipoFecha'];
+                $muncom = "'".implode("','",$_POST['municipios'])."'";
+                $activoIni = str_replace(",", "", $_POST['activoIni']);
+                $activoFinal = str_replace(",", "", $_POST['activoFinal']);
+                   
+                $sqlExtracMatri.=")";
+                if($_POST['tipoFecha']!='all'){
+                    $fechaInicial = explode("-", $_POST['dateInit']);
+                    $fechaFinal = explode("-", $_POST['dateEnd']);
+
+                    $fecIni = str_replace("-", "", $_POST['dateInit']);
+                    $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+                    $sqlExtracMatri.= " AND $fechaWhere BETWEEN '$fecIni' AND '$fecEnd' ";   
+                }
+                      
+                $sqlExtracMatri.= " AND mei.muncom IN ($muncom) "
+                      . " AND ((mei.acttot BETWEEN $activoIni AND $activoFinal ) OR (mei.actvin BETWEEN $activoIni AND $activoFinal)) ";
+                if($_POST['ciius'] !=''){
+                    $ciiu = "'".implode("','",$_POST['ciius'])."'";
+                    $sqlExtracMatri.=" AND mei.ciiu1 IN ($ciiu) ";
+                } 
+                
+                if($_POST['afiliacion']==1){
+                    $sqlExtracMatri.=" AND mem.ctrafiliacion=1 ";
+                }elseif($_POST['afiliacion']==2){
+                    $sqlExtracMatri.=" AND mem.ctrafiliacion<>1 ";
+                }
+                $sqlExtracMatri.= " GROUP BY mei.matricula ORDER BY mei.matricula DESC;";
+            }
+            
+            return new Response (json_encode(array('sqlExtracMatri'=>$sqlExtracMatri)));
         }else{
-            $sqlCIIUS = "SELECT ciius.idciiu, ciius.descripcion FROM bas_ciius4 ciius";
-            $prepareCIIUS = $em->getConnection()->prepare($sqlCIIUS);
-            $prepareCIIUS->execute();
-            $ciius =  $prepareCIIUS->fetchAll();
+            $consultCiius = new UtilitiesController();
+            $ciius = $consultCiius->ciius($em);
             return $this->render('default/extraccionMatriculados.html.twig',array('ciius' => $ciius));
         }    
             

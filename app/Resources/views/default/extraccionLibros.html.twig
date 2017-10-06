@@ -33,16 +33,15 @@
             </div>
     </div>     
             <div class="col-md-4">
-                <select name="libro[]" id="libro" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple >
-                    <option value="" disabled>Seleccionar Libros</option>
+                <select name="libro[]" id="libro" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple title="Seleccionar Libros">
                     {% for libro in libros %}
                         <option value="{{ libro.idlibro }}" >{{ libro.nombre }}</option>
                     {% endfor %}   
                 </select> 
             </div>
             <div class="col-md-4"> 
-                <select name="acto[]" id="acto" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple >
-                    <option value="" disabled>Seleccionar Actos</option>
+                <select name="acto[]" id="acto" class="form-control selectpicker" data-live-search="true" data-actions-box="true" multiple title="Seleccionar Actos" >
+                    
                 </select>  
                 <input type="hidden" name="excel" value="1" />
                 <input type="hidden" name="libroActo" name="libroActo" value="1" />
