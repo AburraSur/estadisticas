@@ -23,8 +23,9 @@
                     <option value="1">Personas Juridicas</option>  
                     <option value="2">Establecimientos</option>
                     <option value="3">Agencias y Sucursales</option>
+                    <option value="4">E.S.A.L</option>
                     <option data-divider="true"></option>
-                    <option value="4">Establecimientos otra jurisdicción</option>
+                    <option value="5">Establecimientos otra jurisdicción</option>
                 </select>
             </div>
             <div class="form-group col-md-3">
@@ -35,7 +36,7 @@
                 </select>
             </div>        
             <div class="form-group col-md-3">
-                <select name="municipio[]" id="municipios" class="form-control selectpicker required" data-style="btn-primary" data-live-search="true" data-actions-box="true" multiple title="Municipios" >
+                <select name="municipio[]" id="municipio" class="form-control selectpicker required" data-style="btn-primary" data-live-search="true" data-actions-box="true" multiple title="Municipios" >
                     <option value="05129">05129 - Caldas</option>
                     <option value="05266">05266 - Envigado</option>  
                     <option value="05360">05360 - Itagüí</option>  
@@ -47,7 +48,8 @@
         <div class="col-md-12">
             <div class="col-md-3 form-group">
                  <select name="ciius[]" id="ciius" class="selectpicker form-control" data-style="btn-primary" data-live-search="true" data-actions-box="true" multiple title="CIIUS" >
-                    {% for ciiusValue in ciius %}
+                     <option value="all" selected ></option>
+                     {% for ciiusValue in ciius %}
                         <option value="{{ ciiusValue.idciiu }}" >{{ ciiusValue.idciiu }} - {{ ciiusValue.descripcion }}</option>
                     {% endfor %}   
                 </select>    
@@ -88,17 +90,16 @@
             </div>
             <div class="col-md-3">
                 <input type="hidden" name="excel" value="1" />
-                <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
-    </form>        
+                <button class="btn btn-success hide" id="excelB" ><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</button>        
                 <a class="btn btn-primary" id="search" >Generar</a>
                 <a class="btn btn-primary" id="clear" >Limpiar</a>
             </div>
         </div>
-            
+    </form>        
     <div class="clearfix"><hr></div>
-    <div id="detallado" class="tab-pane fade">
+    <div id="detallado" class="tab-pane">
         <div class="clearfix"><hr></div>
-        <div class="panel panel-success">
+        <div class="panel panel-primary">
             <div class="panel-heading">
                 <h3>Informe Detallado<span class="periodo" ></span></h3>
             </div>
@@ -106,28 +107,56 @@
                 <table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
                     <thead>
                         <tr>
-                            <th>ID. Cliente</th>
-                            <th>Cliente</th>
-                            <th>Operador</th>
-                            <th>Sede</th>
-                            <th>Operación</th>
-                            <th>ID. Servicio</th>
-                            <th>Servicio</th>
-                            <th>Cantidad</th>
-                            <th>Valor</th>
+                            <th>Matricula</th>
+                            <th>Organizacion </th>
+                            <th>Categoria </th>
+                            <th>Ets. Matricula</th>
+                            <th>Identificación</th>
+                            <th>NIT</th>
+                            <th>RAZON SOCIAL</th>
+                            <th>FEC-MATRICULA</th>
+                            <th>FEC-RENOVACIÓN</th>
+                            <th>FEC-CANCELACIÓN</th>
+                            {#<th>DIR-COMERCIAL</th>
+                            <th>MUNICIPIO</th>
+                            <th>TEL-COM-1</th>
+                            <th>TEL-COM-2</th>
+                            <th>TEL-COM-3</th>
+                            <th>EMAIL-COM</th>
+                            <th>CIIU</th>
+                            <th>ACTIVO TOTAL</th>
+                            <th>VLR-ESTABLECIMIENTO</th>
+                            <th>ID. Rep. Legal</th>
+                            <th>Representante Legal</th>
+                            <th>ID. Propietario</th>
+                            <th>Propietario</th>#}
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
-                            <th>ID. Cliente</th>
-                            <th>Cliente</th>
-                            <th>Operador</th>
-                            <th>Sede</th>
-                            <th>Operación</th>
-                            <th>ID. Servicio</th>
-                            <th>Servicio</th>
-                            <th>Cantidad</th>
-                            <th>Valor</th>
+                            <th>Matricula</th>
+                            <th>Organizacion </th>
+                            <th>Categoria </th>
+                            <th>Ets. Matricula</th>
+                            <th>Identificación</th>
+                            <th>NIT</th>
+                            <th>RAZON SOCIAL</th>
+                            <th>FEC-MATRICULA</th>
+                            <th>FEC-RENOVACIÓN</th>
+                            <th>FEC-CANCELACIÓN</th>
+                            {#<th>DIR-COMERCIAL</th>
+                            <th>MUNICIPIO</th>
+                            <th>TEL-COM-1</th>
+                            <th>TEL-COM-2</th>
+                            <th>TEL-COM-3</th>
+                            <th>EMAIL-COM</th>
+                            <th>CIIU</th>
+                            <th>ACTIVO TOTAL</th>
+                            <th>VLR-ESTABLECIMIENTO</th>
+                            <th>ID. Rep. Legal</th>
+                            <th>Representante Legal</th>
+                            <th>ID. Propietario</th>
+                            <th>Propietario</th>#}
                         </tr>
                     </tfoot>
                 </table>    
@@ -143,6 +172,8 @@
             {% endjavascripts %}
     <script>
         $(document).ready(function() {  
+            $('#extraccion').dataTable();
+            
             $('.datepicker').datepicker({
                 language: 'es',
                 autoclose: true,
@@ -162,7 +193,7 @@
             
             $('#organizacion').change(function(){
                 var val=$(this).val();
-                if(val.indexOf('4')>0){
+                if(val.indexOf('5')>0){
                     $('#organizacion').selectpicker('deselectAll');
                     $('#organizacion').val(4);
                     $('#organizacion').selectpicker('refresh');
@@ -172,6 +203,14 @@
             $(".numeros").on('keyup', function(){
                 var n = parseInt($(this).val().replace(/\D/g,''),10);
                 $(this).val(n.toLocaleString());
+            });
+            
+            $('#excelB').click(function(){
+                $.blockUI({
+                        message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere esto puede tardar unos minutos....</div>'
+                    });
+
+                    setTimeout($.unblockUI,3000);
             });
             
         {# $('#exportExcel').click(function(){
@@ -186,13 +225,13 @@
                     return false;
             });   #} 
             $('#search').click(function(){
-                var tablaServicios = $('#tablaServicios').dataTable().fnDestroy();
+                var tablaServicios = $('#extraccion').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
                 var organizacion = $('#organizacion').val();
                 var estadoMat = $('#estadoMat').val();
                 var afiliacion = $('#afiliacion').val();
-                var municipios = $('#municipios').val();
+                var municipio = $('#municipio').val();
                 var ciius = $('#ciius').val();
                 var activoIni = $('#activoIni').val();
                 var activoFinal = $('#activoFinal').val();
@@ -229,9 +268,6 @@
                     conterror = conterror-1;
                 });
                 
-                /*$.blockUI({
-                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
-                });  */        
                                   
                 if(conterror == 0){
 
@@ -250,15 +286,17 @@
                                 organizacion:organizacion,
                                 estadoMat:estadoMat,
                                 afiliacion:afiliacion,
-                                municipios:municipios,
+                                municipio:municipio,
                                 ciius:ciius,
                                 activoIni:activoIni,
                                 activoFinal:activoFinal,
                                 tipoFecha:tipoFecha,
                                 excel: '0'
-                            },
+                            },       
                         }
+                        
                     } );
+                    $('#excelB').removeClass('hide');
 
                     return false;
                 }else{

@@ -41,33 +41,35 @@ class DefaultController extends Controller
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
 //          Consulta para los matriculados en el rango de fechas consultado  
-            $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren  "
-                    . "FROM mreg_est_matriculados mem  "
-                    . "WHERE mem.fecmatricula between :fecIni AND :fecEnd  "
-                    . "AND mem.estmatricula NOT IN ('NA','NM') "
-                    . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' ";
+            $sqlMat = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren  "
+                    . "FROM mreg_est_inscritos inscritos  "
+                    . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                    . "WHERE inscritos.fecmatricula between :fecIni AND :fecEnd  "
+                    . "AND inscritos.ctrestmatricula NOT IN ('NA','NM') "
+                    . "AND inscritos.matricula IS NOT NULL "
+                    . "AND inscritos.matricula !='' ";
             
 //          Consulta para las matriculas renovadas en el rango de fechas consultado  
-            $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
-                    . "FROM mreg_est_matriculados mem  "
-                    . "WHERE mem.fecmatricula < :fecIni "
-                    . "AND mem.fecrenovacion between :fecIni AND :fecEnd  "
-                    . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' "
-                    . "AND mem.ultanoren ='".$fechaFinal[0]."' ";
+            $sqlRen = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+                    . "FROM mreg_est_inscritos inscritos  "
+                    . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                    . "WHERE inscritos.fecmatricula < :fecIni "
+                    . "AND inscritos.fecrenovacion between :fecIni AND :fecEnd  "
+                    . "AND inscritos.matricula IS NOT NULL "
+                    . "AND inscritos.matricula !='' "
+                    . "AND inscritos.ultanoren ='".$fechaFinal[0]."' ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
-            $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
-                    . "FROM mreg_est_matriculados mem  "
-                    . "INNER JOIN mreg_est_inscripciones mei "
-                    . "WHERE mem.matricula = mei.matricula "
-                    . "AND mei.fecharegistro between :fecIni AND :fecEnd "
-                    //. "AND mem.estmatricula IN ('MC','IC','MF') "
-                    . "AND mem.estmatricula IN ('MC','IC') "
-                    . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' "
-                    . "AND libro IN ('RM15' , 'RM51', 'RM53', 'RM54', 'RM55', 'RM13') "
+            $sqlCan = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+                    . "FROM mreg_est_inscritos inscritos  "
+                    . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                    . "INNER JOIN mreg_est_inscripciones mei ON  inscritos.matricula = mei.matricula "
+                    . "WHERE mei.fecharegistro between :fecIni AND :fecEnd "
+                    //. "AND inscritos.ctrestmatricula IN ('MC','IC','MF') "
+                    . "AND inscritos.ctrestmatricula IN ('MC','IC') "
+                    . "AND inscritos.matricula IS NOT NULL "
+                    . "AND inscritos.matricula !='' "
+                    . "AND libro IN ('RM15' , 'RM51', 'RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
                     . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
             
             
@@ -87,7 +89,8 @@ class DefaultController extends Controller
                             <thead>
                                 <tr>
                                     <th>Matricula</th>
-                                    <th>Organizacion</th>
+                                    <th>Cod. Organización</th>
+                                    <th>Organización</th>
                                     <th>Categoria</th>
                                     <th>Razón Social</th>
                                     <th>Municipio</th>
@@ -101,6 +104,8 @@ class DefaultController extends Controller
                             <tbody>";
             
 //            Se invoca objeto constructor de las tablas resumen como parametros se envia el resultado de la consulta y la categoria Matriculados-Renovados-Cancelados 
+            
+            $excelRegistro = array();
             $tabla = new UtilitiesController();
             $totalMatRen = 0;
             $resultadosMat = $stmt->fetchAll();
@@ -108,21 +113,61 @@ class DefaultController extends Controller
             $tablaMatri['matriculados'] = $resumenMat['tabla'];
             $tablaDetalle = $resumenMat['tablaDetalle'];
             $totalMatRen = $totalMatRen+$resumenMat['granTotal'];
+            $excelRegistro[] = $resumenMat['excelRegistro'];
             
             $resultadosRen = $strv->fetchAll();
             $resumenRen = $tabla->construirTablaResumen($resultadosRen, 'renovados', $tablaDetalle);
             $tablaMatri['renovados'] = $resumenRen['tabla'];
             $tablaDetalle = $resumenRen['tablaDetalle'];
             $totalMatRen = $totalMatRen + $resumenRen['granTotal'];
+            $excelRegistro[] = $resumenRen['excelRegistro'];
                     
             $resultadosCan = $stcn->fetchAll();
             $resumenCan = $tabla->construirTablaResumen($resultadosCan, 'cancelados', $tablaDetalle);
             $tablaMatri['cancelados'] = $resumenCan['tabla'];
             $tablaDetalle = $resumenCan['tablaDetalle'];
+            $excelRegistro[] = $resumenCan['excelRegistro'];
+            
+//            $fecha = new \DateTime();
+//            $fecExcel = $fecha->format('YmdHis');
+//            $nomExcel = 'ExtraccionMatRenCan'.$fecExcel;
+//            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel));
+            //return $response;
+            
+            if($_POST['excel']==1){
+                
+//                for($i=0;$i<sizeof($excelRegistro);$i++){
+//                    foreach($excelRegistro[$i] as $value){
+//                       $arrayExcel[] = $value; 
+//                    }
+//                }
+                
+                //for($i=0;$i<sizeof($excelRegistro);$i++){
+                foreach ($excelRegistro as $key => $valueExcel) {
+                    foreach($valueExcel as $value){
+                       $arrayExcel[] = $value; 
+                    }
+                }
 
             
+                $fecha = new \DateTime();
+                $fecExcel = $fecha->format('YmdHis');
+                $nomExcel = 'ResumenMatRenCan'.$fecExcel;
+                $columns[] = 'Municipio';
+                $columns[]= 'P. Naturales';
+                $columns[]= 'Establecimientos';
+                $columns[]= 'Sociedades';
+                $columns[]= 'Agencias - Sucursales';
+                $columns[]= 'ESAL';
+                $columns[]= 'Civil';
+                $columns[]= 'Total';
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel));
+                return $response;
+            }else{
+                return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'totalMatRen' => number_format($totalMatRen,"0","",".") , 'excelRegistro' => $excelRegistro , 'resultadosCan'=>$resultadosCan)));
+            }
 //            return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'tablaDetalle' => $tablaDetalle )));
-            return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'totalMatRen' => number_format($totalMatRen,"0","",".") )));
+            
         }else{
             return $this->render('default/estadisticasGenerales.html.twig');
         }
@@ -140,48 +185,49 @@ class DefaultController extends Controller
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
-            $columns = array( 
-            // datatable column index  => database column name
-                    0 =>'matricula', 
-                    1 => 'organizacion',
-                    2=> 'categoria',
-                    3=>'muncom',
-                    4=>'razonsocial',
-                    5=> 'estado',
-                    6=>'fecmatricula',
-                    7=>'fecrenovacion',
-                    8=>'feccancelacion',
-                    9=>'ultanoren',
-            );
+            $columns =['matricula', 
+                    'Cod organizacion',
+                    'organizacion',
+                    'categoria',
+                    'muncom',
+                    'razonsocial',
+                    'estado',
+                    'fecmatricula',
+                    'fecrenovacion',
+                    'feccancelacion',
+                    'ultanoren',
+           ];
             
 //          Consulta para los matriculados en el rango de fechas consultado  
-            $sqlMatT = $sqlMat = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren  "
-                    . "FROM mreg_est_matriculados mem  "
-                    . "WHERE mem.fecmatricula between :fecIni AND :fecEnd  "
-                    . "AND mem.estmatricula NOT IN ('NA','NM') "
-                    . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' ";
+            $sqlMatT = $sqlMat = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren  "
+                    . "FROM mreg_est_inscritos inscritos  "
+                    . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                    . "WHERE inscritos.fecmatricula between :fecIni AND :fecEnd  "
+                    . "AND inscritos.ctrestmatricula NOT IN ('NA','NM') "
+                    . "AND inscritos.matricula IS NOT NULL "
+                    . "AND inscritos.matricula !='' ";
             
 //          Consulta para las matriculas renovadas en el rango de fechas consultado  
-            $sqlRenT = $sqlRen = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
-                    . "FROM mreg_est_matriculados mem  "
-                    . "WHERE mem.fecmatricula < :fecIni "
-                    . "AND mem.fecrenovacion between :fecIni AND :fecEnd  "
-                    . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' "
-                    . "AND mem.ultanoren ='".$fechaFinal[0]."' ";
+            $sqlRenT = $sqlRen = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+                    . "FROM mreg_est_inscritos inscritos  "
+                    . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                    . "WHERE inscritos.fecmatricula < :fecIni "
+                    . "AND inscritos.fecrenovacion between :fecIni AND :fecEnd  "
+                    . "AND inscritos.matricula IS NOT NULL "
+                    . "AND inscritos.matricula !='' "
+                    . "AND inscritos.ultanoren ='".$fechaFinal[0]."' ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
-            $sqlCanT = $sqlCan = "SELECT mem.matricula, mem.organizacion, mem.categoria, mem.muncom, mem.razonsocial, mem.fecmatricula, mem.fecrenovacion, mem.feccancelacion, mem.ultanoren "
-                    . "FROM mreg_est_matriculados mem  "
-                    . "INNER JOIN mreg_est_inscripciones mei "
-                    . "WHERE mem.matricula = mei.matricula "
-                    . "AND mei.fecharegistro between :fecIni AND :fecEnd "
-                    //. "AND mem.estmatricula IN ('MC','IC','MF') "
-                    . "AND mem.estmatricula IN ('MC','IC') "
-                    . "AND mem.matricula IS NOT NULL "
-                    . "AND mem.matricula !='' "
-                    . "AND libro IN ('RM15' , 'RM51', 'RM53', 'RM54', 'RM55', 'RM13') "
+            $sqlCanT = $sqlCan = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+                    . "FROM mreg_est_inscritos inscritos  "
+                    . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                    . "INNER JOIN mreg_est_inscripciones mei ON  inscritos.matricula = mei.matricula  "
+                    . "WHERE mei.fecharegistro between :fecIni AND :fecEnd "
+                    //. "AND inscritos.ctrestmatricula IN ('MC','IC','MF') "
+                    . "AND inscritos.ctrestmatricula IN ('MC','IC') "
+                    . "AND inscritos.matricula IS NOT NULL "
+                    . "AND inscritos.matricula !='' "
+                    . "AND libro IN ('RM15' , 'RM51','RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
                     . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
             
             $stmtT = $SIIem->getConnection()->prepare($sqlMatT);
@@ -208,6 +254,7 @@ class DefaultController extends Controller
                 if(isset($matT[$i]["matricula"])){                    
                     $excelData[] = $matT[$i]["matricula"];
                     $excelData[] = $matT[$i]["organizacion"];
+                    $excelData[] = $matT[$i]["descripcion"];
                     $excelData[] = $matT[$i]["categoria"];
                     $posMuni=$matT[$i]["muncom"];
                     if(array_key_exists($posMuni, $codMuni)){
@@ -234,6 +281,7 @@ class DefaultController extends Controller
                 if(isset($renT[$i]["matricula"])){
                     $excelData[] = $renT[$i]["matricula"];
                     $excelData[] = $renT[$i]["organizacion"];
+                    $excelData[] = $renT[$i]["descripcion"];
                     $excelData[] = $renT[$i]["categoria"];
                     $posMuni=$renT[$i]["muncom"];
                     if(array_key_exists($posMuni, $codMuni)){
@@ -258,6 +306,7 @@ class DefaultController extends Controller
                 if(isset($canT[$i]["matricula"])){
                     $excelData[] = $canT[$i]["matricula"];
                     $excelData[] = $canT[$i]["organizacion"];
+                    $excelData[] = $canT[$i]["descripcion"];
                     $excelData[] = $canT[$i]["categoria"];
                     $posMuni=$canT[$i]["muncom"];
                     if(array_key_exists($posMuni, $codMuni)){
@@ -276,7 +325,11 @@ class DefaultController extends Controller
                     $totalFiltered++;
                 }    
             }
-            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns));
+            
+            $fecha = new \DateTime();
+            $fecExcel = $fecha->format('YmdHis');
+            $nomExcel = 'ExtraccionMatRenCan'.$fecExcel;
+            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel));
             return $response;
         }else{  
             $t1 = sizeof($matT);
@@ -286,9 +339,9 @@ class DefaultController extends Controller
             $totalFiltered = $totalData = $t1 + $t2 + $t3;
             
             if( !empty($_POST['columns'][1]['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
-                $sqlMat.=" AND mem.muncom = '".$_POST['columns'][1]['search']['value']."' ";
-                $sqlRen.=" AND mem.muncom = '".$_POST['columns'][1]['search']['value']."' ";
-                $sqlCan.=" AND mem.muncom = '".$_POST['columns'][1]['search']['value']."' ";
+                $sqlMat.=" AND inscritos.muncom = '".$_POST['columns'][1]['search']['value']."' ";
+                $sqlRen.=" AND inscritos.muncom = '".$_POST['columns'][1]['search']['value']."' ";
+                $sqlCan.=" AND inscritos.muncom = '".$_POST['columns'][1]['search']['value']."' ";
 
             }
             
@@ -357,6 +410,7 @@ class DefaultController extends Controller
                 if(isset($matriculados[$i]["matricula"])){                    
                     $nestedData[] = $matriculados[$i]["matricula"];
                     $nestedData[] = $matriculados[$i]["organizacion"];
+                    $nestedData[] = $matriculados[$i]["descripcion"];
                     $nestedData[] = $matriculados[$i]["categoria"];
                     $posMuni=$matriculados[$i]["muncom"];
                     if(array_key_exists($posMuni, $codMuni)){
@@ -383,6 +437,7 @@ class DefaultController extends Controller
                 if(isset($renovados[$i]["matricula"])){
                     $nestedData[] = $renovados[$i]["matricula"];
                     $nestedData[] = $renovados[$i]["organizacion"];
+                    $nestedData[] = $renovados[$i]["descripcion"];
                     $nestedData[] = $renovados[$i]["categoria"];
                     $posMuni=$renovados[$i]["muncom"];
                     if(array_key_exists($posMuni, $codMuni)){
@@ -407,6 +462,7 @@ class DefaultController extends Controller
                 if(isset($cancelados[$i]["matricula"])){
                     $nestedData[] = $cancelados[$i]["matricula"];
                     $nestedData[] = $cancelados[$i]["organizacion"];
+                    $nestedData[] = $cancelados[$i]["descripcion"];
                     $nestedData[] = $cancelados[$i]["categoria"];
                     $posMuni=$cancelados[$i]["muncom"];
                     if(array_key_exists($posMuni, $codMuni)){
@@ -623,7 +679,12 @@ class DefaultController extends Controller
                     $resultadosServicios[$i]['horaoperacion'] = $listaUsuarios[$codOpera];
                    
                 }
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns));
+                
+                
+                $fecha = new \DateTime();
+                $fecExcel = $fecha->format('YmdHis');
+                $nomExcel = 'ExtraccionServicios'.$fecExcel;
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns , 'nomExcel'=>$nomExcel ));
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -662,6 +723,7 @@ class DefaultController extends Controller
                     $nestedData[] = $listaSedes[$sucursal];
                     $nestedData[] = $resultadosServicios[$i]['operador'];  
                     $nestedData[] = $resultadosServicios[$i]['numerooperacion'];
+                    $nestedData[] = $resultadosServicios[$i]['numerorecibo'];
                     $nestedData[] = $resultadosServicios[$i]['idservicio'];
                     $nestedData[] = $resultadosServicios[$i]['Servicio'];
                     $nestedData[] = number_format($resultadosServicios[$i]['cantidad'],"0","",".");
@@ -839,7 +901,11 @@ class DefaultController extends Controller
                        
             
             if($_POST['excel']==1){
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns));
+                
+                    $fecha = new \DateTime();
+                    $fecExcel = $fecha->format('YmdHis');
+                    $nomExcel = 'ExtraccionLibros'.$fecExcel;
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel));
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -911,7 +977,7 @@ class DefaultController extends Controller
     public function extraccionMatriculadosAction() {
         $em = $this->getDoctrine()->getManager('sii');
         
-        if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipios']) ){
+        if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipio']) ){
                         
             if($_POST['estadoMat']==1){
                 $estado = "('MA','MI','IA')";
@@ -920,19 +986,22 @@ class DefaultController extends Controller
             }
             
             
-            if($_POST['organizacion']==4){
+            //if($_POST['organizacion']==4){
                 
-            }else{
+                
+                
+            //}else{
             
                 $sqlExtracMatri = "SELECT 
                             mei.matricula,
                             mei.organizacion ,
                             mei.categoria ,
                             mei.ctrestmatricula,
-                            mei.numid,
-                            mei.nit,
-                            mei.razonsocial AS 'RAZON SOCIAL',
+                            mei.numid AS 'numidMat',
+                            mei.nit AS 'nitMat',
+                            mei.razonsocial AS 'razonsocialMat',
                             mei.fecmatricula AS 'FEC-MATRICULA',
+                            mei.fecrenovacion AS 'FEC-RENOVACION',
                             mei.feccancelacion AS 'FEC-CANCELACION',
                             mei.dircom AS 'DIR-COMERCIAL',
                             mei.muncom AS 'MUNICIPIO',
@@ -941,20 +1010,20 @@ class DefaultController extends Controller
                             mei.telcom3 AS 'TEL-COM-3',
                             mei.emailcom AS 'EMAIL-COM',
                             mei.ciiu1 AS 'CIIU',
-                            mei.acttot AS 'ACTIVO TOTAL',
-                            mei.actvin AS 'VLR-ESTABLECIMIENTO',
+                            mei.acttot,
+                            mei.actvin,
                             mev.numid AS idRepLegal,
                             mev.nombre AS RepresentanteLegal,
                             (CASE WHEN mei.organizacion='02' THEN mep.nit 
-                                ELSE mem.nit 
+                                ELSE inscritos.nit 
                             END) AS 'idPropietario',
                             (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
-                                ELSE mem.razonsocial 
+                                ELSE inscritos.razonsocial 
                             END) AS 'NombrePropietario'
                         FROM
                             mreg_est_inscritos mei
                         LEFT JOIN mreg_est_vinculos mev ON mei.matricula = mev.matricula 
-                        LEFT JOIN mreg_est_matriculados mem ON mei.matricula = mem.matricula
+                        LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
                         LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
                         WHERE mei.matricula <> '' 
                         AND mei.ctrestmatricula IN $estado 
@@ -970,6 +1039,40 @@ class DefaultController extends Controller
                         $condiOrga = " (mei.organizacion = '02' OR mei.categoria = '2' OR mei.categoria = '3') ";
                     }elseif($organiza==3){
                         $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND mei.categoria IN ('2','3')) ";
+                    }elseif($organiza==4){
+                        $condiOrga = " mei.organizacion IN ('12','14') ";
+                    }elseif($organiza==5){
+                        $sqlExtracMatri = "SELECT 
+                                mei.matricula,
+                                mei.organizacion ,
+                                mei.categoria ,
+                                mei.ctrestmatricula,
+                                mei.numid AS 'numidMat',
+                                mei.nit AS 'nitMat',
+                                mei.razonsocial AS 'razonsocialMat',
+                                mei.fecmatricula AS 'FEC-MATRICULA',
+                                mei.fecrenovacion AS 'FEC-RENOVACION',
+                                mei.feccancelacion AS 'FEC-CANCELACION',
+                                mei.dircom AS 'DIR-COMERCIAL',
+                                mei.muncom AS 'MUNICIPIO',
+                                mei.telcom1 AS 'TEL-COM-1',
+                                mei.telcom2 AS 'TEL-COM-2',
+                                mei.telcom3 AS 'TEL-COM-3',
+                                mei.emailcom AS 'EMAIL-COM',
+                                mei.ciiu1 AS 'CIIU',
+                                mei.acttot,
+                                mei.actvin,
+                                mep.identificacion AS 'Ident. Propietario',
+                                mep.razonsocial AS 'Propietario'
+                            FROM
+                                mreg_est_propietarios mep
+                            LEFT JOIN   mreg_est_inscritos mei ON mep.matricula = mei.matricula
+                            WHERE mei.matricula <> '' 
+                            AND mei.ctrestmatricula IN $estado"; 
+                        
+                            $condiOrga = "AND ((mei.organizacion = '02')
+                            AND mep.codigocamara != '55'
+                            AND mep.estado='V' ";
                     }
                     if($i==0){
                         $sqlExtracMatri.= $condiOrga;
@@ -980,7 +1083,7 @@ class DefaultController extends Controller
                 }
                 
                 $fechaWhere = $_POST['tipoFecha'];
-                $muncom = "'".implode("','",$_POST['municipios'])."'";
+                $muncom = "'".implode("','",$_POST['municipio'])."'";
                 $activoIni = str_replace(",", "", $_POST['activoIni']);
                 $activoFinal = str_replace(",", "", $_POST['activoFinal']);
                    
@@ -996,20 +1099,140 @@ class DefaultController extends Controller
                       
                 $sqlExtracMatri.= " AND mei.muncom IN ($muncom) "
                       . " AND ((mei.acttot BETWEEN $activoIni AND $activoFinal ) OR (mei.actvin BETWEEN $activoIni AND $activoFinal)) ";
-                if($_POST['ciius'] !=''){
+                if(isset($_POST['ciius'][1])){
                     $ciiu = "'".implode("','",$_POST['ciius'])."'";
                     $sqlExtracMatri.=" AND mei.ciiu1 IN ($ciiu) ";
                 } 
                 
                 if($_POST['afiliacion']==1){
-                    $sqlExtracMatri.=" AND mem.ctrafiliacion=1 ";
+                    $sqlExtracMatri.=" AND inscritos.ctrafiliacion=1 ";
                 }elseif($_POST['afiliacion']==2){
-                    $sqlExtracMatri.=" AND mem.ctrafiliacion<>1 ";
+                    $sqlExtracMatri.=" AND inscritos.ctrafiliacion<>1 ";
                 }
-                $sqlExtracMatri.= " GROUP BY mei.matricula ORDER BY mei.matricula DESC;";
-            }
+                
+                
+                $stmt = $em->getConnection()->prepare($sqlExtracMatri." GROUP BY mei.matricula ORDER BY mei.matricula DESC;");
+                $stmt->execute();
+                $resultados = $stmt->fetchAll();
+                $totalFiltered = $totalData = sizeof($resultados);
+                
+                if($_POST['excel']==1){
+                    $columns=['Matricula',
+                            'Organizacion ',
+                            'Categoria ',
+                            'Ets. Afiliación',
+                            'Identificación',
+                            'NIT',
+                            'RAZON SOCIAL',
+                            'FEC-MATRICULA',
+                            'FEC-RENOVACION',
+                            'FEC-CANCELACION',
+                            'DIR-COMERCIAL',
+                            'MUNICIPIO',
+                            'TEL-COM-1',
+                            'TEL-COM-2',
+                            'TEL-COM-3',
+                            'EMAIL-COM',
+                            'CIIU',
+                            'ACTIVO TOTAL',
+                            'VLR-ESTABLECIMIENTO',
+                            'ID. Rep. Legal',
+                            'Representante Legal',
+                            'ID. Propietario',
+                            'Propietario'];
+                    $fecha = new \DateTime();
+                    $fecExcel = $fecha->format('YmdHis');
+                    $nomExcel = 'ExtraccionMatriculados'.$fecExcel;
+                    $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultados , 'columnas'=>$columns , 'nomExcel'=>$nomExcel ));
+                    return $response;
+                }else{
+                    if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
+                        $sqlExtracMatri.=" AND (mei.matricula LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.organizacion  LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.categoria  LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.ctrestmatricula LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.numid LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.nit LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.razonsocial LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.fecmatricula LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.fecrenovacion LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.feccancelacion LIKE '".$_POST['search']['value']."%' ";
+                        /*$sqlExtracMatri.=" OR mei.dircom LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.muncom LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.telcom1 LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.telcom2 LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.telcom3 LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.emailcom LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.ciiu1 LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.acttot LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mei.actvin LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mev.numid LIKE '".$_POST['search']['value']."%' ";
+                        $sqlExtracMatri.=" OR mev.nombre LIKE '".$_POST['search']['value']."%' )";*/
+                    }
+                    $sqlExtracMatri.= " GROUP BY mei.matricula ";
+                    $stmt = $em->getConnection()->prepare($sqlExtracMatri);
+        //            Ejecución de las consultas
+                    $stmt->execute();
+                    $resultados = $stmt->fetchAll();
+                    $totalFiltered = sizeof($resultados);
+                    
+                    $sqlExtracMatri.= " ORDER BY mei.matricula DESC LIMIT ".$_POST['start']." ,".$_POST['length']."   ";
+
+
+        //            Parametrizacion de cada una de las consultas para extracción de bases de datos
+                    $stmt = $em->getConnection()->prepare($sqlExtracMatri);
+        //            Ejecución de las consultas
+                    $stmt->execute();
+                    $resultados = $stmt->fetchAll();
+
+        //           Ciclo para crear contadores de valores y cantidades por servicio, se construye la tabla detalla con la información consultada 
+                    $idservAux = 0;
+                    for($i=0;$i<sizeof($resultados);$i++){
+                        $nestedData=array();
+                        $nestedData[] = $resultados[$i]['matricula'];
+                        $nestedData[] = $resultados[$i]['organizacion'];
+                        $nestedData[] = $resultados[$i]['categoria'];                  
+                        $nestedData[] = $resultados[$i]['ctrestmatricula'];
+                        $nestedData[] = $resultados[$i]['numidMat'];
+                        $nestedData[] = $resultados[$i]['nitMat'];
+                        $nestedData[] = $resultados[$i]['razonsocialMat'];
+                        $nestedData[] = $resultados[$i]['FEC-MATRICULA'];
+                        $nestedData[] = $resultados[$i]['FEC-RENOVACION'];
+                        $nestedData[] = $resultados[$i]['FEC-CANCELACION'];
+                        /*$nestedData[] = $resultados[$i]['DIR-COMERCIAL'];
+                        $nestedData[] = $resultados[$i]['MUNICIPIO'];
+                        $nestedData[] = $resultados[$i]['TEL-COM-1'];
+                        $nestedData[] = $resultados[$i]['TEL-COM-2'];
+                        $nestedData[] = $resultados[$i]['TEL-COM-3'];
+                        $nestedData[] = $resultados[$i]['EMAIL-COM'];
+                        $nestedData[] = $resultados[$i]['CIIU'];
+                        $nestedData[] = number_format($resultados[$i]['acttot'],"0","",".");
+                        $nestedData[] = number_format($resultados[$i]['actvin'],"0","",".");                        
+                        $nestedData[] = $resultados[$i]['idRepLegal'];  
+                        $nestedData[] = $resultados[$i]['RepresentanteLegal'];  
+                        $nestedData[] = $resultados[$i]['idPropietario'];
+                        $nestedData[] = $resultados[$i]['NombrePropietario'];*/
+
+                        $data[] = $nestedData;
+                    }           
+
+                    $json_data = array(
+                                "draw"            => intval( $_POST['draw'] ),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+                                "recordsTotal"    => intval( $totalData ),  // total number of records
+                                "recordsFiltered" => intval( $totalFiltered ), // total number of records after searching, if there is no searching then totalFiltered = totalData
+                                "data"            => $data ,  // total data array
+                                "i"               => $sqlExtracMatri  
+                                );
+
+        //            echo json_encode($json_data);
+
+
+                    return new Response(json_encode($json_data ));
+
+                }
+            //}
             
-            return new Response (json_encode(array('sqlExtracMatri'=>$sqlExtracMatri)));
+            //return new Response (json_encode(array('sqlExtracMatri'=>$sqlExtracMatri)));
         }else{
             $consultCiius = new UtilitiesController();
             $ciius = $consultCiius->ciius($em);
@@ -1021,7 +1244,7 @@ class DefaultController extends Controller
     /**
      * @Route("/exportExcel", name="exportExcel")
      */
-    public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL)
+    public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL , $nomExcel=NULL)
     {
         
         
@@ -1042,20 +1265,33 @@ class DefaultController extends Controller
         }
         
         $c=0;
-        foreach ($columnas as $value) {
+        if($columnas!=''){
+            foreach ($columnas as $value) {
                 $pos = $columns[$c].('1');
                 $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $value);
                 $c++;
             }
-        
+        }
         for($i=0;$i<sizeof($resultadosServicios);$i++){
-            $p=$i+2;
+            if($columnas!=''){
+                $p=$i+2;
+            }else{
+                $p=$i+1;
+            }    
             $j=0;
-            foreach ($resultadosServicios[$i] as $value) {
+           /* if(!is_array($resultadosServicios[$i])){
                 $pos = $columns[$j].($p);
-                $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $value);
-                $j++;
-            }
+                $posL = $columns[$c];
+                
+                $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $resultadosServicios[$i])->mergeCells($pos.":".$posL."5");
+                    
+            }else{*/
+                foreach ($resultadosServicios[$i] as $value) {
+                    $pos = $columns[$j].($p);
+                    $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $value);
+                    $j++;
+                }
+            //}
         }
 
        $phpExcelObject->getActiveSheet()->setTitle('Simple');
@@ -1069,7 +1305,7 @@ class DefaultController extends Controller
         // adding headers
         $dispositionHeader = $response->headers->makeDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            'PhpExcelFileSample.xlsx'
+            $nomExcel.'.xlsx'
         );
         $response->headers->set('Content-Type', 'text/vnd.ms-excel; charset=utf-8');
         $response->headers->set('Pragma', 'public');

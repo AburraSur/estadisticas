@@ -81,6 +81,7 @@ class UtilitiesController extends Controller
                 $tablaDetalle .= "<tr>
                             <td>".$results[$i]['matricula']."</td>
                             <td>".$results[$i]['organizacion']."</td>
+                            <td>".$results[$i]['descripcion']."</td>
                             <td>".$results[$i]['categoria']."</td>
                             <td>".$results[$i]['razonsocial']."</td>
                             <td>".$codMuni[$posMunic]."</td>
@@ -106,6 +107,19 @@ class UtilitiesController extends Controller
                                 </tr>
                             </thead>
                             <tbody>";
+            $categ[] = strtoupper($categoria);
+            $excelTitle[] = 'Municipio';
+            $excelTitle[]= 'P. Naturales';
+            $excelTitle[]= 'Establecimientos';
+            $excelTitle[]= 'Sociedades';
+            $excelTitle[]= 'Agencias - Sucursales';
+            $excelTitle[]= 'ESAL';
+            $excelTitle[]= 'Civil';
+            $excelTitle[]= 'Total';
+            
+            $excelDatos[] = $categ;
+            $excelDatos[] = $excelTitle;
+            
             foreach ($municipios as $valueMun) {
                 $tabla .="<tr>
                             <th>$codMuni[$valueMun]</th>
@@ -117,6 +131,19 @@ class UtilitiesController extends Controller
                             <td>".number_format($arregloMatriculados[$valueMun.$categoria]['CIVILES'],"0","",".")."</td>
                             <td><b>".number_format($totalMunicipio[$valueMun.$categoria],"0","",".")."</b></td>
                         </tr>  ";
+                
+                $excelData=array();
+                
+                $excelData[]=$codMuni[$valueMun];
+                $excelData[]= number_format($arregloMatriculados[$valueMun.$categoria]['PN'],"0","",".");
+                $excelData[]= number_format($arregloMatriculados[$valueMun.$categoria]['EST'],"0","",".");
+                $excelData[]= number_format($arregloMatriculados[$valueMun.$categoria]['SOC'],"0","",".");
+                $excelData[]= number_format($arregloMatriculados[$valueMun.$categoria]['AGSUC'],"0","",".");
+                $excelData[]= number_format($arregloMatriculados[$valueMun.$categoria]['ESAL'],"0","",".");
+                $excelData[]= number_format($arregloMatriculados[$valueMun.$categoria]['CIVILES'],"0","",".");
+                $excelData[]= number_format($totalMunicipio[$valueMun.$categoria],"0","",".");
+                
+                $excelDatos[] = $excelData;
 
             }
                                   
@@ -133,8 +160,19 @@ class UtilitiesController extends Controller
                         </tr>
                     </tbody>
                 </table>";
+            $excelData = array();
             
-            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal);
+            $excelData[] = 'TOTAL';
+            $excelData[] = number_format($totalPN,"0","",".");
+            $excelData[] = number_format($totalEST,"0","",".");
+            $excelData[] = number_format($totalSOC,"0","",".");
+            $excelData[] = number_format($totalAGSUC,"0","",".");
+            $excelData[] = number_format($totalESAL,"0","",".");
+            $excelData[] = number_format($totalCV,"0","",".");
+            $excelData[] = number_format($granTotal,"0","",".");
+            $excelDatos[] = $excelData;
+            
+            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal,'excelRegistro' => $excelDatos);
     }
     
     public function sedes( $em ){
