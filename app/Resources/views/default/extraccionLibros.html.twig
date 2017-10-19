@@ -12,7 +12,7 @@
     {# Formulario de búsqueda #}
     <div class="col-md-12" style="margin-bottom: 10px;padding:0;">
        {# <form id="formClear" > #}
-       <form action="{{ path('extracionLibros') }}" method="POST" >
+       <form action="{{ path('extraeLibroActosDetalle') }}" method="POST" >
             <div class="form-group">
                 <label class="sr-only">Icono FechaIn</label>
                 <div class="col-md-4">
@@ -44,7 +44,7 @@
                     
                 </select>  
                 <input type="hidden" name="excel" value="1" />
-                <input type="hidden" name="libroActo" name="libroActo" value="1" />
+                <input type="hidden" name="libroActo" id="libroActo" />
             </div>    
             <div class="col-md-4">
                 <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
@@ -82,27 +82,31 @@
                         <table id='tablaActos' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
                             <thead>
                                 <tr>
-                                    <th>Fecha inscripción</th>
                                     <th>Matricula</th>
+                                    <th>Fecha inscripción</th>
                                     <th>Identificación</th>
                                     <th>Razón Social</th>
                                     <th>Noticia</th>
                                     <th>Operador</th>
                                     <th>Operación</th>
+                                    <th>idLibro</th>
                                     <th>Libro</th>
+                                    <th>idActo</th>
                                     <th>Acto</th>
                                 </tr>
                             </thead>
                             <tfoot>
                                 <tr>
-                                    <th>Fecha inscripción</th>
                                     <th>Matricula</th>
+                                    <th>Fecha inscripción</th>
                                     <th>Identificación</th>
                                     <th>Razón Social</th>
                                     <th>Noticia</th>
                                     <th>Operador</th>
                                     <th>Operación</th>
+                                    <th>idLibro</th>
                                     <th>Libro</th>
+                                    <th>idActo</th>
                                     <th>Acto</th>
                                 </tr>
                             </tfoot>
@@ -161,7 +165,7 @@
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
                 var libroActo = $('#acto').val();
-                $('libroActo').val(libroActo);
+                $('#libroActo').val(libroActo);
                 $.blockUI({
                     message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
                 });          
