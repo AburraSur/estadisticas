@@ -1,0 +1,312 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="col-md-12">
+        <h2 class="h2" ><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción de Bases de Datos</h2>
+    </div>
+    <form id="extraccionForm" method="POST" action="{{ path('extraccionMatriculados') }}" >
+        <div class="col-md-12">
+            <div class=" form-group col-md-3">
+                <select name="estadoMat" id="estadoMat" class="form-control selectpicker required" data-style="btn-primary" title="Estado del Comerciante" >
+                    <option value="1">Activos/Inactivos</option>  
+                    <option value="0">Cancelados</option>  
+                </select>    
+            </div>
+            <div class="form-group col-md-3">
+                <select name="organizacion[]" id="organizacion" class="form-control selectpicker required" data-style="btn-primary" data-live-search="true" multiple title="Organizaciones Jurídicas" >
+                    <option value="0">Personas Naturales</option>  
+                    <option value="1">Personas Juridicas</option>  
+                    <option value="2">Establecimientos</option>
+                    <option value="3">Agencias y Sucursales</option>
+                    <option value="4">E.S.A.L</option>
+                    <option data-divider="true"></option>
+                    <option value="5">Establecimientos otra jurisdicción</option>
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <select name="afiliacion" id="afiliacion" class="form-control selectpicker required" data-style="btn-primary" title="Calidad del Comerciante" >
+                    <option value="0">Matriculados</option>
+                    <option value="1">Afiliados</option>  
+                    <option value="2">Matriculados No Afiliados</option>  
+                </select>
+            </div>        
+            <div class="form-group col-md-3">
+                <select name="municipio[]" id="municipio" class="form-control selectpicker required" data-style="btn-primary" data-live-search="true" data-actions-box="true" multiple title="Municipios" >
+                    <option value="05129">05129 - Caldas</option>
+                    <option value="05266">05266 - Envigado</option>  
+                    <option value="05360">05360 - Itagüí</option>  
+                    <option value="05380">05380 - La Estrella</option> 
+                    <option value="05631">05631 - Sabaneta</option> 
+                </select>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="col-md-3 form-group">
+                 <select name="ciius[]" id="ciius" class="selectpicker form-control" data-style="btn-primary" data-live-search="true" data-actions-box="true" multiple title="CIIUS" >
+                     <option value="all" selected ></option>
+                     {% for ciiusValue in ciius %}
+                        <option value="{{ ciiusValue.idciiu }}" >{{ ciiusValue.idciiu }} - {{ ciiusValue.descripcion }}</option>
+                    {% endfor %}   
+                </select>    
+            </div>
+            <div class="form-group col-md-3">
+                <div class="input-group">
+                    <div class="input-group-addon"><span class="glyphicon glyphicon-usd" aria-hidden="true"></span></div>
+                    <input name="activoIni" id="activoIni" class="form-control numeros" value="0" placeholder="Activo Inicial" >
+                </div>
+            </div>
+            <div class="form-group col-md-3">
+                <div class="input-group">
+                    <div class="input-group-addon"><span class="glyphicon glyphicon-usd" aria-hidden="true"></span></div>
+                    <input name="activoFinal" id="activoFinal" class="form-control numeros" value="999,999,999,999,999" placeholder="Activo Final" >
+                </div>
+            </div>    
+        </div>    
+        <div class="col-md-12">
+            <div class="form-group col-md-3">
+                 <select name="tipoFecha" id="tipoFecha" class="form-control selectpicker" data-style="btn-primary" >
+                    <option value="all" selected>Rango de fechas</option>
+                    <option value="mei.fecmatricula">Fecha de Matricula</option>
+                    <option value="mei.fecrenovacion">Fecha de Renovación</option>  
+                    <option value="mei.feccancelacion">Fecha de Cancelación</option>  
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <div class="input-group">
+                    <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                    <input name="dateInit" id="dateInit" readonly class="form-control datepicker" placeholder="Fecha Inicial" data-date-end-date="0d">
+                </div>
+            </div>
+            <div class="form-group col-md-3">
+                <div class="input-group">
+                    <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                    <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker" placeholder="Fecha Final" data-date-end-date="0d">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <input type="hidden" name="excel" value="1" />
+                <button class="btn btn-success hide" id="excelB" ><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</button>        
+                <a class="btn btn-primary" id="search" >Generar</a>
+                <a class="btn btn-primary" id="clear" >Limpiar</a>
+            </div>
+        </div>
+    </form>        
+    <div class="clearfix"><hr></div>
+    <div id="detallado" class="tab-pane">
+        <div class="clearfix"><hr></div>
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3>Informe Detallado<span class="periodo" ></span></h3>
+            </div>
+            <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
+                <table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
+                    <thead>
+                        <tr>
+                            <th>Matricula</th>
+                            <th>Organizacion </th>
+                            <th>Categoria </th>
+                            <th>Ets. Matricula</th>
+                            <th>Identificación</th>
+                            <th>NIT</th>
+                            <th>RAZON SOCIAL</th>
+                            <th>FEC-MATRICULA</th>
+                            <th>FEC-RENOVACIÓN</th>
+                            <th>FEC-CANCELACIÓN</th>
+                            {#<th>DIR-COMERCIAL</th>
+                            <th>MUNICIPIO</th>
+                            <th>TEL-COM-1</th>
+                            <th>TEL-COM-2</th>
+                            <th>TEL-COM-3</th>
+                            <th>EMAIL-COM</th>
+                            <th>CIIU</th>
+                            <th>ACTIVO TOTAL</th>
+                            <th>VLR-ESTABLECIMIENTO</th>
+                            <th>ID. Rep. Legal</th>
+                            <th>Representante Legal</th>
+                            <th>ID. Propietario</th>
+                            <th>Propietario</th>#}
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Matricula</th>
+                            <th>Organizacion </th>
+                            <th>Categoria </th>
+                            <th>Ets. Matricula</th>
+                            <th>Identificación</th>
+                            <th>NIT</th>
+                            <th>RAZON SOCIAL</th>
+                            <th>FEC-MATRICULA</th>
+                            <th>FEC-RENOVACIÓN</th>
+                            <th>FEC-CANCELACIÓN</th>
+                            {#<th>DIR-COMERCIAL</th>
+                            <th>MUNICIPIO</th>
+                            <th>TEL-COM-1</th>
+                            <th>TEL-COM-2</th>
+                            <th>TEL-COM-3</th>
+                            <th>EMAIL-COM</th>
+                            <th>CIIU</th>
+                            <th>ACTIVO TOTAL</th>
+                            <th>VLR-ESTABLECIMIENTO</th>
+                            <th>ID. Rep. Legal</th>
+                            <th>Representante Legal</th>
+                            <th>ID. Propietario</th>
+                            <th>Propietario</th>#}
+                        </tr>
+                    </tfoot>
+                </table>    
+            </div>
+        </div>
+    </div>      
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+    <script>
+        $(document).ready(function() {  
+            $('#extraccion').dataTable();
+            
+            $('.datepicker').datepicker({
+                language: 'es',
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                
+            });
+            $('.selectpicker').selectpicker();
+            
+            $('#tipoFecha').change(function(){
+                var tf = $(this).val();
+                if(tf!='all'){
+                    $('.datepicker').addClass('required');
+                }else{
+                    $('.datepicker').removeClass('required error btn-danger');
+                }
+            });
+            
+            $('#organizacion').change(function(){
+                var val=$(this).val();
+                if(val.indexOf('5')>0){
+                    $('#organizacion').selectpicker('deselectAll');
+                    $('#organizacion').val(4);
+                    $('#organizacion').selectpicker('refresh');
+                }
+            });
+            
+            $(".numeros").on('keyup', function(){
+                var n = parseInt($(this).val().replace(/\D/g,''),10);
+                $(this).val(n.toLocaleString());
+            });
+            
+            $('#excelB').click(function(){
+                $.blockUI({
+                        message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere esto puede tardar unos minutos....</div>'
+                    });
+
+                    setTimeout($.unblockUI,3000);
+            });
+            
+        {# $('#exportExcel').click(function(){
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                var servicio = $('#servicio').val();
+                 $.ajax({
+                        url: '{{ path('exportExcel') }}',
+                        type: 'POST',
+                        data: {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio, excel: '1'}                       
+                    })
+                    return false;
+            });   #} 
+            $('#search').click(function(){
+                var tablaServicios = $('#extraccion').dataTable().fnDestroy();
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                var organizacion = $('#organizacion').val();
+                var estadoMat = $('#estadoMat').val();
+                var afiliacion = $('#afiliacion').val();
+                var municipio = $('#municipio').val();
+                var ciius = $('#ciius').val();
+                var activoIni = $('#activoIni').val();
+                var activoFinal = $('#activoFinal').val();
+                var tipoFecha = $('#tipoFecha').val();
+                var conterror=0;
+                $('.required').each(function(){
+                    var valc = $(this).prop('value');
+                    var id = $(this).attr('id');
+
+                    if(valc == ''){
+
+                        //if(($(this).hasClass('selectpicker3')) || ($(this).hasClass('selectpickerAll')) ){
+                        if($(this).hasClass('selectpicker') ){
+                            $('[data-id="'+id+'"]').removeClass('btn-primary').addClass('btn-danger');
+                        }else{
+                            $(this).addClass('btn-danger');
+                        }
+                        $(this).addClass('error');
+                        conterror = conterror+1;
+
+                    }else{
+                        $(this).removeClass('error');
+                        $('[data-id="'+id+'"]').removeClass('btn-danger').addClass('btn-primary');
+                    }
+                });
+                
+                $('.error').change(function(){
+                    if($(this).hasClass('selectpicker') ){
+                        var ids = $(this).prop('id');
+                        $('[data-id="'+ids+'"]').removeClass('btn-danger').addClass('btn-primary');
+                    }else{
+                        $(this).removeClass('btn-danger')
+                    }
+                    conterror = conterror-1;
+                });
+                
+                                  
+                if(conterror == 0){
+
+                    var tablaServicios = $('#extraccion').DataTable( {
+                       dom: 'Bfrtip',
+                        buttons: [],
+                        "ordering": false,
+                        "processing": false,
+                        "serverSide": true,
+                        "ajax": {
+                            "url": '{{ path('extraccionMatriculados') }}',
+                            "type": 'POST',
+                            "data": {
+                                dateInit:fecIni ,
+                                dateEnd:fecEnd ,
+                                organizacion:organizacion,
+                                estadoMat:estadoMat,
+                                afiliacion:afiliacion,
+                                municipio:municipio,
+                                ciius:ciius,
+                                activoIni:activoIni,
+                                activoFinal:activoFinal,
+                                tipoFecha:tipoFecha,
+                                excel: '0'
+                            },       
+                        }
+                        
+                    } );
+                    $('#excelB').removeClass('hide');
+
+                    return false;
+                }else{
+                    $.blockUI({
+                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor diligenciar los campos requeridos.</div>'
+                    });
+
+                    setTimeout($.unblockUI,3000);
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -11,7 +11,7 @@
     </div>
                     {# Formulario de búsqueda #}
                     <div class="col-md-12">
-                        <form action="{{ path('tabladetalle') }}" method="POST" >
+                        <form action="{{ path('tabladetalle') }}" method="POST" id="formExcel" >
                             <div class="form-group">
                                 <label class="sr-only">Icono FechaIn</label>
                                 <div class="col-md-2" style="margin:0;padding:0;">
@@ -35,14 +35,15 @@
                             </div>  
                         
                         <div class="col-md-4">
-                            <button class="btn btn-success hide" id="excelB" >Exportar Detallado</button>
-                        </form>    
-                            <button class="btn btn-primary" id="search" >Generar</button>
-                            <button class="btn btn-primary" id="clear" >Limpiar</button>
+                            <a class="btn btn-primary" id="search" >Generar</a>
+                            <a class="btn btn-primary" id="clear" >Limpiar</a>
+                            <button class="btn btn-success hide excelB" id="excelB" >Exportar Detallado</button>
+                        </form>
                         </div>
+                        
 
                     </div>
-                    <div class="clearfix"><hr></div>
+                    <div class="clearfix"><hr></div>                    
                     {# Menu Relaciones #}
                     <div class="form-group" style="margin-top: 10px;" >
                     <ul class="nav nav-tabs">
@@ -54,6 +55,15 @@
                     <div class="tab-content">
                         <div id="home" class="tab-pane fade in active">
                             <div class="clearfix"><hr></div>
+                            <div class="col-md-4">                
+                                <form action="{{ path('estadisticasGenerales') }}" method="POST" id="formExcel2" >
+                                    <input type="hidden" name="excel" id="excel" value="1" />
+                                    <input name="dateInit" id="dateInit2" type="hidden">
+                                    <input name="dateEnd" id="dateEnd2" type="hidden">
+                                    <button class="btn btn-success hide " id="excelB2" >Exportar Resumido</button>
+                                </form>
+
+                            </div>
                                 <div class="panel panel-info">
                                     <div class="panel-heading">
                                         <h3>Matriculados<span class="periodo" ></span><b><span class="total pull-right" ></span></b></h3>
@@ -143,7 +153,8 @@
                                             <thead>
                                                 <tr>
                                                     <th>Matricula</th>
-                                                    <th>Organizacion</th>
+                                                    <th>Cod. Organización</th>
+                                                    <th>Organización</th>
                                                     <th>Categoria</th>
                                                     <th>Municipio</th>
                                                     <th>Razón Social</th>
@@ -157,7 +168,8 @@
                                             <tfoot>
                                                 <tr>
                                                     <th>Matricula</th>
-                                                    <th>Organizacion</th>
+                                                    <th>Cod. Organización</th>
+                                                    <th>Organización</th>
                                                     <th>Categoria</th>
                                                     <th>Municipio</th>
                                                     <th>Razón Social</th>
@@ -190,6 +202,17 @@
                 format: 'yyyy-mm-dd',
                 
             });
+            $('#dateInit').change(function(){
+                var dato = $(this).val();
+                $('#dateInit2').val(dato);
+                $('#dateEnd').datepicker('setStartDate', dato);
+            });
+            
+            $('#dateEnd').change(function(){
+                var dato = $(this).val();
+                $('#dateEnd2').val(dato);
+            });
+            
             $('.estadisticasGenerales').DataTable( {
                                 dom: 'Bfrtip',
                                 buttons: [
@@ -253,7 +276,7 @@
                         type: 'POST',
                         data: {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
                         success: function(data){
-                            $('#excelB').removeClass('hide');
+                            $('.excelB').removeClass('hide');
                             console.log(data);
                             var resp = JSON.parse(data);
                             $.unblockUI();
@@ -282,6 +305,12 @@
                                 ]
                             } ); 
                             
+                            $('.dt-buttons').html('');
+                            $('.dt-buttons').html('<button class="btn btn-default excelFake"  >Exportar Resumen</button>');
+                            $('#tabla_detallada div.dt-buttons').html('');
+                            $('.excelFake').click(function(){
+                                $('#excelB2').trigger('click');
+                            });
                         }
                     })
                     return false;
@@ -296,6 +325,21 @@
                 }
             });
             
+            $('#formExcel').on('submit',function(){
+                $.blockUI({
+                        message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere esto puede tardar unos minutos....</div>'
+                    });
+
+                    setTimeout($.unblockUI,5000);
+            });
+            
+            $('#formExcel2').on('submit',function(){
+                $.blockUI({
+                        message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere esto puede tardar unos minutos....</div>'
+                    });
+
+                    setTimeout($.unblockUI,5000);
+            });
             {#$('#exportExcel').click(function(){
                 $.blockUI({
                     message: '<div class="alert alert-success" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
