@@ -1134,7 +1134,6 @@ class DefaultController extends Controller
                                     'ID. REP. LEGAL',
                                     'REPRESENTANTE LEGAL',
                                     'ID. PROPIETARIO',
-                                    'NIT PROPIETARIO',
                                     'PROPIETARIO',
                                     'DIR-COMERCIAL',
                                     'BARRIO-COMERCIAL',
