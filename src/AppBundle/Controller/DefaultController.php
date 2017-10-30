@@ -106,27 +106,44 @@ class DefaultController extends Controller
 //            Se invoca objeto constructor de las tablas resumen como parametros se envia el resultado de la consulta y la categoria Matriculados-Renovados-Cancelados 
             
             $excelRegistro = array();
+            
+            $arregloTotales['PN'] = 0;
+            $arregloTotales['EST'] = 0;
+            $arregloTotales['SOC'] = 0;
+            $arregloTotales['AGSUC'] = 0;
+            $arregloTotales['ESAL'] = 0;
+            $arregloTotales['CIVILES'] = 0;
+            
+            $arregloMatMun = array();
+            
             $tabla = new UtilitiesController();
             $totalMatRen = 0;
             $resultadosMat = $stmt->fetchAll();
-            $resumenMat = $tabla->construirTablaResumen($resultadosMat, 'matriculados',$tablaDetalle);
+            $resumenMat = $tabla->construirTablaResumen($resultadosMat, 'matriculados',$tablaDetalle,$arregloTotales,$arregloMatMun);
             $tablaMatri['matriculados'] = $resumenMat['tabla'];
             $tablaDetalle = $resumenMat['tablaDetalle'];
             $totalMatRen = $totalMatRen+$resumenMat['granTotal'];
             $excelRegistro[] = $resumenMat['excelRegistro'];
+            $arregloTotales = $resumenMat['arregloTotales'];
+            $totttt[] = $arregloMatMun = $resumenMat['arregloMatMun'];
+            
+            
             
             $resultadosRen = $strv->fetchAll();
-            $resumenRen = $tabla->construirTablaResumen($resultadosRen, 'renovados', $tablaDetalle);
+            $resumenRen = $tabla->construirTablaResumen($resultadosRen, 'renovados', $tablaDetalle, $arregloTotales,$arregloMatMun);
             $tablaMatri['renovados'] = $resumenRen['tabla'];
             $tablaDetalle = $resumenRen['tablaDetalle'];
             $totalMatRen = $totalMatRen + $resumenRen['granTotal'];
             $excelRegistro[] = $resumenRen['excelRegistro'];
+            $arregloTotales = $resumenRen['arregloTotales'];
+            $arregloMatMun = $resumenRen['arregloMatMun'];
                     
             $resultadosCan = $stcn->fetchAll();
-            $resumenCan = $tabla->construirTablaResumen($resultadosCan, 'cancelados', $tablaDetalle);
+            $resumenCan = $tabla->construirTablaResumen($resultadosCan, 'cancelados', $tablaDetalle, $arregloTotales,$arregloMatMun);
             $tablaMatri['cancelados'] = $resumenCan['tabla'];
             $tablaDetalle = $resumenCan['tablaDetalle'];
             $excelRegistro[] = $resumenCan['excelRegistro'];
+            $arregloMatMun = $resumenCan['arregloMatMun'];
             
 //            $fecha = new \DateTime();
 //            $fecExcel = $fecha->format('YmdHis');
@@ -148,11 +165,13 @@ class DefaultController extends Controller
                        $arrayExcel[] = $value; 
                     }
                 }
+                
+                
+                foreach ($valueExcel as $key => $value) {
+                    
+                }
 
-            
-                $fecha = new \DateTime();
-                $fecExcel = $fecha->format('YmdHis');
-                $nomExcel = 'ResumenMatRenCan'.$fecExcel;
+                $nomExcel = 'ResumenMatRenCan';
                 $columns[] = 'Municipio';
                 $columns[]= 'P. Naturales';
                 $columns[]= 'Establecimientos';
@@ -161,10 +180,10 @@ class DefaultController extends Controller
                 $columns[]= 'ESAL';
                 $columns[]= 'Civil';
                 $columns[]= 'Total';
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel));
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']) );
                 return $response;
             }else{
-                return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'totalMatRen' => number_format($totalMatRen,"0","",".") , 'excelRegistro' => $excelRegistro , 'resultadosCan'=>$resultadosCan)));
+                return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'totalMatRen' => number_format($totalMatRen,"0","",".") , 'excelRegistro' => $excelRegistro , 'resultadosCan'=>$resultadosCan , 'arregloTotales'=>$arregloTotales , 'arregloMatMun'=>$arregloMatMun , '$totttt'=>$totttt)));
             }
 //            return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'tablaDetalle' => $tablaDetalle )));
             
@@ -326,10 +345,8 @@ class DefaultController extends Controller
                 }    
             }
             
-            $fecha = new \DateTime();
-            $fecExcel = $fecha->format('YmdHis');
-            $nomExcel = 'ExtraccionMatRenCan'.$fecExcel;
-            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel));
+            $nomExcel = 'ExtraccionMatRenCan';
+            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
             return $response;
         }else{  
             $t1 = sizeof($matT);
@@ -681,10 +698,8 @@ class DefaultController extends Controller
                 }
                 
                 
-                $fecha = new \DateTime();
-                $fecExcel = $fecha->format('YmdHis');
-                $nomExcel = 'ExtraccionServicios'.$fecExcel;
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns , 'nomExcel'=>$nomExcel ));
+                $nomExcel = 'ExtraccionServicios';
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -864,7 +879,9 @@ class DefaultController extends Controller
                             inscrip.noticia,
                             inscrip.operador,
                             inscrip.numerooperacion,
+                            actos.idacto,
                             actos.nombre AS 'acto',
+                            libros.idlibro,
                             libros.nombre AS 'libro'
                         FROM
                             mreg_inscripciones inscrip
@@ -902,10 +919,8 @@ class DefaultController extends Controller
             
             if($_POST['excel']==1){
                 
-                    $fecha = new \DateTime();
-                    $fecExcel = $fecha->format('YmdHis');
-                    $nomExcel = 'ExtraccionLibros'.$fecExcel;
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel));
+                $nomExcel = 'ExtraccionLibros';
+                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -946,8 +961,10 @@ class DefaultController extends Controller
                     $nestedData[] = $resultadoLibros[$i]['noticia'];
                     $nestedData[] = $resultadoLibros[$i]['operador'];
                     $nestedData[] = $resultadoLibros[$i]['numerooperacion'];
-                    $nestedData[] = $resultadoLibros[$i]['acto'];
+                    $nestedData[] = $resultadoLibros[$i]['idlibro'];
                     $nestedData[] = $resultadoLibros[$i]['libro'];
+                    $nestedData[] = $resultadoLibros[$i]['idacto'];
+                    $nestedData[] = $resultadoLibros[$i]['acto'];
 
                     $data[] = $nestedData;
                 }           
@@ -985,14 +1002,209 @@ class DefaultController extends Controller
                 $estado = "('MC','IC')";
             }
             
+            $sqlExtracMatri = "SELECT 
+                            mei.matricula,
+                                mei.proponente,
+                                mei.organizacion,
+                                mei.categoria,
+                                mei.ctrestmatricula,
+                                mei.ctrestdatos,
+                                mei.nombre1,
+                                mei.nombre2,
+                                mei.apellido1,
+                                mei.apellido2,
+                                mei.idclase,
+                                mei.numid AS 'numidMat',
+                                mei.nit AS 'nitMat',
+                                mei.razonsocial AS 'razonsocialMat',
+                                mei.fecmatricula AS 'FEC-MATRICULA',
+                                mei.fecrenovacion AS 'FEC-RENOVACION',
+                                mei.ultanoren,
+                                mei.feccancelacion AS 'FEC-CANCELACION',
+                                mei.fecconstitucion,
+                                mei.fecdisolucion,
+                                mei.fecliquidacion,
+                                mei.fecvigencia,
+                                mev.numid AS idRepLegal,
+                                mev.nombre AS RepresentanteLegal,
+                                (CASE WHEN mei.organizacion='02' THEN mep.nit 
+                                    ELSE inscritos.nit 
+                                END) AS 'idPropietario',
+                                (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
+                                    ELSE inscritos.razonsocial 
+                                END) AS 'NombrePropietario',
+                                mei.dircom,
+                                mei.barriocom,
+                                mei.muncom,
+                                mei.telcom1,
+                                mei.telcom2,
+                                mei.telcom3,
+                                mei.emailcom,
+                                mei.dirnot,
+                                mei.munnot,
+                                mei.telnot,
+                                mei.telnot2,
+                                mei.emailnot,
+                                mei.ciiu1,
+                                mei.ciiu2,
+                                mei.ciiu3,
+                                mei.ciiu4,
+                                mei.personal,
+                                mei.ctrlibroscomercio,
+                                mei.ctrafiliacion,
+                                mei.ctrembargo,
+                                mei.ctrimpexp,
+                                mei.ctrtipolocal,
+                                mei.ctrfun,
+                                mei.ctrubi,
+                                mei.ctrclasegenesadl,
+                                mei.ctrclaseespeesadl,
+                                mei.ctrclaseeconsoli,
+                                mei.ctrbenart7,
+                                mei.ctrbenley1780,
+                                mei.ctrtipopropiedad,
+                                mei.tamanoempresa,
+                                mei.actcte,
+                                mei.actnocte,
+                                mei.actfij,
+                                mei.actval,
+                                mei.actotr,
+                                mei.acttot,
+                                mei.pascte,
+                                mei.paslar,
+                                mei.pastot,
+                                mei.patrimonio,
+                                mei.paspat,
+                                mei.ingope,
+                                mei.ingnoope,
+                                mei.gasope,
+                                mei.gasnoope,
+                                mei.utiope,
+                                mei.utinet,                                
+                                mei.anodatos,
+                                mei.fecdatos,
+                                mei.capaut,
+                                mei.capsus,
+                                mei.cappag,
+                                mei.capsoc,
+                                mei.apolab,
+                                mei.apolabadi,
+                                mei.apodin,
+                                mei.apotra,
+                                mei.apoact,
+                                mei.apotot,
+                                mei.actvin,
+                                mei.capesadl,
+                                mei.cantest,
+                                mei.anorenaflia,
+                                mei.fecactaaflia,
+                                mei.fecrenaflia,
+                                mei.valpagaflia
+                        FROM
+                            mreg_est_inscritos mei
+                        LEFT JOIN mreg_est_vinculos mev ON mei.matricula = mev.matricula 
+                        LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
+                        LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
+                        WHERE mei.matricula <> '' 
+                        AND mei.ctrestmatricula IN $estado 
+                        AND (";
             
-            //if($_POST['organizacion']==4){
-                
-                
-                
-            //}else{
-            
-                $sqlExtracMatri = "SELECT 
+                        $columns=['MATRICULA',
+                                    'PROPONENTE',
+                                    'ORGANIZACION',
+                                    'CATEGORIA',
+                                    'EST-MATRICULA',
+                                    'EST_DATOS',
+                                    'NOMBRE 1',
+                                    'NOMBRE 2',
+                                    'APELLIDO 1',
+                                    'APELLIDO 2',
+                                    'CLASE-ID',
+                                    'IDENTIFICACION',
+                                    'NIT',
+                                    'RAZÓN SOCIAL',
+                                    'FEC-MATRICULA',
+                                    'FEC-RENOVACION',
+                                    'ULT-ANO_REN',
+                                    'FEC-CANCELACION',
+                                    'FEC-CONSTITUCION',
+                                    'FEC-DISOLUCION',
+                                    'FEC-LIQUIDACION',
+                                    'FEC-VIGENCIA',
+                                    'ID. REP. LEGAL',
+                                    'REPRESENTANTE LEGAL',
+                                    'ID. PROPIETARIO',
+                                    'NIT PROPIETARIO',
+                                    'PROPIETARIO',
+                                    'DIR-COMERCIAL',
+                                    'BARRIO-COMERCIAL',
+                                    'MUN-COMERCIAL',
+                                    'TEL-COM-1',
+                                    'TEL-COM-2',
+                                    'TEL-COM-3',
+                                    'EMAIL-COMERCIAL',
+                                    'DIR-NOTIFICACION',
+                                    'MUN-NOTIFICACION',
+                                    'TEL-NOTF-1',
+                                    'TEL-NOTF-2',
+                                    'EMAIL-NOTIFICACION',
+                                    'CIIU-1',
+                                    'CIIU-2',
+                                    'CIIU-3',
+                                    'CIIU-4',
+                                    'PERSONAL',
+                                    'LIBROS-COMERCIO',
+                                    'CTR-AFILIACION',
+                                    'CTR-EMBARGO',
+                                    'IMPORTA-EXPORTA',
+                                    'TIPO-LOCAL',
+                                    'TIEMPO-FUN',
+                                    'UBICACION',
+                                    'CLA-GEN-ESADL',
+                                    'CLA-ESPE-ESADL',
+                                    'CLA-ECON-SOLI',
+                                    'BEN-ART-7',
+                                    'BEN-LEY-1780',
+                                    'TIPO-PROPIEDAD',
+                                    'TAM-EMPRESA',
+                                    'ACTIVO-CORRIENTE',
+                                    'ACTIVO-NO-CORRIENTE',
+                                    'ACTIVO-FIJO',
+                                    'ACTIVO-VALORIZ',
+                                    'ACTIVO-OTROS',
+                                    'ACTIVO-TOTAL',
+                                    'PASIVO-CORRIENTE',
+                                    'PASIVO-LRG-PLAZO',
+                                    'PASIVO-TOTAL',
+                                    'PATRIMONIO',
+                                    'PASIVO+PATRIM',
+                                    'ING-OPERACIONES',
+                                    'ING-NO-OPERACIONALES',
+                                    'GAS-OPERACIONALES',
+                                    'GAS-NO-OPERAC.',
+                                    'UTIL-OPERACIONAL',
+                                    'UTIL-NETA',
+                                    'ANIO-DATOS',
+                                    'FECHA-DATOS',
+                                    'CAPITAL-AUTORIZ.',
+                                    'CAPITAL-SUSCRITO',
+                                    'CAPITAL-PAGADO',
+                                    'CAPITAL-SOCIAL',
+                                    'APORTE-LABORAL',
+                                    'APORTE-LABORAL-ADI',
+                                    'APORTE-DINERO',
+                                    'APORTE-TRABAJO',
+                                    'APORTE-ACTIVOS',
+                                    'APORTE-TOTAL',
+                                    'VLR-ESTABLEC.',
+                                    'PATRIM-ESADL.',
+                                    'CANT-ESTABLECIM.',
+                                    'ANIO-REN-AFIL',
+                                    'FEC-AFIL.',
+                                    'FEC-ULT-PAG-AFIL',
+                                    'VAL-ULT-PAG-AFIL'
+                                    ];
+                /*$sqlExtracMatri = "SELECT 
                             mei.matricula,
                             mei.organizacion ,
                             mei.categoria ,
@@ -1009,7 +1221,10 @@ class DefaultController extends Controller
                             mei.telcom2 AS 'TEL-COM-2',
                             mei.telcom3 AS 'TEL-COM-3',
                             mei.emailcom AS 'EMAIL-COM',
-                            mei.ciiu1 AS 'CIIU',
+                            mei.ciiu1 AS 'CIIU1',
+                            mei.ciiu2 AS 'CIIU2',
+                            mei.ciiu3 AS 'CIIU3',
+                            mei.ciiu4 AS 'CIIU4',
                             mei.acttot,
                             mei.actvin,
                             mev.numid AS idRepLegal,
@@ -1027,7 +1242,7 @@ class DefaultController extends Controller
                         LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
                         WHERE mei.matricula <> '' 
                         AND mei.ctrestmatricula IN $estado 
-                        AND (";
+                        AND (";*/
 
                 $i=0;
                 foreach($_POST['organizacion'] as $organiza){
@@ -1044,26 +1259,97 @@ class DefaultController extends Controller
                     }elseif($organiza==5){
                         $sqlExtracMatri = "SELECT 
                                 mei.matricula,
-                                mei.organizacion ,
-                                mei.categoria ,
+                                mei.proponente,
+                                mei.organizacion,
+                                mei.categoria,
                                 mei.ctrestmatricula,
+                                mei.ctrestdatos,
+                                mei.nombre1,
+                                mei.nombre2,
+                                mei.apellido1,
+                                mei.apellido2,
+                                mei.idclase,
                                 mei.numid AS 'numidMat',
                                 mei.nit AS 'nitMat',
                                 mei.razonsocial AS 'razonsocialMat',
                                 mei.fecmatricula AS 'FEC-MATRICULA',
                                 mei.fecrenovacion AS 'FEC-RENOVACION',
+                                mei.ultanoren,
                                 mei.feccancelacion AS 'FEC-CANCELACION',
-                                mei.dircom AS 'DIR-COMERCIAL',
-                                mei.muncom AS 'MUNICIPIO',
-                                mei.telcom1 AS 'TEL-COM-1',
-                                mei.telcom2 AS 'TEL-COM-2',
-                                mei.telcom3 AS 'TEL-COM-3',
-                                mei.emailcom AS 'EMAIL-COM',
-                                mei.ciiu1 AS 'CIIU',
-                                mei.acttot,
-                                mei.actvin,
+                                mei.fecconstitucion,
+                                mei.fecdisolucion,
+                                mei.fecliquidacion,
+                                mei.fecvigencia,
                                 mep.identificacion AS 'Ident. Propietario',
-                                mep.razonsocial AS 'Propietario'
+                                mep.razonsocial AS 'Propietario',
+                                mei.dircom,
+                                mei.barriocom,
+                                mei.muncom,
+                                mei.telcom1,
+                                mei.telcom2,
+                                mei.telcom3,
+                                mei.emailcom,
+                                mei.dirnot,
+                                mei.munnot,
+                                mei.telnot,
+                                mei.telnot2,
+                                mei.emailnot,
+                                mei.ciiu1,
+                                mei.ciiu2,
+                                mei.ciiu3,
+                                mei.ciiu4,
+                                mei.personal,
+                                mei.ctrlibroscomercio,
+                                mei.ctrafiliacion,
+                                mei.ctrembargo,
+                                mei.ctrimpexp,
+                                mei.ctrtipolocal,
+                                mei.ctrfun,
+                                mei.ctrubi,
+                                mei.ctrclasegenesadl,
+                                mei.ctrclaseespeesadl,
+                                mei.ctrclaseeconsoli,
+                                mei.ctrbenart7,
+                                mei.ctrbenley1780,
+                                mei.ctrtipopropiedad,
+                                mei.tamanoempresa,
+                                mei.actcte,
+                                mei.actnocte,
+                                mei.actfij,
+                                mei.actval,
+                                mei.actotr,
+                                mei.acttot,
+                                mei.pascte,
+                                mei.paslar,
+                                mei.pastot,
+                                mei.pattot,
+                                mei.patrimonio,
+                                mei.paspat,
+                                mei.ingope,
+                                mei.ingnoope,
+                                mei.gasope,
+                                mei.gasnoope,
+                                mei.utiope,
+                                mei.utinet,                                
+                                mei.anodatos,
+                                mei.fecdatos,
+                                mei.capaut,
+                                mei.capsus,
+                                mei.cappag,
+                                mei.capsoc,
+                                mei.apolab,
+                                mei.apolabadi,
+                                mei.apodin,
+                                mei.apotra,
+                                mei.apoact,
+                                mei.apotot,
+                                mei.actvin,
+                                mei.capesadl,
+                                mei.cantest,
+                                mei.anorenaflia,
+                                mei.fecactaaflia,
+                                mei.fecrenaflia,
+                                mei.valpagaflia
                             FROM
                                 mreg_est_propietarios mep
                             LEFT JOIN   mreg_est_inscritos mei ON mep.matricula = mei.matricula
@@ -1073,6 +1359,101 @@ class DefaultController extends Controller
                             $condiOrga = "AND ((mei.organizacion = '02')
                             AND mep.codigocamara != '55'
                             AND mep.estado='V' ";
+                            
+                            
+                            $columns=['MATRICULA',
+                                        'PROPONENTE',
+                                        'ORGANIZACION',
+                                        'CATEGORIA',
+                                        'EST-MATRICULA',
+                                        'EST_DATOS',
+                                        'NOMBRE 1',
+                                        'NOMBRE 2',
+                                        'APELLIDO 1',
+                                        'APELLIDO 2',
+                                        'CLASE-ID',
+                                        'IDENTIFICACION',
+                                        'NIT',
+                                        'RAZÓN SOCIAL',
+                                        'FEC-MATRICULA',
+                                        'FEC-RENOVACION',
+                                        'ULT-ANO_REN',
+                                        'FEC-CANCELACION',
+                                        'FEC-CONSTITUCION',
+                                        'FEC-DISOLUCION',
+                                        'FEC-LIQUIDACION',
+                                        'FEC-VIGENCIA',
+                                        'ID. PROPIETARIO',
+                                        'PROPIETARIO',
+                                        'DIR-COMERCIAL',
+                                        'BARRIO-COMERCIAL',
+                                        'MUN-COMERCIAL',
+                                        'TEL-COM-1',
+                                        'TEL-COM-2',
+                                        'TEL-COM-3',
+                                        'EMAIL-COMERCIAL',
+                                        'DIR-NOTIFICACION',
+                                        'MUN-NOTIFICACION',
+                                        'TEL-NOTF-1',
+                                        'TEL-NOTF-2',
+                                        'EMAIL-NOTIFICACION',
+                                        'CIIU-1',
+                                        'CIIU-2',
+                                        'CIIU-3',
+                                        'CIIU-4',
+                                        'PERSONAL',
+                                        'LIBROS-COMERCIO',
+                                        'CTR-AFILIACION',
+                                        'CTR-EMBARGO',
+                                        'IMPORTA-EXPORTA',
+                                        'TIPO-LOCAL',
+                                        'TIEMPO-FUN',
+                                        'UBICACION',
+                                        'CLA-GEN-ESADL',
+                                        'CLA-ESPE-ESADL',
+                                        'CLA-ECON-SOLI',
+                                        'BEN-ART-7',
+                                        'BEN-LEY-1780',
+                                        'TIPO-PROPIEDAD',
+                                        'TAM-EMPRESA',
+                                        'ACTIVO-CORRIENTE',
+                                        'ACTIVO-NO-CORRIENTE',
+                                        'ACTIVO-FIJO',
+                                        'ACTIVO-VALORIZ',
+                                        'ACTIVO-OTROS',
+                                        'ACTIVO-TOTAL',
+                                        'PASIVO-CORRIENTE',
+                                        'PASIVO-LRG-PLAZO',
+                                        'PASIVO-TOTAL',
+                                        'PATRIMONIO TOTAL',
+                                        'PATRIMONIO',
+                                        'PASIVO+PATRIM',
+                                        'ING-OPERACIONES',
+                                        'ING-NO-OPERACIONALES',
+                                        'GAS-OPERACIONALES',
+                                        'GAS-NO-OPERAC.',
+                                        'UTIL-OPERACIONAL',
+                                        'UTIL-NETA',
+                                        'ANIO-DATOS',
+                                        'FECHA-DATOS',
+                                        'CAPITAL-AUTORIZ.',
+                                        'CAPITAL-SUSCRITO',
+                                        'CAPITAL-PAGADO',
+                                        'CAPITAL-SOCIAL',
+                                        'APORTE-LABORAL',
+                                        'APORTE-LABORAL-ADI',
+                                        'APORTE-DINERO',
+                                        'APORTE-TRABAJO',
+                                        'APORTE-ACTIVOS',
+                                        'APORTE-TOTAL',
+                                        'VLR-ESTABLEC.',
+                                        'PATRIM-ESADL.',
+                                        'CANT-ESTABLECIM.',
+                                        'ANIO-REN-AFIL',
+                                        'FEC-AFIL.',
+                                        'FEC-ULT-PAG-AFIL',
+                                        'VAL-ULT-PAG-AFIL'
+                                        ];
                     }
                     if($i==0){
                         $sqlExtracMatri.= $condiOrga;
@@ -1099,17 +1480,24 @@ class DefaultController extends Controller
                       
                 $sqlExtracMatri.= " AND mei.muncom IN ($muncom) "
                       . " AND ((mei.acttot BETWEEN $activoIni AND $activoFinal ) OR (mei.actvin BETWEEN $activoIni AND $activoFinal)) ";
-                if(isset($_POST['ciius'][1])){
+                if(isset($_POST['ciius'][0])){
                     $ciiu = "'".implode("','",$_POST['ciius'])."'";
-                    $sqlExtracMatri.=" AND mei.ciiu1 IN ($ciiu) ";
+                    $sqlExtracMatri.=" AND (mei.ciiu1 IN ($ciiu) OR mei.ciiu2 IN ($ciiu) OR mei.ciiu3 IN ($ciiu) OR mei.ciiu4 IN ($ciiu)) ";
                 } 
                 
                 if($_POST['afiliacion']==1){
-                    $sqlExtracMatri.=" AND inscritos.ctrafiliacion=1 ";
+                    $sqlExtracMatri.=" AND mei.ctrafiliacion=1 ";
                 }elseif($_POST['afiliacion']==2){
-                    $sqlExtracMatri.=" AND inscritos.ctrafiliacion<>1 ";
+                    $sqlExtracMatri.=" AND mei.ctrafiliacion<>1 ";
                 }
                 
+                if($_POST['yearInit']!=''){
+                    if($_POST['yearInit']==$_POST['yearEnd']){
+                        $sqlExtracMatri.=" AND mei.ultanoren = '".$_POST['yearInit']."'  ";
+                    }else{
+                        $sqlExtracMatri.=" AND mei.ultanoren BETWEEN '".$_POST['yearInit']."' AND '".$_POST['yearEnd']."' ";
+                    }    
+                }
                 
                 $stmt = $em->getConnection()->prepare($sqlExtracMatri." GROUP BY mei.matricula ORDER BY mei.matricula DESC;");
                 $stmt->execute();
@@ -1117,32 +1505,8 @@ class DefaultController extends Controller
                 $totalFiltered = $totalData = sizeof($resultados);
                 
                 if($_POST['excel']==1){
-                    $columns=['Matricula',
-                            'Organizacion ',
-                            'Categoria ',
-                            'Ets. Afiliación',
-                            'Identificación',
-                            'NIT',
-                            'RAZON SOCIAL',
-                            'FEC-MATRICULA',
-                            'FEC-RENOVACION',
-                            'FEC-CANCELACION',
-                            'DIR-COMERCIAL',
-                            'MUNICIPIO',
-                            'TEL-COM-1',
-                            'TEL-COM-2',
-                            'TEL-COM-3',
-                            'EMAIL-COM',
-                            'CIIU',
-                            'ACTIVO TOTAL',
-                            'VLR-ESTABLECIMIENTO',
-                            'ID. Rep. Legal',
-                            'Representante Legal',
-                            'ID. Propietario',
-                            'Propietario'];
-                    $fecha = new \DateTime();
-                    $fecExcel = $fecha->format('YmdHis');
-                    $nomExcel = 'ExtraccionMatriculados'.$fecExcel;
+                    
+                    $nomExcel = 'ExtraccionMatriculados';
                     $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultados , 'columnas'=>$columns , 'nomExcel'=>$nomExcel ));
                     return $response;
                 }else{
@@ -1244,7 +1608,7 @@ class DefaultController extends Controller
     /**
      * @Route("/exportExcel", name="exportExcel")
      */
-    public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL , $nomExcel=NULL)
+    public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL , $nomExcel=NULL , $fecIni=NULL , $fecEnd=NULL )
     {
         
         
@@ -1259,39 +1623,53 @@ class DefaultController extends Controller
            ->setKeywords("office 2005 openxml php")
            ->setCategory("Test result file");
        
-        for($l=65; $l<=90; $l++) {  
-            $letra = chr($l);  
-            $columns[]=$letra;  
-        }
+        $fecha = new \DateTime();
+        $fecExcel = $fecha->format('YmdHis');
+        $fecCuerpo = $fecha->format('Y-m-d H:i:s');
         
+        for($ll=0; $ll<=5; $ll++) {  
+         
+            for($l=65; $l<=90; $l++) {  
+                if($ll==0){
+                    $letra = chr($l);  
+                    $columns[]=$letra;
+                }else{
+                    $ls = $ll+64;
+                    $letra1 = chr($ls); 
+                    $letra2 = chr($l);
+                    $columns[]=$letra1.$letra2;
+                }
+                  
+            }           
+        }
         $c=0;
+        $pos = 'C'.('1');
+        $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $nomExcel.' Generado el '.$fecCuerpo)->mergeCells('C1:H1');
+//        $phpExcelObject->getActiveSheet()
+        $pos = 'C'.('2');
+        $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, 'Para el rango de fechas: '.$fecIni." - ".$fecEnd);
+        $phpExcelObject->getActiveSheet()->mergeCells('C2:H2');
+        
+        
         if($columnas!=''){
             foreach ($columnas as $value) {
-                $pos = $columns[$c].('1');
+                $pos = $columns[$c].('4');
                 $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $value);
                 $c++;
             }
         }
         for($i=0;$i<sizeof($resultadosServicios);$i++){
             if($columnas!=''){
-                $p=$i+2;
+                $p=$i+5;
             }else{
-                $p=$i+1;
+                $p=$i+4;
             }    
             $j=0;
-           /* if(!is_array($resultadosServicios[$i])){
-                $pos = $columns[$j].($p);
-                $posL = $columns[$c];
-                
-                $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $resultadosServicios[$i])->mergeCells($pos.":".$posL."5");
-                    
-            }else{*/
                 foreach ($resultadosServicios[$i] as $value) {
                     $pos = $columns[$j].($p);
                     $phpExcelObject->setActiveSheetIndex(0)->setCellValue($pos, $value);
                     $j++;
                 }
-            //}
         }
 
        $phpExcelObject->getActiveSheet()->setTitle('Simple');
@@ -1305,7 +1683,7 @@ class DefaultController extends Controller
         // adding headers
         $dispositionHeader = $response->headers->makeDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            $nomExcel.'.xlsx'
+            $nomExcel.$fecExcel.'.xlsx'
         );
         $response->headers->set('Content-Type', 'text/vnd.ms-excel; charset=utf-8');
         $response->headers->set('Pragma', 'public');
@@ -1339,7 +1717,7 @@ class DefaultController extends Controller
                 $listaLibros.='</optgroup><optgroup label="'.$rowLibros[$i]['libro'].'" >';
                 $auxLibro=$rowLibros[$i]['idlibro'];
             }
-            $listaLibros.="<option value='".$rowLibros[$i]['idlibro']."-".$rowLibros[$i]['idacto']."' >".$rowLibros[$i]['idlibro']." - ".$rowLibros[$i]['acto']."</option>";
+            $listaLibros.="<option value='".$rowLibros[$i]['idlibro']."-".$rowLibros[$i]['idacto']."' >".$rowLibros[$i]['idlibro']." - ".$rowLibros[$i]['idacto']."-".$rowLibros[$i]['acto']."</option>";
             
         }
         

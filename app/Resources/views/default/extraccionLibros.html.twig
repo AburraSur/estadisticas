@@ -82,8 +82,8 @@
                         <table id='tablaActos' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
                             <thead>
                                 <tr>
-                                    <th>Matricula</th>
                                     <th>Fecha inscripción</th>
+                                    <th>Matricula</th>
                                     <th>Identificación</th>
                                     <th>Razón Social</th>
                                     <th>Noticia</th>
@@ -97,8 +97,8 @@
                             </thead>
                             <tfoot>
                                 <tr>
-                                    <th>Matricula</th>
                                     <th>Fecha inscripción</th>
+                                    <th>Matricula</th>
                                     <th>Identificación</th>
                                     <th>Razón Social</th>
                                     <th>Noticia</th>
@@ -161,6 +161,7 @@
                     return false;
             });*/    
             $('#search').click(function(){
+                $('.selectpicker').selectpicker('toggle');
                 var tablalibroActo = $('#tablaActos').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();

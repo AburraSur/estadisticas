@@ -48,7 +48,6 @@
         <div class="col-md-12">
             <div class="col-md-3 form-group">
                  <select name="ciius[]" id="ciius" class="selectpicker form-control" data-style="btn-primary" data-live-search="true" data-actions-box="true" multiple title="CIIUS" >
-                     <option value="all" selected ></option>
                      {% for ciiusValue in ciius %}
                         <option value="{{ ciiusValue.idciiu }}" >{{ ciiusValue.idciiu }} - {{ ciiusValue.descripcion }}</option>
                     {% endfor %}   
@@ -79,22 +78,38 @@
             <div class="form-group col-md-3">
                 <div class="input-group">
                     <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
-                    <input name="dateInit" id="dateInit" readonly class="form-control datepicker" placeholder="Fecha Inicial" data-date-end-date="0d">
+                    <input name="dateInit" id="dateInit" readonly class="fecReq form-control datepicker" placeholder="Fecha Inicial" data-date-end-date="0d">
                 </div>
             </div>
             <div class="form-group col-md-3">
                 <div class="input-group">
                     <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
-                    <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker" placeholder="Fecha Final" data-date-end-date="0d">
+                    <input name="dateEnd" id="dateEnd" readonly class="fecReq form-control datepicker" placeholder="Fecha Final" data-date-end-date="0d">
                 </div>
             </div>
-            <div class="col-md-3">
-                <input type="hidden" name="excel" value="1" />
-                <button class="btn btn-success hide" id="excelB" ><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</button>        
-                <a class="btn btn-primary" id="search" >Generar</a>
-                <a class="btn btn-primary" id="clear" >Limpiar</a>
-            </div>
         </div>
+        <div class="col-md-12">
+            <div class="form-group col-md-3">
+                <select name="yearInit" id="yearInit" class="form-control selectpicker" data-style="btn-primary" title="Año Inicial Renovación" data-live-search="true">
+                      {% for i in 1992.."now"|date("Y") %}
+                          <option>{{ i }}</option>
+                       {% endfor %}   
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <select name="yearEnd" id="yearEnd" class="form-control selectpicker" data-style="btn-primary" title="Año Final Renovación" data-live-search="true">
+                      {% for i in 1992.."now"|date("Y") %}
+                          <option>{{ i }}</option>
+                       {% endfor %}   
+                </select>
+            </div>
+            <div class="col-md-6">
+                <input type="hidden" name="excel" value="1" />
+                <button class="btn btn-success hide col-md-3" id="excelB" style="margin: 4px;" ><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</button>        
+                <a class="btn btn-primary col-md-3" id="search" style="margin: 4px;" >Generar</a>
+                <a class="btn btn-primary col-md-3" id="clear" style="margin: 4px;" >Limpiar</a>
+            </div>    
+        </div>        
     </form>        
     <div class="clearfix"><hr></div>
     <div id="detallado" class="tab-pane">
@@ -110,7 +125,7 @@
                             <th>Matricula</th>
                             <th>Organizacion </th>
                             <th>Categoria </th>
-                            <th>Ets. Matricula</th>
+                            <th>Est. Matricula</th>
                             <th>Identificación</th>
                             <th>NIT</th>
                             <th>RAZON SOCIAL</th>
@@ -137,7 +152,7 @@
                             <th>Matricula</th>
                             <th>Organizacion </th>
                             <th>Categoria </th>
-                            <th>Ets. Matricula</th>
+                            <th>Est. Matricula</th>
                             <th>Identificación</th>
                             <th>NIT</th>
                             <th>RAZON SOCIAL</th>
@@ -171,7 +186,7 @@
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
     <script>
-        $(document).ready(function() {  
+        $(document).ready(function() {              
             $('#extraccion').dataTable();
             
             $('.datepicker').datepicker({
@@ -179,15 +194,15 @@
                 autoclose: true,
                 format: 'yyyy-mm-dd',
                 
-            });
+            });                       
             $('.selectpicker').selectpicker();
             
             $('#tipoFecha').change(function(){
                 var tf = $(this).val();
                 if(tf!='all'){
-                    $('.datepicker').addClass('required');
+                    $('.fecReq').addClass('required');
                 }else{
-                    $('.datepicker').removeClass('required error btn-danger');
+                    $('.fecReq').removeClass('required error btn-danger');
                 }
             });
             
@@ -195,7 +210,7 @@
                 var val=$(this).val();
                 if(val.indexOf('5')>0){
                     $('#organizacion').selectpicker('deselectAll');
-                    $('#organizacion').val(4);
+                    $('#organizacion').val(5);
                     $('#organizacion').selectpicker('refresh');
                 }
             });
@@ -213,21 +228,12 @@
                     setTimeout($.unblockUI,3000);
             });
             
-        {# $('#exportExcel').click(function(){
-                var fecIni = $('#dateInit').val();
-                var fecEnd = $('#dateEnd').val();
-                var servicio = $('#servicio').val();
-                 $.ajax({
-                        url: '{{ path('exportExcel') }}',
-                        type: 'POST',
-                        data: {dateInit:fecIni , dateEnd:fecEnd , servicio:servicio, excel: '1'}                       
-                    })
-                    return false;
-            });   #} 
             $('#search').click(function(){
                 var tablaServicios = $('#extraccion').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
+                var yearIni = $('#yearInit').val();
+                var yearEnd = $('#yearEnd').val();
                 var organizacion = $('#organizacion').val();
                 var estadoMat = $('#estadoMat').val();
                 var afiliacion = $('#afiliacion').val();
@@ -237,6 +243,10 @@
                 var activoFinal = $('#activoFinal').val();
                 var tipoFecha = $('#tipoFecha').val();
                 var conterror=0;
+                
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });  
                 $('.required').each(function(){
                     var valc = $(this).prop('value');
                     var id = $(this).attr('id');
@@ -283,6 +293,8 @@
                             "data": {
                                 dateInit:fecIni ,
                                 dateEnd:fecEnd ,
+                                yearInit:yearIni ,
+                                yearEnd:yearEnd ,
                                 organizacion:organizacion,
                                 estadoMat:estadoMat,
                                 afiliacion:afiliacion,
@@ -297,7 +309,7 @@
                         
                     } );
                     $('#excelB').removeClass('hide');
-
+                    setTimeout($.unblockUI,3000);
                     return false;
                 }else{
                     $.blockUI({
