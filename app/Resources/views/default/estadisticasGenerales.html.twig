@@ -221,6 +221,7 @@
                             } ); 
                             
             $('#search').click(function(){
+                $('body').trigger('click');
                 var tablaDetalle = $('#tablaDetalle').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();

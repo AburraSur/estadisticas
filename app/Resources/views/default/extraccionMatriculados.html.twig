@@ -229,6 +229,7 @@
             });
             
             $('#search').click(function(){
+                $('body').trigger('click');
                 var tablaServicios = $('#extraccion').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
