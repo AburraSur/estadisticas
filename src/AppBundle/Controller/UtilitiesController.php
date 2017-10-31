@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class UtilitiesController extends Controller
 {
-    public function construirTablaResumen($results, $categoria, $tablaDetalle) {
+    public function construirTablaResumen($results, $categoria, $tablaDetalle,$arregloTotales,$arregloMatMun) {
         $municipios = array('05129','05266','05360','05380','05631');
         $codMuni = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA','otroDom' => 'otroDomicilio'); 
             $sociedades = array('03','04','05','06','07','09','11','15','16');
@@ -144,6 +144,29 @@ class UtilitiesController extends Controller
                 $excelData[]= number_format($totalMunicipio[$valueMun.$categoria],"0","",".");
                 
                 $excelDatos[] = $excelData;
+                
+                $organizacion = ['PN','EST','SOC','AGSUC','ESAL','CIVILES','TOTAL'];
+                
+                if($categoria!='cancelados'){
+                    foreach ($organizacion as $value) {
+                        if($value=='TOTAL'){
+                            //$arregloMatMun[$valueMun][$value] = $arregloMatMun[$valueMun][$value]+$totalMunicipio[$valueMun.$categoria];
+                            if(isset($arregloMatMun[$valueMun][$value])){
+                                $arregloMatMun[$valueMun][$value] = $arregloMatMun[$valueMun][$value]+$totalMunicipio[$valueMun.$categoria];
+                            }else{
+                                $arregloMatMun[$valueMun][$value] = $totalMunicipio[$valueMun.$categoria];
+                            }
+                        }else{
+                            if(isset($arregloMatMun[$valueMun][$value])){
+                                $arregloMatMun[$valueMun][$value] = $arregloMatMun[$valueMun][$value] + $arregloMatriculados[$valueMun.$categoria][$value];                       
+                            }else{
+                                $arregloMatMun[$valueMun][$value] = $arregloMatriculados[$valueMun.$categoria][$value];
+                            }
+                        }    
+                    }
+                }
+                
+                
 
             }
                                   
@@ -172,7 +195,46 @@ class UtilitiesController extends Controller
             $excelData[] = number_format($granTotal,"0","",".");
             $excelDatos[] = $excelData;
             
-            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal,'excelRegistro' => $excelDatos);
+            if($categoria!='cancelados'){
+                $arregloTotales['PN'] = $arregloTotales['PN']+$totalPN;
+                $arregloTotales['EST'] = $arregloTotales['EST']+$totalEST;
+                $arregloTotales['SOC'] = $arregloTotales['SOC']+$totalSOC;
+                $arregloTotales['AGSUC'] = $arregloTotales['AGSUC']+$totalAGSUC;
+                $arregloTotales['ESAL'] = $arregloTotales['ESAL']+$totalESAL;
+                $arregloTotales['CIVILES'] = $arregloTotales['CIVILES']+$totalCV;
+            }else{
+                $catego[] = 'Total Matriculados + Renovados';
+                
+
+                $excelDatos[] = $catego;
+                $excelDatos[] = $excelTitle;
+                foreach ($codMuni as $key => $value) {
+                    if($key!='otroDom'){
+                        $excelTotalesMun = array();
+                        $excelTotalesMun[] = "$value";
+                        $excelTotalesMun[] = $arregloMatMun[$key]['PN'];
+                        $excelTotalesMun[] = $arregloMatMun[$key]['EST'];
+                        $excelTotalesMun[] = $arregloMatMun[$key]['SOC'];
+                        $excelTotalesMun[] = $arregloMatMun[$key]['AGSUC'];
+                        $excelTotalesMun[] = $arregloMatMun[$key]['ESAL'];
+                        $excelTotalesMun[] = $arregloMatMun[$key]['CIVILES'];
+                        $excelTotalesMun[] = $arregloMatMun[$key]['TOTAL'];
+                        $excelDatos[] = $excelTotalesMun;
+                    }
+                }                
+                $excelTotales[] = 'Totales';
+                $excelTotales[] = $arregloTotales['PN'];
+                $excelTotales[] = $arregloTotales['EST'];
+                $excelTotales[] = $arregloTotales['SOC'];
+                $excelTotales[] = $arregloTotales['AGSUC'];
+                $excelTotales[] = $arregloTotales['ESAL'];
+                $excelTotales[] = $arregloTotales['CIVILES'];
+                $excelTotales[] = $arregloTotales['PN']+$arregloTotales['EST']+$arregloTotales['SOC']+$arregloTotales['AGSUC']+$arregloTotales['ESAL']+$arregloTotales['CIVILES'];
+                
+                $excelDatos[] = $excelTotales;
+                
+            }
+            return $tablas = array('tabla' => $tabla , 'tablaDetalle' => $tablaDetalle , 'granTotal' => $granTotal,'excelRegistro' => $excelDatos,'arregloTotales'=>$arregloTotales,'arregloMatMun'=>$arregloMatMun);
     }
     
     public function sedes( $em ){

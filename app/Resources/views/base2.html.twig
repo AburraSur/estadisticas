@@ -54,7 +54,7 @@
                         <a href="{{ path('extracionLibros') }}"><span class="glyphicon glyphicon-book" aria-hidden="true"></span>Extracción de Libros</a>
                     </li>
                     <li class="active" >
-                        <a href="{{ path('extraccionMatriculados') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción de Matriculados</a>
+                        <a href="{{ path('extraccionMatriculados') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción Bases de Datos</a>
                     </li>
                 </ul>
             </div>
@@ -87,6 +87,19 @@
                 '@AppBundle/Resources/public/js/bootstrap-datepicker.es.min.js'%}
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
+            <script>
+                $(document).ready(function(){
+                    $('#clear').click(function(){
+                        $(':input').val('');
+                        $('.selectpicker').selectpicker('refresh');
+                        $('.table').dataTable().fnDestroy();
+                        $('.table').dataTable();
+                        $('#activoIni').val('0');
+                        $('#activoFinal').val('999,999,999,999,999');
+                        $('.fecReq').removeClass('required');
+                    });
+                });
+            </script>
         {% endblock %}
 
 </body>
