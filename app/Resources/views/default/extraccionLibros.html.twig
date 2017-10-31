@@ -151,17 +151,6 @@
                 return false;
             });
             
-            /*$('#exportExcel').click(function(){
-                var fecIni = $('#dateInit').val();
-                var fecEnd = $('#dateEnd').val();
-                var libroActo = $('#acto').val();
-                 $.ajax({
-                        url: '{{ path('exportExcel') }}',
-                        type: 'POST',
-                        data: {dateInit:fecIni , dateEnd:fecEnd , libroActo:libroActo, excel: '1'}                       
-                    })
-                    return false;
-            });*/    
             $('#search').click(function(){
                 $('body').trigger('click');
                 $('.selectpicker').selectpicker('toggle');
