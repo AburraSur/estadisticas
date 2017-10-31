@@ -128,7 +128,6 @@
                 
             $('#search').click(function(){
                 $('body').trigger('click');
-                $('.selectpicker').selectpicker('toggle');
                 var tablaServicios = $('#tablaServicios').dataTable().fnDestroy();
                 var fecIni = $('#dateInit').val();
                 var fecEnd = $('#dateEnd').val();
