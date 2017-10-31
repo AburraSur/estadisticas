@@ -180,8 +180,12 @@ class DefaultController extends Controller
                 $columns[]= 'ESAL';
                 $columns[]= 'Civil';
                 $columns[]= 'Total';
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']) );
+                /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']) );
+                return $response;*/
+                $utilities = new UtilitiesController();
+                $response = $utilities->exportExcel( $arrayExcel, $columns,$nomExcel);
                 return $response;
+                
             }else{
                 return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'totalMatRen' => number_format($totalMatRen,"0","",".") , 'excelRegistro' => $excelRegistro , 'resultadosCan'=>$resultadosCan , 'arregloTotales'=>$arregloTotales , 'arregloMatMun'=>$arregloMatMun , '$totttt'=>$totttt)));
             }
@@ -346,7 +350,10 @@ class DefaultController extends Controller
             }
             
             $nomExcel = 'ExtraccionMatRenCan';
-            $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
+            /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
+            return $response;*/
+            $utilities = new UtilitiesController();
+            $response = $utilities->exportExcel( $excelReg, $columns,$nomExcel);
             return $response;
         }else{  
             $t1 = sizeof($matT);
@@ -699,7 +706,10 @@ class DefaultController extends Controller
                 
                 
                 $nomExcel = 'ExtraccionServicios';
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
+                /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
+                return $response;*/
+                $utilities = new UtilitiesController();
+                $response = $utilities->exportExcel( $resultadosServicios, $columns,$nomExcel);
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -864,7 +874,13 @@ class DefaultController extends Controller
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
-            foreach ($_POST['libroActo'] as $value) {
+            if($_POST['excel']==1){
+                $libroActo = $_POST['acto'];
+            }else{
+                $libroActo = $_POST['libroActo'];
+            }
+            
+            foreach ($libroActo as $value) {
                 $registro = explode("-", $value);
                 $libros[$registro[0]][] = $registro[1];
             }
@@ -920,7 +936,11 @@ class DefaultController extends Controller
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
+                $columns = ['id','Fecha inscripción','Matricula','Identificación','Razón Social','Noticia','Operador','Operación','idActo','Acto','idLibro','Libro'];
+                /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
+                return $response;*/
+                $utilities = new UtilitiesController();
+                $response = $utilities->exportExcel( $resultadoLibros, $columns,$nomExcel);
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
@@ -1203,45 +1223,6 @@ class DefaultController extends Controller
                                     'FEC-ULT-PAG-AFIL',
                                     'VAL-ULT-PAG-AFIL'
                                     ];
-                /*$sqlExtracMatri = "SELECT 
-                            mei.matricula,
-                            mei.organizacion ,
-                            mei.categoria ,
-                            mei.ctrestmatricula,
-                            mei.numid AS 'numidMat',
-                            mei.nit AS 'nitMat',
-                            mei.razonsocial AS 'razonsocialMat',
-                            mei.fecmatricula AS 'FEC-MATRICULA',
-                            mei.fecrenovacion AS 'FEC-RENOVACION',
-                            mei.feccancelacion AS 'FEC-CANCELACION',
-                            mei.dircom AS 'DIR-COMERCIAL',
-                            mei.muncom AS 'MUNICIPIO',
-                            mei.telcom1 AS 'TEL-COM-1',
-                            mei.telcom2 AS 'TEL-COM-2',
-                            mei.telcom3 AS 'TEL-COM-3',
-                            mei.emailcom AS 'EMAIL-COM',
-                            mei.ciiu1 AS 'CIIU1',
-                            mei.ciiu2 AS 'CIIU2',
-                            mei.ciiu3 AS 'CIIU3',
-                            mei.ciiu4 AS 'CIIU4',
-                            mei.acttot,
-                            mei.actvin,
-                            mev.numid AS idRepLegal,
-                            mev.nombre AS RepresentanteLegal,
-                            (CASE WHEN mei.organizacion='02' THEN mep.nit 
-                                ELSE inscritos.nit 
-                            END) AS 'idPropietario',
-                            (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
-                                ELSE inscritos.razonsocial 
-                            END) AS 'NombrePropietario'
-                        FROM
-                            mreg_est_inscritos mei
-                        LEFT JOIN mreg_est_vinculos mev ON mei.matricula = mev.matricula 
-                        LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
-                        LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
-                        WHERE mei.matricula <> '' 
-                        AND mei.ctrestmatricula IN $estado 
-                        AND (";*/
 
                 $i=0;
                 foreach($_POST['organizacion'] as $organiza){
@@ -1506,8 +1487,12 @@ class DefaultController extends Controller
                 if($_POST['excel']==1){
                     
                     $nomExcel = 'ExtraccionMatriculados';
-                    $response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultados , 'columnas'=>$columns , 'nomExcel'=>$nomExcel ));
-                    return $response;
+                    
+                    $utilities = new UtilitiesController();
+                    $response = $utilities->exportExcel( $resultados, $columns,$nomExcel);
+                     return $response;
+                    
+                    
                 }else{
                     if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
                         $sqlExtracMatri.=" AND (mei.matricula LIKE '".$_POST['search']['value']."%' ";
@@ -1520,17 +1505,6 @@ class DefaultController extends Controller
                         $sqlExtracMatri.=" OR mei.fecmatricula LIKE '".$_POST['search']['value']."%' ";
                         $sqlExtracMatri.=" OR mei.fecrenovacion LIKE '".$_POST['search']['value']."%' ";
                         $sqlExtracMatri.=" OR mei.feccancelacion LIKE '".$_POST['search']['value']."%' ";
-                        /*$sqlExtracMatri.=" OR mei.dircom LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.muncom LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.telcom1 LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.telcom2 LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.telcom3 LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.emailcom LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.ciiu1 LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.acttot LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mei.actvin LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mev.numid LIKE '".$_POST['search']['value']."%' ";
-                        $sqlExtracMatri.=" OR mev.nombre LIKE '".$_POST['search']['value']."%' )";*/
                     }
                     $sqlExtracMatri.= " GROUP BY mei.matricula ";
                     $stmt = $em->getConnection()->prepare($sqlExtracMatri);
@@ -1562,19 +1536,6 @@ class DefaultController extends Controller
                         $nestedData[] = $resultados[$i]['FEC-MATRICULA'];
                         $nestedData[] = $resultados[$i]['FEC-RENOVACION'];
                         $nestedData[] = $resultados[$i]['FEC-CANCELACION'];
-                        /*$nestedData[] = $resultados[$i]['DIR-COMERCIAL'];
-                        $nestedData[] = $resultados[$i]['MUNICIPIO'];
-                        $nestedData[] = $resultados[$i]['TEL-COM-1'];
-                        $nestedData[] = $resultados[$i]['TEL-COM-2'];
-                        $nestedData[] = $resultados[$i]['TEL-COM-3'];
-                        $nestedData[] = $resultados[$i]['EMAIL-COM'];
-                        $nestedData[] = $resultados[$i]['CIIU'];
-                        $nestedData[] = number_format($resultados[$i]['acttot'],"0","",".");
-                        $nestedData[] = number_format($resultados[$i]['actvin'],"0","",".");                        
-                        $nestedData[] = $resultados[$i]['idRepLegal'];  
-                        $nestedData[] = $resultados[$i]['RepresentanteLegal'];  
-                        $nestedData[] = $resultados[$i]['idPropietario'];
-                        $nestedData[] = $resultados[$i]['NombrePropietario'];*/
 
                         $data[] = $nestedData;
                     }           
@@ -1607,7 +1568,7 @@ class DefaultController extends Controller
     /**
      * @Route("/exportExcel", name="exportExcel")
      */
-    public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL , $nomExcel=NULL , $fecIni=NULL , $fecEnd=NULL )
+    /*public function exportExcelAction($resultadosServicios=NULL , $columnas=NULL , $nomExcel=NULL , $fecIni=NULL , $fecEnd=NULL )
     {
         
         
@@ -1690,7 +1651,7 @@ class DefaultController extends Controller
         $response->headers->set('Content-Disposition', $dispositionHeader);
 
         return $response;     
-    } 
+    } */
         
     /**
      * @Route("/consultaActos" , name="consultaActos" )

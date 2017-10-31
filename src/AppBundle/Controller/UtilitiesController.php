@@ -8,6 +8,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 class UtilitiesController extends Controller
 {
@@ -267,5 +269,37 @@ class UtilitiesController extends Controller
             $prepareCIIUS->execute();
             $ciius =  $prepareCIIUS->fetchAll();
             return $ciius;
+    }
+    
+    public function exportExcel($resultados,$columns,$nomExcel) {
+        $rows[] = implode(';', $columns);
+        foreach ($resultados as $event) {
+            $data = $event;
+
+            $rows[] = implode(';', $data);
+        }
+
+
+        $fecha = new \DateTime();
+        $fecExcel = $fecha->format('YmdHis');
+        
+        $content = implode("\n", $rows);
+        $response = new Response($content);
+        $dispositionHeader = $response->headers->makeDisposition(
+                                        ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                                        $nomExcel.$fecExcel.'.csv'
+                                    );
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Pragma', 'public');
+        $response->headers->set('Cache-Control', 'maxage=1');
+        $response->headers->set('Content-Disposition', $dispositionHeader);
+        //$response->headers->set('Content-Type', 'text/csv');
+
+        return $response;
+//        $response->setStatusCode(200);
+//        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+//        $response->headers->set('Content-Disposition', 'attachment; filename="export.csv"');
+
+        return $response;
     }
 }
