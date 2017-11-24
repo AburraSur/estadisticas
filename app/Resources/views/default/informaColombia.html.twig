@@ -15,8 +15,29 @@
     {# Formulario de búsqueda #}
     <div class="col-md-12">
         <form action="{{ path('informaColombia') }}" method="POST" >
-            <input type="hidden" name="generar" value="1" />
-            <button class="btn btn-primary col-md-3" id="search" >Generar archivos</button> 
+            <div class="form-group">
+                <label class="sr-only">Icono FechaIn</label>
+                <div class="col-md-4" style="margin:0;padding:0;">
+                    <div class="input-group">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial">
+                    </div>
+                </div>
+                <label class="sr-only">Icono FechaFin</label>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                    </div>
+                </div>           
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="hidden" name="generar" value="1" />
+                        <button class="btn btn-primary" id="search" >Generar archivos</button> 
+                        <a class="btn btn-primary" id="clear" >Limpiar</a>
+                    </div>
+                </div>    
+            </div>    
         </form>
     </div>
                                         
@@ -31,29 +52,23 @@
         $(document).ready(function() {  
             $('#search').click(function(){
                 
+            var fecIni = $('#dateInit').val();    
+            var fecFin = $('#dateEnd').val();
+            if(fecIni!='' && fecFin!=''){
                 $.blockUI({
                     message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
-                });               
-                    
-                    $.ajax({
-                        url: '{{ path('informaColombia') }}',
-                        type: 'POST',
-                        data: {generar:1 },
-                        success: function(data){
-                           
-                        }
-                    })
-                    return false;
-                    
+                });  
+                
+                setTimeout($.unblockUI,3000);
                      
-                }else{
-                    $.blockUI({
-                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
-                    });
-                    
-                    setTimeout($.unblockUI,3000);
-                }
-            });
+            }else{
+                $.blockUI({
+                    message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                });
+
+                setTimeout($.unblockUI,3000);
+            }
+        });
             
             
         });

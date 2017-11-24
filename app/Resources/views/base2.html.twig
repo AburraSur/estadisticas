@@ -39,7 +39,7 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="#">Estadisticas Cámara de Comercio Aburrá Sur</a>
-                <a href="{{ asset('/logout') }}" >Salir</a>
+                <a href="{{ path('fos_user_security_logout') }}" >Salir</a>
             </div>
             <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
             <div class="collapse navbar-collapse navbar-ex1-collapse">
@@ -100,6 +100,23 @@
                         $('#activoIni').val('0');
                         $('#activoFinal').val('999,999,999,999,999');
                         $('.fecReq').removeClass('required');
+                    });
+                    
+                    $('.datepicker').datepicker({
+                        language: 'es',
+                        autoclose: true,
+                        format: 'yyyy-mm-dd',
+
+                    });
+                    $('#dateInit').change(function(){
+                        var dato = $(this).val();
+                        $('#dateInit2').val(dato);
+                        $('#dateEnd').datepicker('setStartDate', dato);
+                    });
+
+                    $('#dateEnd').change(function(){
+                        var dato = $(this).val();
+                        $('#dateEnd2').val(dato);
                     });
                 });
             </script>
