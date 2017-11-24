@@ -1,0 +1,62 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="col-md-12">
+        <h2 class="h2" ><span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>Informa Colombia </h2>
+    </div>
+    <div class="col-md-12">
+        {#<h2 class="h2" >{{ dump(string) }}</h2>#}
+    </div>
+    {# Formulario de búsqueda #}
+    <div class="col-md-12">
+        <form action="{{ path('informaColombia') }}" method="POST" >
+            <input type="hidden" name="generar" value="1" />
+            <button class="btn btn-primary col-md-3" id="search" >Generar archivos</button> 
+        </form>
+    </div>
+                                        
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+    <script>
+        $(document).ready(function() {  
+            $('#search').click(function(){
+                
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });               
+                    
+                    $.ajax({
+                        url: '{{ path('informaColombia') }}',
+                        type: 'POST',
+                        data: {generar:1 },
+                        success: function(data){
+                           
+                        }
+                    })
+                    return false;
+                    
+                     
+                }else{
+                    $.blockUI({
+                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                    });
+                    
+                    setTimeout($.unblockUI,3000);
+                }
+            });
+            
+            
+        });
+    </script>
+{% endblock %}
+{# empty Twig template #}

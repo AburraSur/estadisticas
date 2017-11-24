@@ -41,6 +41,9 @@
 # Build data
 /build/
 
+# Data creada para archivos como informaColombia 
+/app/data/informes/
+
 # Composer PHAR
 /composer.phar
 
