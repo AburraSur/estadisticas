@@ -13,6 +13,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UtilitiesController extends Controller
 {
+    public function municipios(){
+        $municipios['codigos'] = array('05129','05266','05360','05380','05631');
+        $municipios['municipios'] = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA','otroDom' => 'otroDomicilio','0000'=>'');
+        
+        return $municipios;
+    }
+
+
     public function construirTablaResumen($results, $categoria, $tablaDetalle,$arregloTotales,$arregloMatMun) {
         $municipios = array('05129','05266','05360','05380','05631');
         $codMuni = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA','otroDom' => 'otroDomicilio'); 
@@ -45,7 +53,7 @@ class UtilitiesController extends Controller
             for($i=0;$i<sizeof($results);$i++){
                 
                 if((!in_array($results[$i]['muncom'], $municipios)) || $results[$i]['muncom'] =='' || $results[$i]['muncom'] == NULL){
-                    $posMunic = 'otroDom';
+                    $posMunic = '05360';
                 }else{
                     $posMunic = $results[$i]['muncom'];
                 }
@@ -55,7 +63,7 @@ class UtilitiesController extends Controller
                 }elseif($results[$i]['organizacion']=='02'){
                     $arregloMatriculados[$posMunic.$categoria]['EST']++;
                     $totalEST++;
-                }elseif(in_array($results[$i]['organizacion'], $sociedades) && $results[$i]['categoria']==1 ){
+                }elseif(in_array($results[$i]['organizacion'], $sociedades) && ($results[$i]['categoria']==1 || $results[$i]['categoria']=='' || $results[$i]['categoria']==null )){
                     $arregloMatriculados[$posMunic.$categoria]['SOC']++;
                     $totalSOC++;
                 }elseif(in_array($results[$i]['organizacion'], $sociedades) && ($results[$i]['categoria']==2 || $results[$i]['categoria']==3) ){
@@ -77,6 +85,12 @@ class UtilitiesController extends Controller
                     $arregloMatriculados[$posMunic.$categoria]['AGSUC']++;
                     $totalAGSUC++;
                 }
+                
+//                if(!in_array($posMunic, $municipios)){
+//                    $totalMunicipio['05360'.$categoria] = $totalMunicipio[$posMunic.$categoria]+1;
+//                }else{
+//                    $totalMunicipio[$posMunic.$categoria] = $totalMunicipio[$posMunic.$categoria]+1;
+//                }
                 $totalMunicipio[$posMunic.$categoria] = $totalMunicipio[$posMunic.$categoria]+1;
                 $granTotal++;
                 $estado = strtoupper(str_replace("s", "", $categoria));
@@ -272,7 +286,7 @@ class UtilitiesController extends Controller
     }
     
     public function exportExcel($resultados,$columns,$nomExcel) {
-        $rows[] = implode(';', $columns);
+        //$rows[] = implode(';', $columns);
         foreach ($resultados as $event) {
             $data = $event;
 
@@ -296,10 +310,59 @@ class UtilitiesController extends Controller
         //$response->headers->set('Content-Type', 'text/csv');
 
         return $response;
-//        $response->setStatusCode(200);
-//        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-//        $response->headers->set('Content-Disposition', 'attachment; filename="export.csv"');
+
+
+    }
+    
+    
+//  función para exportar informacion en formato TXT, los datos deben ser enviado en un array
+    public function exportTxt($resultados,$nomArchivo) {
+                
+        $content = implode("\n", $resultados);
+        $response = new Response($content);
+        $dispositionHeader = $response->headers->makeDisposition(
+                                        ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                                        $nomArchivo.'.txt'
+                                    );
+        $response->headers->set('Content-Type', 'text/plain; charset=utf-8');
+        $response->headers->set('Content-Disposition', $dispositionHeader);
 
         return $response;
+    }
+    
+    
+    //    funcion para dar formato a los diferentes datos que conforman los archivos para informaColombia, los string agregan espacios en blanco a la derecha,
+//    los entero agregan 0 a la izquierda y a su vez comprueban si son + o -
+    public function preparaInforma($dato, $tipo, $long) {
+        
+        $string= '';
+        $numero='';
+        
+        
+        if($tipo=='string'){
+            if(strpos($dato,"Ñ")){
+                $long++;                
+            }
+            $dato = str_pad($dato, $long);
+            $resultado=$dato;
+        }elseif($tipo=='ciiu'){
+            $dato = str_pad($dato, $long," ",STR_PAD_LEFT);
+            $resultado=$dato;
+        }else{
+            $signo = 1;
+            if($dato<0){
+                if($dato[0]=='-'){
+                    $dato = substr($dato, 1);
+                    $signo = 0;
+                }
+            }    
+            if(strlen($dato)<$long){
+                $dato = str_pad($dato, $long,"0",STR_PAD_LEFT); 
+            }
+            $resultado['signo']=$signo;
+            $resultado['dato']=$dato;
+            
+        }
+        return $resultado;
     }
 }
