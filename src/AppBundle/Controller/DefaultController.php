@@ -1947,9 +1947,9 @@ class DefaultController extends Controller
 
             $zip->addFile($archivo, "informa1.txt");
 
-            $zip->addFile($archivo, "informa2.txt");
+            $zip->addFile($archivoVinc, "informa2.txt");
             
-            $zip->addFile($archivo, "informa3.txt");
+            $zip->addFile($archivoCert, "informa3.txt");
 
             $zip->close();
             header('Content-Type', 'application/zip');
