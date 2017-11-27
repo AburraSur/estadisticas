@@ -228,24 +228,24 @@ class UtilitiesController extends Controller
                     if($key!='otroDom'){
                         $excelTotalesMun = array();
                         $excelTotalesMun[] = "$value";
-                        $excelTotalesMun[] = $arregloMatMun[$key]['PN'];
-                        $excelTotalesMun[] = $arregloMatMun[$key]['EST'];
-                        $excelTotalesMun[] = $arregloMatMun[$key]['SOC'];
-                        $excelTotalesMun[] = $arregloMatMun[$key]['AGSUC'];
-                        $excelTotalesMun[] = $arregloMatMun[$key]['ESAL'];
-                        $excelTotalesMun[] = $arregloMatMun[$key]['CIVILES'];
-                        $excelTotalesMun[] = $arregloMatMun[$key]['TOTAL'];
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['PN'],"0","",".");
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['EST'],"0","",".");
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['SOC'],"0","",".");
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['AGSUC'],"0","",".");
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['ESAL'],"0","",".");
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['CIVILES'],"0","",".");
+                        $excelTotalesMun[] = number_format($arregloMatMun[$key]['TOTAL'],"0","",".");
                         $excelDatos[] = $excelTotalesMun;
                     }
                 }                
                 $excelTotales[] = 'Totales';
-                $excelTotales[] = $arregloTotales['PN'];
-                $excelTotales[] = $arregloTotales['EST'];
-                $excelTotales[] = $arregloTotales['SOC'];
-                $excelTotales[] = $arregloTotales['AGSUC'];
-                $excelTotales[] = $arregloTotales['ESAL'];
-                $excelTotales[] = $arregloTotales['CIVILES'];
-                $excelTotales[] = $arregloTotales['PN']+$arregloTotales['EST']+$arregloTotales['SOC']+$arregloTotales['AGSUC']+$arregloTotales['ESAL']+$arregloTotales['CIVILES'];
+                $excelTotales[] = number_format($arregloTotales['PN'],"0","",".");
+                $excelTotales[] = number_format($arregloTotales['EST'],"0","",".");
+                $excelTotales[] = number_format($arregloTotales['SOC'],"0","",".");
+                $excelTotales[] = number_format($arregloTotales['AGSUC'],"0","",".");
+                $excelTotales[] = number_format($arregloTotales['ESAL'],"0","",".");
+                $excelTotales[] = number_format($arregloTotales['CIVILES'],"0","",".");
+                $excelTotales[] = number_format(($arregloTotales['PN']+$arregloTotales['EST']+$arregloTotales['SOC']+$arregloTotales['AGSUC']+$arregloTotales['ESAL']+$arregloTotales['CIVILES']),"0","",".");
                 
                 $excelDatos[] = $excelTotales;
                 
