@@ -241,7 +241,7 @@ class DefaultController extends Controller
             $fecIni = str_replace("-", "", $_POST['dateInit']);
             $fecEnd = str_replace("-", "", $_POST['dateEnd']);
             
-            $columns =['matricula', 
+            $excelReg[] =['matricula', 
                     'Cod organizacion',
                     'organizacion',
                     'categoria',
@@ -386,7 +386,7 @@ class DefaultController extends Controller
             /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
             return $response;*/
             $utilities = new UtilitiesController();
-            $response = $utilities->exportExcel( $excelReg, $columns,$nomExcel);
+            $response = $utilities->exportExcel( $excelReg, '',$nomExcel);
             return $response;
         }else{  
             $t1 = sizeof($matT);
@@ -681,7 +681,7 @@ class DefaultController extends Controller
             
             $impServi = "'".implode("','",$_POST['servicio'])."'";
 
-            $columns = ['identificacion',
+            $columns = ['Identificacion',
                     'Cliente',
                     'Matricula',
                     'Organizacion',
@@ -1081,9 +1081,10 @@ class DefaultController extends Controller
                                 mev.numid AS idRepLegal,
                                 mev.nombre AS RepresentanteLegal,
                                 (CASE
-                                    WHEN mei.organizacion = '02' AND (mep.nit ='' AND mep.identificacion='') THEN (select nit from mreg_est_inscritos where matricula=mep.matriculapropietario)
+                                    WHEN mei.organizacion = '02' AND (mep.nit ='' AND mep.identificacion='') THEN mei.nit
                                     WHEN mei.organizacion = '02' AND mep.nit !='' THEN mep.nit
                                     WHEN mei.organizacion = '02' AND mep.nit ='' THEN mep.identificacion
+                                    ELSE ''
                                 END) AS 'idPropietario',
                                 (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
                                     ELSE inscritos.razonsocial 
@@ -1830,7 +1831,7 @@ class DefaultController extends Controller
                     }else{
                         $arreglo.= $util->preparaInforma('', 'string', 25);
                     }
-
+                    $arreglo.= $util->preparaInforma(0, 'string', 10);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['telcom1'], 'string', 10);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['faxcom'], 'string', 10);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['emailcom'], 'string', 50);
@@ -1874,7 +1875,7 @@ class DefaultController extends Controller
                             }else{
                                 $vctrcargo = 2;
                             }
-                            $vlrCtrCargo = $util->preparaInforma($vctrcargo, 'entero', 1);
+                            $vlrCtrCargo = $util->preparaInforma($vctrcargo, 'entero', 2);
                             $vinculos .= $vlrCtrCargo['dato'];
                             $vlrVinculo = $util->preparaInforma($resultVinculos[$j]['vinculo'], 'entero', 4);
                             $vinculos .= $vlrVinculo['dato'];
@@ -1996,33 +1997,6 @@ class DefaultController extends Controller
         }else{
             return $this->render('default/informaColombia.html.twig');
         }
-    }
-    
-    /**
-     * 
-     * @Route("/nits" , name="nits" )
-     */
-    
-    public function nitAction() {
-        $em = $this->getDoctrine()->getManager('sii');
-        $util = new UtilitiesController();        
-        $nits = ['900431014','900618394','900462667','860071562','900663781','900545978','900462833','800219510','900347321','830513134','428860384','900536673','900511941','890929877','900499950','900548395','900010320','900691492','890900608','900054711','811030191','890900608','900340118','900550831','900323251','900553329','715897240','900545544','900490620','900238615','900670711','900533325','162348451','438684313','900678731','900684058','900362244','900443661','814004952','891900990','900740627','811026526','900681994'];
-        //$newNit = array();
-        $i=0;
-        foreach ($nits as $value) {
-            $sql = "select mei.nit, mei.numid from mreg_est_inscritos mei where mei.nit LIKE '%$value%' OR mei.numid LIKE '%$value%'";
-            $info1 = $em->getConnection()->prepare($sql);
-            $info1->execute();
-            $datosInforma1 = $info1->fetchAll();
-            if(sizeof($datosInforma1)>0){
-            $newNit[] = $datosInforma1[0]['numid'];
-//            $newNit[$i]['nit'] = $datosInforma1[0]['nit'];
-            $i++;
-            }
-        }
-        $nomExcel = 'informa1';
-        $response = $util->exportTxt( $newNit,$nomExcel);
-        return $response;
-//        return $this->render('default/nit.html.twig',array('nit'=>$newNit));
-    }
+    } 
+
 }
