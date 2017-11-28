@@ -681,7 +681,7 @@ class DefaultController extends Controller
             
             $impServi = "'".implode("','",$_POST['servicio'])."'";
 
-            $columns = ['identificacion',
+            $columns = ['Identificacion',
                     'Cliente',
                     'Matricula',
                     'Organizacion',
@@ -1081,9 +1081,10 @@ class DefaultController extends Controller
                                 mev.numid AS idRepLegal,
                                 mev.nombre AS RepresentanteLegal,
                                 (CASE
-                                    WHEN mei.organizacion = '02' AND (mep.nit ='' AND mep.identificacion='') THEN (select nit from mreg_est_inscritos where matricula=mep.matriculapropietario)
+                                    WHEN mei.organizacion = '02' AND (mep.nit ='' AND mep.identificacion='') THEN mei.nit
                                     WHEN mei.organizacion = '02' AND mep.nit !='' THEN mep.nit
                                     WHEN mei.organizacion = '02' AND mep.nit ='' THEN mep.identificacion
+                                    ELSE ''
                                 END) AS 'idPropietario',
                                 (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
                                     ELSE inscritos.razonsocial 

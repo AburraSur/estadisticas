@@ -286,7 +286,10 @@ class UtilitiesController extends Controller
     }
     
     public function exportExcel($resultados,$columns,$nomExcel) {
-        //$rows[] = implode(';', $columns);
+        
+        if($columns!=''){    
+            $rows[] = implode(';', $columns);
+        }    
         foreach ($resultados as $event) {
             $data = $event;
 
