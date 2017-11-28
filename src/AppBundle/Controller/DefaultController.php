@@ -1084,7 +1084,6 @@ class DefaultController extends Controller
                                     WHEN mei.organizacion = '02' AND (mep.nit ='' AND mep.identificacion='') THEN mei.nit
                                     WHEN mei.organizacion = '02' AND mep.nit !='' THEN mep.nit
                                     WHEN mei.organizacion = '02' AND mep.nit ='' THEN mep.identificacion
-                                    ELSE ''
                                 END) AS 'idPropietario',
                                 (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
                                     ELSE inscritos.razonsocial 
