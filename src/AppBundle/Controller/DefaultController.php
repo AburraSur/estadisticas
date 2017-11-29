@@ -1081,9 +1081,9 @@ class DefaultController extends Controller
                                 mev.numid AS idRepLegal,
                                 mev.nombre AS RepresentanteLegal,
                                 (CASE
-                                    WHEN mei.organizacion = '02' AND (mep.nit ='' AND mep.identificacion='') THEN mei.nit
                                     WHEN mei.organizacion = '02' AND mep.nit !='' THEN mep.nit
                                     WHEN mei.organizacion = '02' AND mep.nit ='' THEN mep.identificacion
+                                    ELSE ''
                                 END) AS 'idPropietario',
                                 (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
                                     ELSE inscritos.razonsocial 
@@ -1266,7 +1266,7 @@ class DefaultController extends Controller
                     }elseif($organiza==1){
                         $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1')) ";
                     }elseif($organiza==2){
-                        $condiOrga = " (mei.organizacion = '02' OR mei.categoria = '2' OR mei.categoria = '3') ";
+                        $condiOrga = " (mei.organizacion = '02') ";
                     }elseif($organiza==3){
                         $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND mei.categoria IN ('2','3')) ";
                     }elseif($organiza==4){
