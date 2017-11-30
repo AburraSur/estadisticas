@@ -14,12 +14,12 @@
         </div>
         
         <div class="panel panel-default" >
-            <div class="panel-heading">
-                <div class="panel-title text-center">Iniciar Sesión</div>
-            </div>     
-
             <div class="panel-body" >
-
+                <div class="panel-title text-center">
+                    <label>
+                        Extracciones y Estadisticas CCAS
+                    </label>    
+                </div>
                 <form action="{{ path("fos_user_security_check") }}" method="post">
                     {% if error %}
                         <div class="alert alert-danger" >{{ error.messageKey|trans(error.messageData, 'security') }}</div>
@@ -29,23 +29,28 @@
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}" />
                     {% endif %}
                     <div class="form-group">
+                        <label for="username">
+                            Usuario
+                        </label>
                         <div class="input-group">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                            <input type="text" class="form-control" id="username" name="_username" required="required"  placeholder="User">                                        
+                            <input type="text" class="form-control" id="username" name="_username" required="required"  placeholder="Usuario">                                        
                         </div>
                     </div>    
-                    <div class="form-group">      
+                    <div class="form-group">  
+                        <label for="password">
+                            Contraseña
+                        </label>
                         <div class="input-group">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                            <input type="password" class="form-control" id="password" name="_password" required="required" placeholder="Password">
+                            <input type="password" class="form-control" id="password" name="_password" required="required" placeholder="Contraseña">
                         </div> 
                     </div>                                                                  
 
                     <div class="form-group">
                         <!-- Button -->
-                        <div class="col-sm-12 controls">
-                            <button type="submit" href="#" class="btn btn-primary pull-right"><i class="glyphicon glyphicon-log-in"></i> Log in</button>                          
-                        </div>
+                            <input class="btn btn-primary btn-block" data-disable-with="Signing in…" name="commit" tabindex="3" type="submit" value="Iniciar Sesión">
+                        
                     </div>
 
                 </form>     
