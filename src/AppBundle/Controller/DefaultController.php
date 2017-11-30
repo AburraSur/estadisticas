@@ -12,6 +12,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use ZipArchive;
 use AppBundle\Controller\UtilitiesController;
+use AppBundle\Entity\Logs;
 
 class DefaultController extends Controller
 {
@@ -35,8 +36,13 @@ class DefaultController extends Controller
      */
     public function estadisticasGeneralesAction(Request $request)
     {
+        
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
+                
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
-            $SIIem =  $this->getDoctrine()->getManager('sii');
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
             
@@ -162,7 +168,6 @@ class DefaultController extends Controller
 //                    }
 //                }
                 
-                $fecha = new \DateTime();
                 $fecActua = $fecha->format('Y/m/d - H:i:s');
                 
                 $arrayExcel2[]='';
@@ -215,11 +220,23 @@ class DefaultController extends Controller
                 $columns[]= 'Total';
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']) );
                 return $response;*/
+                
                 $utilities = new UtilitiesController();
                 $response = $utilities->exportExcel( $arrayExcel, $columns,$nomExcel);
                 return $response;
                 
             }else{
+                $logs = new Logs();
+                $logs->setFecha($fecha);
+                $logs->setModulo('Extracción Matriculados, Renovados y Cancelados');
+                $logs->setQuery('Consulta: '.$sqlMat.' ** '.$sqlRen.' ** '.$sqlCan.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
+                $logs->setIdUser($user);
+                
+                $logem->persist($logs);
+                $logem->flush($logs);
+                
+                
+                
                 return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'totalMatRen' => number_format($totalMatRen,"0","",".") , 'excelRegistro' => $excelRegistro , 'resultadosCan'=>$resultadosCan , 'arregloTotales'=>$arregloTotales , 'arregloMatMun'=>$arregloMatMun , '$totttt'=>$totttt)));
             }
 //            return new Response(json_encode(array('tablaMatri' => $tablaMatri , 'tablaDetalle' => $tablaDetalle )));
@@ -234,24 +251,28 @@ class DefaultController extends Controller
      */
     public function tabladetalleAction(Request $request)
     {
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
-            $fechaInicial = explode("-", $_POST['dateInit']);
-            $fechaFinal = explode("-", $_POST['dateEnd']);
-            
-            $fecIni = str_replace("-", "", $_POST['dateInit']);
-            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
-            
-            $excelReg[] =['matricula', 
-                    'Cod organizacion',
-                    'organizacion',
-                    'categoria',
-                    'muncom',
-                    'razonsocial',
-                    'estado',
-                    'fecmatricula',
-                    'fecrenovacion',
-                    'feccancelacion',
-                    'ultanoren',
+        $logem =  $this->getDoctrine()->getManager();
+        
+        $fechaInicial = explode("-", $_POST['dateInit']);
+        $fechaFinal = explode("-", $_POST['dateEnd']);
+
+        $fecIni = str_replace("-", "", $_POST['dateInit']);
+        $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+
+        $excelReg[] =['matricula', 
+                'Cod organizacion',
+                'organizacion',
+                'categoria',
+                'muncom',
+                'razonsocial',
+                'estado',
+                'fecmatricula',
+                'fecrenovacion',
+                'feccancelacion',
+                'ultanoren',
            ];
             
 //          Consulta para los matriculados en el rango de fechas consultado  
@@ -381,6 +402,18 @@ class DefaultController extends Controller
                     $totalFiltered++;
                 }    
             }
+            
+            
+            $logs = new Logs();
+            $logs->setFecha($fecha);
+            $logs->setModulo('Extracción Matriculados, Renovados y Cancelados');
+            $logs->setQuery('Exporta: '.$sqlMat.' ** '.$sqlRen.' ** '.$sqlCan.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
+            $logs->setIdUser($user);
+
+            $logem->persist($logs);
+            $logem->flush($logs);
+
+
             
             $nomExcel = 'ExtraccionMatRenCan';
             /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
@@ -667,7 +700,10 @@ class DefaultController extends Controller
     public function extraeserviciosDetalleAction(Request $request)
     {
         
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
         
         $sedes = new UtilitiesController();
         $listaSedes = $sedes->sedes($SIIem);
@@ -741,6 +777,14 @@ class DefaultController extends Controller
                 $nomExcel = 'ExtraccionServicios';
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadosServicios , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
+                $logs = new Logs();
+                $logs->setFecha($fecha);
+                $logs->setModulo('Extracción Servicios');
+                $logs->setQuery('Extracción: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
+                $logs->setIdUser($user);
+                
+                $logem->persist($logs);
+                $logem->flush($logs);
                 $utilities = new UtilitiesController();
                 $response = $utilities->exportExcel( $resultadosServicios, $columns,$nomExcel);
                 return $response;
@@ -799,7 +843,14 @@ class DefaultController extends Controller
                             );
 
     //            echo json_encode($json_data);
-            
+                $logs = new Logs();
+                $logs->setFecha($fecha);
+                $logs->setModulo('Extracción Servicios');
+                $logs->setQuery('Consulta: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
+                $logs->setIdUser($user);
+                
+                $logem->persist($logs);
+                $logem->flush($logs);
             
                 return new Response(json_encode($json_data ));
             }    
@@ -814,7 +865,10 @@ class DefaultController extends Controller
     public function extracionLibrosAction(Request $request)
     {
         
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
         
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
             $fechaInicial = explode("-", $_POST['dateInit']);
@@ -899,7 +953,10 @@ class DefaultController extends Controller
     public function extraeLibroActosDetalleAction(Request $request)
     {
         
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
         
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -972,6 +1029,15 @@ class DefaultController extends Controller
                 $columns = ['id','Fecha inscripción','Matricula','Identificación','Razón Social','Noticia','Operador','Operación','idActo','Acto','idLibro','Libro'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
+                $logs = new Logs();
+                $logs->setFecha($fecha);
+                $logs->setModulo('Extracción Libros Detallado');
+                $logs->setQuery('Extracción: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
+                $logs->setIdUser($user);
+                
+                $logem->persist($logs);
+                $logem->flush($logs);
+                
                 $utilities = new UtilitiesController();
                 $response = $utilities->exportExcel( $resultadoLibros, $columns,$nomExcel);
                 return $response;
@@ -1031,7 +1097,14 @@ class DefaultController extends Controller
                             );
 
     //            echo json_encode($json_data);
-            
+                $logs = new Logs();
+                $logs->setFecha($fecha);
+                $logs->setModulo('Extracción Libros Detallado');
+                $logs->setQuery('Consulta: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
+                $logs->setIdUser($user);
+                
+                $logem->persist($logs);
+                $logem->flush($logs);
             
                 return new Response(json_encode($json_data ));
             } 
@@ -1045,7 +1118,10 @@ class DefaultController extends Controller
      */
     
     public function extraccionMatriculadosAction() {
-        $em = $this->getDoctrine()->getManager('sii');
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $em =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
         
         if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipio']) ){
                         
@@ -1526,6 +1602,15 @@ class DefaultController extends Controller
                     
                     $nomExcel = 'ExtraccionMatriculados';
                     
+                    $logs = new Logs();
+                    $logs->setFecha($fecha);
+                    $logs->setModulo('Extracción Bases de Datos Generales');
+                    $logs->setQuery("Extraccion: ".$sqlExtracMatri." GROUP BY mei.matricula ORDER BY mei.matricula DESC;");
+                    $logs->setIdUser($user);
+
+                    $logem->persist($logs);
+                    $logem->flush($logs);
+                    
                     $utilities = new UtilitiesController();
                     $response = $utilities->exportExcel( $resultados, $columns,$nomExcel);
                      return $response;
@@ -1587,7 +1672,14 @@ class DefaultController extends Controller
                                 );
 
         //            echo json_encode($json_data);
+                    $logs = new Logs();
+                    $logs->setFecha($fecha);
+                    $logs->setModulo('Extracción Bases de Datos Generales');
+                    $logs->setQuery("Consulta: ".$sqlExtracMatri);
+                    $logs->setIdUser($user);
 
+                    $logem->persist($logs);
+                    $logem->flush($logs);
 
                     return new Response(json_encode($json_data ));
 
@@ -1619,7 +1711,7 @@ class DefaultController extends Controller
     //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
         $libros = $SIIem->getConnection()->prepare($sqlLibro);
     //            Ejecución de las consultas
-        $libros->execute($params);
+        $libros->execute();
         $rowLibros = $libros->fetchAll();
         $listaLibros ='<optgroup label="'.$rowLibros[0]['libro'].'" >';
         $auxLibro = $rowLibros[0]['idlibro'];
@@ -1641,7 +1733,11 @@ class DefaultController extends Controller
      * @Route("/informaColombia" , name="informaColombia" )
      */
     public function informaColombiaAction() {
-        $em = $this->getDoctrine()->getManager('sii');
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $em =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
+        
         $util = new UtilitiesController();
         $fecha = new \DateTime();
         $fecActual = $fecha->format('Ymd');
@@ -1934,6 +2030,14 @@ class DefaultController extends Controller
             $content = implode("\n", $infomaData);
             $informe = $this->renderView('informa1.txt.twig',array('infomaData'=>$content));
             
+            $logs = new Logs();
+            $logs->setFecha($fecha);
+            $logs->setModulo('informaColombia');
+            $logs->setQuery('Genera Archivos: '.$sqlInforma1);
+            $logs->setIdUser($user);
+
+            $logem->persist($logs);
+            $logem->flush($logs);
                        
             $fs = new Filesystem();
             $archivo = $this->container->getParameter('kernel.root_dir').'/data/informes/informa1.txt';
