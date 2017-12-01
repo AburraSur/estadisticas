@@ -1988,7 +1988,10 @@ class DefaultController extends Controller
                         }
                     }
 
-                    $sqlCertificas = "SELECT mecerti.matricula, mecerti.idcertifica, mecerti.texto FROM mreg_est_certificas mecerti WHERE mecerti.matricula=:matricula ORDER BY mecerti.id ASC ";
+                    $sqlCertificas = "SELECT mecerti.matricula, mecerti.idcertifica, mecerti.texto "
+                            . "FROM mreg_est_certificas mecerti "
+                            . "WHERE mecerti.matricula=:matricula "
+                            . "ORDER BY mecerti.matricula, mecerti.id ASC ";
                     $info3 = $em->getConnection()->prepare($sqlCertificas);
                     $info3->execute(array('matricula'=>$datosInforma1[$i]['matricula']));
                     $resultCertificas = $info3->fetchAll();                    
