@@ -1826,7 +1826,6 @@ class DefaultController extends Controller
                                     OR mer.servicio LIKE '010203%'
                                     OR mer.servicio LIKE '0103%')
                             AND mer.ctranulacion = '0'
-                            AND mei.ctrestmatricula IN ('MA','MI','IA')
                             AND mei.matricula !='' 
                             GROUP BY mei.matricula ";    
             
@@ -1945,7 +1944,7 @@ class DefaultController extends Controller
 
                     $infomaData[] = $arreglo;
                 
-                    if($datosInforma1[$i]['organizacion']!=='01' && $datosInforma1[$i]['organizacion']!=='02'){
+                    if($datosInforma1[$i]['organizacion']!=='01' && $datosInforma1[$i]['organizacion']!=='02' && $datosInforma1[$i]['organizacion']!=='12'  && $datosInforma1[$i]['organizacion']!=='14' ){
                         $sqlVinculos = "SELECT mev.matricula, mev.nombre, mev.idclase, mev.numid, mev.idcargo, mev.vinculo, mev.descargo, mev.cuotasref, mev.valorref FROM mreg_est_vinculos mev WHERE mev.matricula=:matricula";
                         $info2 = $em->getConnection()->prepare($sqlVinculos);
                         $info2->execute(array('matricula'=>$datosInforma1[$i]['matricula']));
@@ -1967,6 +1966,8 @@ class DefaultController extends Controller
                                 $vctrcargo = 3;
                             }elseif($ctrCargo=='214'){
                                 $vctrcargo = 1;
+                            }elseif($ctrCargo=='216'){
+                                $vctrcargo = 4;
                             }else{
                                 $vctrcargo = 2;
                             }
