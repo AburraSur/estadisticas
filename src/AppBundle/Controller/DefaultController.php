@@ -170,7 +170,7 @@ class DefaultController extends Controller
                 
                 $fecActua = $fecha->format('Y/m/d - H:i:s');
                 
-                $arrayExcel2[]='';
+                
                 $arrayExcel2[]= 'CAMARA DE COMERCIO';
                 $arrayExcel2[]='';
                 $arrayExcel2[]='';
@@ -181,7 +181,6 @@ class DefaultController extends Controller
                 
                 $arrayExcel[] = $arrayExcel2;
                 
-                $arrayExcel3[]='';
                 $arrayExcel3[]= 'ABURRA SUR';
                 $arrayExcel3[]='';
                 $arrayExcel3[]='';
@@ -189,7 +188,6 @@ class DefaultController extends Controller
                 
                 $arrayExcel[] = $arrayExcel3;
                 
-                $arrayExcelP[]='';
                 $arrayExcelP[]='';
                 $arrayExcelP[]='Periodo: '.$_POST['dateInit'].' Hasta '.$_POST['dateEnd'];
                 $arrayExcelP[]='';
@@ -210,19 +208,17 @@ class DefaultController extends Controller
                 }
 
                 $nomExcel = 'ResumenMatRenCan';
-                $columns[] = 'Municipio';
-                $columns[]= 'P. Naturales';
-                $columns[]= 'Establecimientos';
-                $columns[]= 'Sociedades';
-                $columns[]= 'Agencias - Sucursales';
-                $columns[]= 'ESAL';
-                $columns[]= 'Civil';
-                $columns[]= 'Total';
-                /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$arrayExcel, 'columnas'=>'' , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']) );
-                return $response;*/
+//                $columns[] = 'Municipio';
+//                $columns[]= 'P. Naturales';
+//                $columns[]= 'Establecimientos';
+//                $columns[]= 'Sociedades';
+//                $columns[]= 'Agencias - Sucursales';
+//                $columns[]= 'ESAL';
+//                $columns[]= 'Civil';
+//                $columns[]= 'Total';
                 
                 $utilities = new UtilitiesController();
-                $response = $utilities->exportExcel( $arrayExcel, $columns,$nomExcel);
+                $response = $utilities->exportExcel( $arrayExcel, '',$nomExcel);
                 return $response;
                 
             }else{
@@ -1121,7 +1117,8 @@ class DefaultController extends Controller
         $fecha = new \DateTime();
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
-        $logem =  $this->getDoctrine()->getManager();
+        $logem =  $this->getDoctrine()->getManager();        
+        $utilities = new UtilitiesController();
         
         if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipio']) ){
                         
@@ -1135,6 +1132,7 @@ class DefaultController extends Controller
                             mei.matricula,
                                 mei.proponente,
                                 mei.organizacion,
+                                mei.organizacion as 'descorganiza',
                                 mei.categoria,
                                 mei.ctrestmatricula,
                                 mei.ctrestdatos,
@@ -1189,7 +1187,9 @@ class DefaultController extends Controller
                                 mei.ctrfun,
                                 mei.ctrubi,
                                 mei.ctrclasegenesadl,
+                                mei.ctrclasegenesadl AS 'descgenesal',
                                 mei.ctrclaseespeesadl,
+                                mei.ctrclaseespeesadl  AS 'descespesal',
                                 mei.ctrclaseeconsoli,
                                 mei.ctrbenart7,
                                 mei.ctrbenley1780,
@@ -1243,6 +1243,7 @@ class DefaultController extends Controller
                         $columns=['MATRICULA',
                                     'PROPONENTE',
                                     'ORGANIZACION',
+                                    'DESC.ORGANIZACION',
                                     'CATEGORIA',
                                     'EST-MATRICULA',
                                     'EST_DATOS',
@@ -1291,7 +1292,9 @@ class DefaultController extends Controller
                                     'TIEMPO-FUN',
                                     'UBICACION',
                                     'CLA-GEN-ESADL',
+                                    'DESCRIP. CLA-GEN-ESADL',
                                     'CLA-ESPE-ESADL',
+                                    'DESCRIP. CLA-ESPE-ESADL',
                                     'CLA-ECON-SOLI',
                                     'BEN-ART-7',
                                     'BEN-LEY-1780',
@@ -1352,6 +1355,7 @@ class DefaultController extends Controller
                                 mei.matricula,
                                 mei.proponente,
                                 mei.organizacion,
+                                mei.organizacion as 'descorganiza',
                                 mei.categoria,
                                 mei.ctrestmatricula,
                                 mei.ctrestdatos,
@@ -1398,7 +1402,9 @@ class DefaultController extends Controller
                                 mei.ctrfun,
                                 mei.ctrubi,
                                 mei.ctrclasegenesadl,
+                                mei.ctrclasegenesadl AS 'descgenesal',
                                 mei.ctrclaseespeesadl,
+                                mei.ctrclaseespeesadl  AS 'descespesal',
                                 mei.ctrclaseeconsoli,
                                 mei.ctrbenart7,
                                 mei.ctrbenley1780,
@@ -1457,6 +1463,7 @@ class DefaultController extends Controller
                             $columns=['MATRICULA',
                                         'PROPONENTE',
                                         'ORGANIZACION',
+                                        'DESC.ORGANIZACION',
                                         'CATEGORIA',
                                         'EST-MATRICULA',
                                         'EST_DATOS',
@@ -1503,7 +1510,9 @@ class DefaultController extends Controller
                                         'TIEMPO-FUN',
                                         'UBICACION',
                                         'CLA-GEN-ESADL',
+                                        'DESCRIP. CLA-GEN-ESADL',
                                         'CLA-ESPE-ESADL',
+                                        'DESCRIP. CLA-ESPE-ESADL',
                                         'CLA-ECON-SOLI',
                                         'BEN-ART-7',
                                         'BEN-LEY-1780',
@@ -1598,6 +1607,55 @@ class DefaultController extends Controller
                 $resultados = $stmt->fetchAll();
                 $totalFiltered = $totalData = sizeof($resultados);
                 
+                $utilMuni = $utilities->municipios();
+                $municipios = $utilMuni['municipios'];
+                
+                $sqlESAL= "SELECT mce.id, mce.descripcion FROM mreg_clase_esadl mce ";
+                $emESAL = $em->getConnection()->prepare($sqlESAL);
+                $emESAL->execute();
+                $claseESAL = $emESAL->fetchAll();
+                for($i=0;$i<sizeof($claseESAL);$i++){
+                    $claseEspecial[$claseESAL[$i]['id']] = $claseESAL[$i]['descripcion'];
+                }
+                
+                $sqlOrg= "SELECT borg.id, borg.descripcion FROM bas_organizacionjuridica borg ";
+                $emOrg = $em->getConnection()->prepare($sqlOrg);
+                $emOrg->execute();
+                $Organiza = $emOrg->fetchAll();
+                for($i=0;$i<sizeof($Organiza);$i++){
+                    $Organizacion[$Organiza[$i]['id']] = $Organiza[$i]['descripcion'];
+                }
+                
+                $sqlESALgen= "SELECT mceg.id, mceg.descripcion FROM mreg_clase_esadl_gen mceg ";
+                $emESALgen = $em->getConnection()->prepare($sqlESALgen);
+                $emESALgen->execute();
+                $claseESALgen = $emESALgen->fetchAll();
+                for($i=0;$i<sizeof($claseESALgen);$i++){
+                    $claseGeneral[$claseESALgen[$i]['id']] = $claseESALgen[$i]['descripcion'];
+                }
+                
+                for($i=0;$i<sizeof($resultados);$i++){
+                    if(key_exists($resultados[$i]['descorganiza'],$Organizacion)){
+                        $resultados[$i]['descorganiza'] = $Organizacion[$resultados[$i]['descorganiza']];
+                    }
+                    if(key_exists($resultados[$i]['muncom'],$municipios)){
+                        $resultados[$i]['muncom'] = $municipios[$resultados[$i]['muncom']];
+                    }    
+                    if(key_exists($resultados[$i]['munnot'],$municipios)){
+                        $resultados[$i]['munnot'] = $municipios[$resultados[$i]['munnot']];
+                    }
+                    
+                    if(key_exists($resultados[$i]['descgenesal'] , $claseGeneral)){
+                        $resultados[$i]['descgenesal'] = $claseGeneral[$resultados[$i]['descgenesal']];
+                    } 
+                    
+                    if(key_exists($resultados[$i]['descespesal'] , $claseEspecial)){
+                        $resultados[$i]['descespesal'] = $claseEspecial[$resultados[$i]['descespesal']];
+                    } 
+                    
+                    
+                }
+                
                 if($_POST['excel']==1){
                     
                     $nomExcel = 'ExtraccionMatriculados';
@@ -1611,7 +1669,6 @@ class DefaultController extends Controller
                     $logem->persist($logs);
                     $logem->flush($logs);
                     
-                    $utilities = new UtilitiesController();
                     $response = $utilities->exportExcel( $resultados, $columns,$nomExcel);
                      return $response;
                     

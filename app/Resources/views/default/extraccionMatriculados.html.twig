@@ -116,7 +116,7 @@
         <div class="clearfix"><hr></div>
         <div class="panel panel-primary">
             <div class="panel-heading">
-                <h3>Informe Detallado<span class="periodo" ></span></h3>
+                <h3>Informe Detallado<span class="periodo pull-right" ></span></h3>
             </div>
             <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
                 <table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive estadisticasGenerales' cellspacing='0' width='100%'>
@@ -284,6 +284,20 @@
 
                     var tablaServicios = $('#extraccion').DataTable( {
                        dom: 'Bfrtip',
+                       language: {
+                            search:         "Buscar",
+                            info:           "Mostrando elementos del _START_ al _END_ de <span id='totalReg'>_TOTAL_ registros</span>",
+                            infoEmpty:      "Consulta sin registros",
+                            loadingRecords: "Chargement en cours...",
+                            zeroRecords:    "Consulta sin registros",
+                            emptyTable:     "",
+                            paginate: {
+                                first:      "Primero",
+                                previous:   "Previo",
+                                next:       "Siguiente",
+                                last:       "Ultimo"
+                            },
+                       },    
                         buttons: [],
                         "ordering": false,
                         "processing": false,
@@ -306,9 +320,14 @@
                                 tipoFecha:tipoFecha,
                                 excel: '0'
                             },       
+                        },
+                        "fnDrawCallback": function () {
+                            var number = this.fnSettings().fnRecordsTotal();
+                            $('.periodo').html(new Intl.NumberFormat().format(number)+' Registros encontrados'  );
                         }
                         
                     } );
+                    
                     $('#excelB').removeClass('hide');
                     setTimeout($.unblockUI,3000);
                     return false;
