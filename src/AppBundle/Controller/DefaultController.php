@@ -723,13 +723,14 @@ class DefaultController extends Controller
                     'Operador',
                     'Numero operacion',
                     'Recibo',
+                    'Fecha Recibo',
                     'idservicio',
                     'Servicio',
                     'Cantidad',
                     'Valor'];
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente',recibos.matricula,recibos.anorenovacion as 'organijuridica',recibos.activos as 'categoria',recibos.sucursal, recibos.operador,recibos.horaoperacion, recibos.numerooperacion,recibos.numerorecibo, servicios.idservicio,servicios.nombre as 'Servicio', recibos.cantidad, recibos.valor "
+            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente',recibos.matricula,recibos.anorenovacion as 'organijuridica',recibos.activos as 'categoria',recibos.sucursal, recibos.operador,recibos.horaoperacion, recibos.numerooperacion,recibos.numerorecibo, recibos.fecoperacion, servicios.idservicio,servicios.nombre as 'Servicio', recibos.cantidad, recibos.valor "
                     . "FROM mreg_est_recibos recibos "
                     . "INNER JOIN mreg_servicios servicios "
                     . "WHERE recibos.servicio = servicios.idservicio "
@@ -766,7 +767,7 @@ class DefaultController extends Controller
                     $resultadosServicios[$i]['sucursal'] = $listaSedes[$sucursal];
                     $codOpera = substr($resultadosServicios[$i]['numerooperacion'], 2,3);
                     $resultadosServicios[$i]['horaoperacion'] = $listaUsuarios[$codOpera];
-                   
+                    $resultadosServicios[$i]['Cliente'] = utf8_decode($resultadosServicios[$i]['Cliente']);
                 }
                 
                 
@@ -974,10 +975,23 @@ class DefaultController extends Controller
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
             $sqlMat = "SELECT 
                             inscrip.id,
-                            inscrip.fecha,
+                            inscrip.fecharegistro,
                             inscrip.matricula,
-                            matriculados.numid AS 'identificacion',    
-                            matriculados.razonsocial AS 'comerciante',
+                            mei.ctrestmatricula,
+                            mei.organizacion,
+                            mei.categoria,
+                            mei.fecmatricula,
+                            mei.fecconstitucion,
+                            mei.fecrenovacion,
+                            mei.ultanoren,
+                            mei.numid AS 'identificacion',    
+                            mei.razonsocial AS 'comerciante',
+                            mei.ciiu1,
+                            mei.personal,
+                            mei.acttot,
+                            mei.muncom,
+                            mei.telcom1,                            
+                            inscrip.registro,
                             inscrip.noticia,
                             inscrip.operador,
                             inscrip.numerooperacion,
@@ -986,14 +1000,14 @@ class DefaultController extends Controller
                             libros.idlibro,
                             libros.nombre AS 'libro'
                         FROM
-                            mreg_inscripciones inscrip
+                            mreg_est_inscripciones inscrip
                                 LEFT JOIN
                             mreg_actos actos ON inscrip.acto=actos.idacto
                                 LEFT JOIN
                             mreg_libros libros ON inscrip.libro=libros.idlibro
                                 LEFT JOIN
-                            mreg_est_matriculados matriculados ON inscrip.matricula=matriculados.matricula
-                       WHERE inscrip.fecha BETWEEN :fecIni AND :fecEnd ";
+                            mreg_est_inscritos mei ON inscrip.matricula=mei.matricula
+                       WHERE inscrip.fecharegistro BETWEEN :fecIni AND :fecEnd ";
             
 //          
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
@@ -1017,12 +1031,18 @@ class DefaultController extends Controller
             $stLibros->execute($params);
             $resultadoLibros = $stLibros->fetchAll();
             $totalData = $totalFiltered = sizeof($resultadoLibros);
-                       
+            
+            for($i=0;$i<sizeof($resultadoLibros);$i++){
+                $resultadoLibros[$i]['comerciante'] = utf8_decode($resultadoLibros[$i]['comerciante']);
+                $resultadoLibros[$i]['noticia'] = utf8_decode($resultadoLibros[$i]['noticia']);
+                $resultadoLibros[$i]['acto'] = utf8_decode($resultadoLibros[$i]['acto']);
+                $resultadoLibros[$i]['libro'] = utf8_decode($resultadoLibros[$i]['libro']);
+            }
             
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $columns = ['id','Fecha inscripción','Matricula','Identificación','Razón Social','Noticia','Operador','Operación','idActo','Acto','idLibro','Libro'];
+                $columns = ['ID','FECHA INSCRIPCION','MATRICULA','EST. MAT','ORGANIZACION','CATEGORIA','FEC. MATRICULA','FEC. CONSTITUCION','FEC. RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','CIIU','PERSONAL','ACTIVOS','MUNICIPIO','TELEFONO','NUM. REGISTRO','NOTICIA','OPERADOR','OPERACION','ID. ACTO','ACTO','ID. LIBRO','LIBRO'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
                 $logs = new Logs();
@@ -1039,7 +1059,7 @@ class DefaultController extends Controller
                 return $response;
             }else{
                 if( !empty($_POST['search']['value']) ) {   // if there is a search parameter, $_POST['search']['value'] contains search parameter
-                        $sqlMat.=" AND ( inscrip.fecha LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" AND ( inscrip.fecharegistro LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR inscrip.matricula LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR identificacion LIKE '".$_POST['search']['value']."%' ";       
                         $sqlMat.=" OR razonsocial LIKE '".$_POST['search']['value']."%' ";    
@@ -1069,7 +1089,7 @@ class DefaultController extends Controller
                 $idservAux = 0;
                 for($i=0;$i<sizeof($resultadoLibros);$i++){
                     $nestedData=array();
-                    $nestedData[] = $resultadoLibros[$i]['fecha'];
+                    $nestedData[] = $resultadoLibros[$i]['fecharegistro'];
                     $nestedData[] = $resultadoLibros[$i]['matricula'];
                     $nestedData[] = $resultadoLibros[$i]['identificacion'];                    
                     $nestedData[] = $resultadoLibros[$i]['comerciante'];
@@ -1123,9 +1143,13 @@ class DefaultController extends Controller
         if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipio']) ){
                         
             if($_POST['estadoMat']==1){
+                $where =" WHERE mei.matricula <> '' ";
                 $estado = "('MA','MI','IA')";
             }else{
-                $estado = "('MC','IC')";
+                $where =" LEFT JOIN mreg_est_inscripciones insc ON mei.matricula=insc.matricula
+                        WHERE mei.matricula <> '' ";
+                $estado = "('MC','IC') AND insc.libro IN ('RM15' , 'RM51','RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
+                    . "AND insc.acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
             }
             
             $sqlExtracMatri = "SELECT 
@@ -1236,7 +1260,7 @@ class DefaultController extends Controller
                         LEFT JOIN mreg_est_vinculos mev ON mei.matricula = mev.matricula 
                         LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
                         LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
-                        WHERE mei.matricula <> '' 
+                        $where
                         AND mei.ctrestmatricula IN $estado 
                         AND (";
             
@@ -1254,7 +1278,7 @@ class DefaultController extends Controller
                                     'CLASE-ID',
                                     'IDENTIFICACION',
                                     'NIT',
-                                    'RAZÓN SOCIAL',
+                                    'RAZON SOCIAL',
                                     'FEC-MATRICULA',
                                     'FEC-RENOVACION',
                                     'ULT-ANO_REN',
@@ -1375,8 +1399,8 @@ class DefaultController extends Controller
                                 mei.fecdisolucion,
                                 mei.fecliquidacion,
                                 mei.fecvigencia,
-                                mep.identificacion AS 'Ident. Propietario',
-                                mep.razonsocial AS 'Propietario',
+                                mep.identificacion AS 'idPropietario',
+                                mep.razonsocial AS 'NombrePropietario',
                                 mei.dircom,
                                 mei.barriocom,
                                 mei.muncom,
@@ -1452,7 +1476,7 @@ class DefaultController extends Controller
                                 mreg_est_inscritos mei
                             LEFT JOIN mreg_est_propietarios mep ON mep.matricula = mei.matricula
                             LEFT JOIN mreg_est_matriculados mem ON mem.matricula = mei.matricula 
-                            WHERE mei.matricula <> '' 
+                            $where 
                             AND mei.ctrestmatricula IN $estado"; 
                         
                             $condiOrga = "AND ((mei.organizacion = '02')
@@ -1474,7 +1498,7 @@ class DefaultController extends Controller
                                         'CLASE-ID',
                                         'IDENTIFICACION',
                                         'NIT',
-                                        'RAZÓN SOCIAL',
+                                        'RAZON SOCIAL',
                                         'FEC-MATRICULA',
                                         'FEC-RENOVACION',
                                         'ULT-ANO_REN',
@@ -1657,6 +1681,15 @@ class DefaultController extends Controller
                 }
                 
                 if($_POST['excel']==1){
+                    
+                    for($i=0;$i<sizeof($resultados);$i++){
+                        $resultados[$i]['razonsocialMat'] = utf8_decode($resultados[$i]['razonsocialMat']);
+                        $resultados[$i]['NombrePropietario'] = utf8_decode($resultados[$i]['NombrePropietario']);
+                        $resultados[$i]['nombre1'] = utf8_decode($resultados[$i]['nombre1']);
+                        $resultados[$i]['nombre2'] = utf8_decode($resultados[$i]['nombre2']);
+                        $resultados[$i]['apellido1'] = utf8_decode($resultados[$i]['apellido1']);
+                        $resultados[$i]['apellido2'] = utf8_decode($resultados[$i]['apellido2']);
+                    }
                     
                     $nomExcel = 'ExtraccionMatriculados';
                     
