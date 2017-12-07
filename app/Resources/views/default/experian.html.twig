@@ -1,0 +1,77 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="col-md-12">
+        <h2 class="h2" ><span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>Experian </h2>
+    </div>
+    <div class="col-md-12">
+        {#<h2 class="h2" >{{ dump(string) }}</h2>#}
+    </div>
+    {# Formulario de búsqueda #}
+    <div class="col-md-12">
+        <form action="{{ path('experian') }}" method="POST" >
+            <div class="form-group">
+                <label class="sr-only">Icono FechaIn</label>
+                <div class="col-md-4" style="margin:0;padding:0;">
+                    <div class="input-group">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                        <input name="dateInit" id="dateInit" readonly class="form-control datepicker required" placeholder="Fecha Inicial">
+                    </div>
+                </div>
+                <label class="sr-only">Icono FechaFin</label>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                        <input name="dateEnd" id="dateEnd" readonly class="form-control datepicker required" placeholder="Fecha Final">
+                    </div>
+                </div>           
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="hidden" name="generar" value="1" />
+                        <button class="btn btn-primary" id="search" >Generar archivos</button> 
+                        <a class="btn btn-primary" id="clear" >Limpiar</a>
+                    </div>
+                </div>    
+            </div>    
+        </form>
+    </div>
+                                        
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+    <script>
+        $(document).ready(function() {  
+            $('#search').click(function(){
+                
+            var fecIni = $('#dateInit').val();    
+            var fecFin = $('#dateEnd').val();
+            if(fecIni!='' && fecFin!=''){
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });  
+                
+                setTimeout($.unblockUI,3000);
+                     
+            }else{
+                $.blockUI({
+                    message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                });
+
+                setTimeout($.unblockUI,3000);
+            }
+        });
+            
+            
+        });
+    </script>
+{% endblock %}
+{# empty Twig template #}
