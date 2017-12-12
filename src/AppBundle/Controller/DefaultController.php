@@ -41,6 +41,9 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
                 
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
             $fechaInicial = explode("-", $_POST['dateInit']);
@@ -226,7 +229,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Matriculados, Renovados y Cancelados');
                 $logs->setQuery('Consulta: '.$sqlMat.' ** '.$sqlRen.' ** '.$sqlCan.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -251,6 +255,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $fechaInicial = explode("-", $_POST['dateInit']);
         $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -404,7 +410,8 @@ class DefaultController extends Controller
             $logs->setFecha($fecha);
             $logs->setModulo('Extracción Matriculados, Renovados y Cancelados');
             $logs->setQuery('Exporta: '.$sqlMat.' ** '.$sqlRen.' ** '.$sqlCan.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-            $logs->setIdUser($user);
+            $logs->setUsuario($usuario->getUsername());
+            $logs->setIp($ipaddress);
 
             $logem->persist($logs);
             $logem->flush($logs);
@@ -700,6 +707,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $sedes = new UtilitiesController();
         $listaSedes = $sedes->sedes($SIIem);
@@ -778,7 +787,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Servicios');
                 $logs->setQuery('Extracción: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -844,7 +854,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Servicios');
                 $logs->setQuery('Consulta: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -895,7 +906,20 @@ class DefaultController extends Controller
                             <tbody>";
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT libro,acto ,COUNT(acto) as 'totalActos' FROM mreg_inscripciones WHERE fecha BETWEEN :fecIni AND :fecEnd ";
+            $sqlMat = "SELECT 
+                            actos.idacto,
+                            actos.nombre AS 'Nomacto',
+                            libros.idlibro,
+                            libros.nombre AS 'Nomlibro'
+                        FROM
+                            mreg_est_inscripciones inscrip
+                                LEFT JOIN
+                            mreg_actos actos ON inscrip.acto=actos.idacto
+                                LEFT JOIN
+                            mreg_libros libros ON inscrip.libro=libros.idlibro
+                                LEFT JOIN
+                            mreg_est_inscritos mei ON inscrip.matricula=mei.matricula
+                     WHERE inscrip.fecharegistro BETWEEN :fecIni AND :fecEnd ";
             
 //          
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
@@ -903,33 +927,45 @@ class DefaultController extends Controller
             foreach ($libros as $key => $value) {
                 $actos = implode("','", $value);
                 if($sw==0){
-                    $sqlMat.="AND (libro='$key' AND acto IN('$actos')) ";
+                    $sqlMat.="AND (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
                     $sw++;
                 }else{
-                    $sqlMat.="OR (libro='$key' AND acto IN('$actos')) ";
+                    $sqlMat.="OR (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
                 }
                 
                 
             }
             
-            $sqlMat.="GROUP BY acto";
+            $sqlMat.="GROUP BY inscrip.id";
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stLibros = $SIIem->getConnection()->prepare($sqlMat);
 //            Ejecución de las consultas
             $stLibros->execute($params);
             $resultadoLibros = $stLibros->fetchAll();
-            
+            $librosID = array();
             for($i=0;$i<sizeof($resultadoLibros);$i++){
-                $sqlLibroActos = "SELECT libro.nombre as 'nomLibro', acto.nombre as 'nomActo' FROM mreg_libros libro INNER JOIN mreg_actos acto WHERE libro.idlibro=acto.idlibro AND acto.idacto='".$resultadoLibros[$i]['acto']."' AND libro.idlibro='".$resultadoLibros[$i]['libro']."' ";
-                $stnombres = $SIIem->getConnection()->prepare($sqlLibroActos);
-                $stnombres->execute();
-                $nombreLibroActo = $stnombres->fetchAll();
-                $tablaTotales.= "<tr>"
-                        . "<td>".$resultadoLibros[$i]['libro']."</td>"
-                        . "<td>".$nombreLibroActo[0]['nomLibro']."</td>"
-                        . "<td>".$resultadoLibros[$i]['acto']."</td>"
-                        . "<td>".$nombreLibroActo[0]['nomActo']."</td>"
-                        . "<td>".$resultadoLibros[$i]['totalActos']."</td>";
+                
+                if(isset($acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']])){
+                    $acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']] = $acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']]+1;
+                }else{
+                    $acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']] = 1;
+                    if(!in_array($resultadoLibros[$i]['idlibro'], $librosID)){
+                        $librosID[] = $resultadoLibros[$i]['idlibro'];                        
+                        $NomLibros[$resultadoLibros[$i]['idlibro']] = $resultadoLibros[$i]['Nomlibro'];
+                    }    
+                    $NomActos[$resultadoLibros[$i]['idacto']] = $resultadoLibros[$i]['Nomacto'];
+                }
+            }
+            
+            foreach ($librosID as $idlibro){
+                foreach ($acto[$idlibro] as $key => $value) {
+                    $tablaTotales.= "<tr>"
+                        . "<td>".$idlibro."</td>"
+                        . "<td>".$NomLibros[$idlibro]."</td>"
+                        . "<td>".$key."</td>"
+                        . "<td>".$NomActos[$key]."</td>"
+                        . "<td>".$value."</td>";
+                }
             }
            
 //           
@@ -954,6 +990,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -1049,7 +1087,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Libros Detallado');
                 $logs->setQuery('Extracción: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -1117,7 +1156,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Libros Detallado');
                 $logs->setQuery('Consulta: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -1137,7 +1177,10 @@ class DefaultController extends Controller
         $fecha = new \DateTime();
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
-        $logem =  $this->getDoctrine()->getManager();        
+        $logem =  $this->getDoctrine()->getManager();   
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+        
         $utilities = new UtilitiesController();
         
         if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipio']) ){
@@ -1697,7 +1740,8 @@ class DefaultController extends Controller
                     $logs->setFecha($fecha);
                     $logs->setModulo('Extracción Bases de Datos Generales');
                     $logs->setQuery("Extraccion: ".$sqlExtracMatri." GROUP BY mei.matricula ORDER BY mei.matricula DESC;");
-                    $logs->setIdUser($user);
+                    $logs->setUsuario($usuario->getUsername());
+                    $logs->setIp($ipaddress);
 
                     $logem->persist($logs);
                     $logem->flush($logs);
@@ -1766,7 +1810,8 @@ class DefaultController extends Controller
                     $logs->setFecha($fecha);
                     $logs->setModulo('Extracción Bases de Datos Generales');
                     $logs->setQuery("Consulta: ".$sqlExtracMatri);
-                    $logs->setIdUser($user);
+                    $logs->setUsuario($usuario->getUsername());
+                    $logs->setIp($ipaddress);
 
                     $logem->persist($logs);
                     $logem->flush($logs);
@@ -1827,6 +1872,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $util = new UtilitiesController();
         $fecha = new \DateTime();
@@ -2137,7 +2184,8 @@ class DefaultController extends Controller
             $logs->setFecha($fecha);
             $logs->setModulo('informaColombia');
             $logs->setQuery('Genera Archivos: '.$sqlInforma1);
-            $logs->setIdUser($user);
+            $logs->setUsuario($usuario->getUsername());
+            $logs->setIp($ipaddress);
 
             $logem->persist($logs);
             $logem->flush($logs);
@@ -2213,6 +2261,9 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $util = new UtilitiesController();
         $fecha = new \DateTime();
@@ -2584,7 +2635,8 @@ class DefaultController extends Controller
             $logs->setFecha($fecha);
             $logs->setModulo('informaColombia');
             $logs->setQuery('Genera Archivos: '.$sqlInforma1);
-            $logs->setIdUser($user);
+            $logs->setUsuario($usuario->getUsername());
+            $logs->setIp($ipaddress);
 
             $logem->persist($logs);
             $logem->flush($logs);
@@ -2665,7 +2717,7 @@ class DefaultController extends Controller
             readfile($archivoZip);
             return new Response(json_encode(array('ruta' => $archivo )));
         }else{
-            return $this->render('default/informaColombia.html.twig');
+            return $this->render('default/informaColombia.html.twig',array('ip'=>$ipaddress));
         }
     } 
 

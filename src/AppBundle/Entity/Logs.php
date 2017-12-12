@@ -29,10 +29,11 @@ class Logs
     private $fecha;
 
     /** 
-     * @ORM\ManyToOne(targetEntity="User", inversedBy="logs")
-     * @ORM\JoinColumn(name="idUser", referencedColumnName="id")
+     * @var string
+     *
+     * @ORM\Column(name="usuario", type="string", length=100)
      */
-    private $idUser;
+    private $usuario;
 
     /**
      * @var string
@@ -47,6 +48,13 @@ class Logs
      * @ORM\Column(name="query", type="text")
      */
     private $query;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ip", type="text", length=20)
+     */
+    private $ip;
 
 
     /**
@@ -84,27 +92,27 @@ class Logs
     }
 
     /**
-     * Set idUser
+     * Set usuario
      *
-     * @param integer $idUser
+     * @param integer $usuario
      *
      * @return LogExtracciones
      */
-    public function setIdUser($idUser)
+    public function setUsuario($usuario)
     {
-        $this->idUser = $idUser;
+        $this->usuario = $usuario;
 
         return $this;
     }
 
     /**
-     * Get idUser
+     * Get usuario
      *
      * @return int
      */
-    public function getIdUser()
+    public function getUsuario()
     {
-        return $this->idUser;
+        return $this->usuario;
     }
 
     /**
@@ -153,6 +161,30 @@ class Logs
     public function getQuery()
     {
         return $this->query;
+    }
+    
+    /**
+     * Set ip
+     *
+     * @param string $ip
+     *
+     * @return LogExtracciones
+     */
+    public function setIp($ip)
+    {
+        $this->ip = $ip;
+
+        return $this;
+    }
+
+    /**
+     * Get ip
+     *
+     * @return string
+     */
+    public function getIp()
+    {
+        return $this->ip;
     }
 }
 
