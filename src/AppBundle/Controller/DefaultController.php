@@ -41,6 +41,9 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
                 
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
             $fechaInicial = explode("-", $_POST['dateInit']);
@@ -226,7 +229,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Matriculados, Renovados y Cancelados');
                 $logs->setQuery('Consulta: '.$sqlMat.' ** '.$sqlRen.' ** '.$sqlCan.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -251,6 +255,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $fechaInicial = explode("-", $_POST['dateInit']);
         $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -404,7 +410,8 @@ class DefaultController extends Controller
             $logs->setFecha($fecha);
             $logs->setModulo('Extracción Matriculados, Renovados y Cancelados');
             $logs->setQuery('Exporta: '.$sqlMat.' ** '.$sqlRen.' ** '.$sqlCan.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-            $logs->setIdUser($user);
+            $logs->setUsuario($usuario->getUsername());
+            $logs->setIp($ipaddress);
 
             $logem->persist($logs);
             $logem->flush($logs);
@@ -700,6 +707,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $sedes = new UtilitiesController();
         $listaSedes = $sedes->sedes($SIIem);
@@ -778,7 +787,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Servicios');
                 $logs->setQuery('Extracción: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -844,7 +854,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Servicios');
                 $logs->setQuery('Consulta: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -895,7 +906,20 @@ class DefaultController extends Controller
                             <tbody>";
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT libro,acto ,COUNT(acto) as 'totalActos' FROM mreg_inscripciones WHERE fecha BETWEEN :fecIni AND :fecEnd ";
+            $sqlMat = "SELECT 
+                            actos.idacto,
+                            actos.nombre AS 'Nomacto',
+                            libros.idlibro,
+                            libros.nombre AS 'Nomlibro'
+                        FROM
+                            mreg_est_inscripciones inscrip
+                                LEFT JOIN
+                            mreg_actos actos ON inscrip.acto=actos.idacto
+                                LEFT JOIN
+                            mreg_libros libros ON inscrip.libro=libros.idlibro
+                                LEFT JOIN
+                            mreg_est_inscritos mei ON inscrip.matricula=mei.matricula
+                     WHERE inscrip.fecharegistro BETWEEN :fecIni AND :fecEnd ";
             
 //          
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd );
@@ -903,33 +927,45 @@ class DefaultController extends Controller
             foreach ($libros as $key => $value) {
                 $actos = implode("','", $value);
                 if($sw==0){
-                    $sqlMat.="AND (libro='$key' AND acto IN('$actos')) ";
+                    $sqlMat.="AND (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
                     $sw++;
                 }else{
-                    $sqlMat.="OR (libro='$key' AND acto IN('$actos')) ";
+                    $sqlMat.="OR (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
                 }
                 
                 
             }
             
-            $sqlMat.="GROUP BY acto";
+            $sqlMat.="GROUP BY inscrip.id";
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stLibros = $SIIem->getConnection()->prepare($sqlMat);
 //            Ejecución de las consultas
             $stLibros->execute($params);
             $resultadoLibros = $stLibros->fetchAll();
-            
+            $librosID = array();
             for($i=0;$i<sizeof($resultadoLibros);$i++){
-                $sqlLibroActos = "SELECT libro.nombre as 'nomLibro', acto.nombre as 'nomActo' FROM mreg_libros libro INNER JOIN mreg_actos acto WHERE libro.idlibro=acto.idlibro AND acto.idacto='".$resultadoLibros[$i]['acto']."' AND libro.idlibro='".$resultadoLibros[$i]['libro']."' ";
-                $stnombres = $SIIem->getConnection()->prepare($sqlLibroActos);
-                $stnombres->execute();
-                $nombreLibroActo = $stnombres->fetchAll();
-                $tablaTotales.= "<tr>"
-                        . "<td>".$resultadoLibros[$i]['libro']."</td>"
-                        . "<td>".$nombreLibroActo[0]['nomLibro']."</td>"
-                        . "<td>".$resultadoLibros[$i]['acto']."</td>"
-                        . "<td>".$nombreLibroActo[0]['nomActo']."</td>"
-                        . "<td>".$resultadoLibros[$i]['totalActos']."</td>";
+                
+                if(isset($acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']])){
+                    $acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']] = $acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']]+1;
+                }else{
+                    $acto[$resultadoLibros[$i]['idlibro']][$resultadoLibros[$i]['idacto']] = 1;
+                    if(!in_array($resultadoLibros[$i]['idlibro'], $librosID)){
+                        $librosID[] = $resultadoLibros[$i]['idlibro'];                        
+                        $NomLibros[$resultadoLibros[$i]['idlibro']] = $resultadoLibros[$i]['Nomlibro'];
+                    }    
+                    $NomActos[$resultadoLibros[$i]['idacto']] = $resultadoLibros[$i]['Nomacto'];
+                }
+            }
+            
+            foreach ($librosID as $idlibro){
+                foreach ($acto[$idlibro] as $key => $value) {
+                    $tablaTotales.= "<tr>"
+                        . "<td>".$idlibro."</td>"
+                        . "<td>".$NomLibros[$idlibro]."</td>"
+                        . "<td>".$key."</td>"
+                        . "<td>".$NomActos[$key]."</td>"
+                        . "<td>".$value."</td>";
+                }
             }
            
 //           
@@ -954,6 +990,8 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -1049,7 +1087,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Libros Detallado');
                 $logs->setQuery('Extracción: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -1117,7 +1156,8 @@ class DefaultController extends Controller
                 $logs->setFecha($fecha);
                 $logs->setModulo('Extracción Libros Detallado');
                 $logs->setQuery('Consulta: '.$sqlMat.' / Parametros: fecIni=>'.$fecIni.'  , fecEnd => '.$fecEnd);
-                $logs->setIdUser($user);
+                $logs->setUsuario($usuario->getUsername());
+                $logs->setIp($ipaddress);
                 
                 $logem->persist($logs);
                 $logem->flush($logs);
@@ -1137,7 +1177,10 @@ class DefaultController extends Controller
         $fecha = new \DateTime();
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
-        $logem =  $this->getDoctrine()->getManager();        
+        $logem =  $this->getDoctrine()->getManager();   
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+        
         $utilities = new UtilitiesController();
         
         if(isset($_POST['organizacion']) && isset($_POST['estadoMat']) && isset($_POST['afiliacion']) && isset($_POST['municipio']) ){
@@ -1697,7 +1740,8 @@ class DefaultController extends Controller
                     $logs->setFecha($fecha);
                     $logs->setModulo('Extracción Bases de Datos Generales');
                     $logs->setQuery("Extraccion: ".$sqlExtracMatri." GROUP BY mei.matricula ORDER BY mei.matricula DESC;");
-                    $logs->setIdUser($user);
+                    $logs->setUsuario($usuario->getUsername());
+                    $logs->setIp($ipaddress);
 
                     $logem->persist($logs);
                     $logem->flush($logs);
@@ -1766,7 +1810,8 @@ class DefaultController extends Controller
                     $logs->setFecha($fecha);
                     $logs->setModulo('Extracción Bases de Datos Generales');
                     $logs->setQuery("Consulta: ".$sqlExtracMatri);
-                    $logs->setIdUser($user);
+                    $logs->setUsuario($usuario->getUsername());
+                    $logs->setIp($ipaddress);
 
                     $logem->persist($logs);
                     $logem->flush($logs);
@@ -1820,13 +1865,15 @@ class DefaultController extends Controller
     }
     
     /**
-     * @Route("/informaColombia" , name="informaColombia" )
+     * @Route("/experian" , name="experian" )
      */
-    public function informaColombiaAction() {
+    public function experianAction() {
         $fecha = new \DateTime();
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $util = new UtilitiesController();
         $fecha = new \DateTime();
@@ -2101,14 +2148,23 @@ class DefaultController extends Controller
                                 $certificas .= $resultCertificas[$k]['idcertifica'];
                                 $contConse = $util->preparaInforma($consec, 'entero', 4);
                                 $certificas .= $contConse['dato'];
-                                $partCertifica = substr($resultCertificas[$k]['texto'], $n, 65);
-                                $certificas .= $util->preparaInforma($partCertifica, 'string', 65);
-                                $n=$n+64;
+                                $partCertifica = substr($resultCertificas[$k]['texto'], $n, 70);
+                                $certificas .= $util->preparaInforma($partCertifica, 'string', 70);
+                                $n=$n+69;
                                 $consec++;
                                 $contRegCert++;
                                 $infoCertifica[] = $certificas;
                             }
-
+                            $certificas = '';
+                            $certificas .= $matricula['dato'];
+                            $certificas .= $resultCertificas[$k]['idcertifica'];
+                            $contConse = $util->preparaInforma($consec, 'entero', 4);
+                            $certificas .= $contConse['dato'];
+                            $certificas .= $util->preparaInforma('  ', 'string', 70);
+                            $n=$n+69;
+                            $consec++;
+                            $contRegCert++;
+                            $infoCertifica[] = $certificas; 
 
 
                     }
@@ -2120,7 +2176,7 @@ class DefaultController extends Controller
             }
             $infomaData[] = '********'.$contReg;
             $infoVinculos[] = '********'.$contRegRepLeg;
-            $infoCertifica[] = '********'.$contRegCert;
+            $infoCertifica[] = '   ';
             $content = implode("\n", $infomaData);
             $informe = $this->renderView('informa1.txt.twig',array('infomaData'=>$content));
             
@@ -2128,7 +2184,8 @@ class DefaultController extends Controller
             $logs->setFecha($fecha);
             $logs->setModulo('informaColombia');
             $logs->setQuery('Genera Archivos: '.$sqlInforma1);
-            $logs->setIdUser($user);
+            $logs->setUsuario($usuario->getUsername());
+            $logs->setIp($ipaddress);
 
             $logem->persist($logs);
             $logem->flush($logs);
@@ -2183,7 +2240,7 @@ class DefaultController extends Controller
 
             $zip->addFile($archivoVinc, "informa2.txt");
             
-            $zip->addFile($archivoCert, "informa3.txt");
+            $zip->addFile($archivoCert, "data03.txt");
 
             $zip->close();
             header('Content-Type', 'application/zip');
@@ -2192,7 +2249,475 @@ class DefaultController extends Controller
             readfile($archivoZip);
             return new Response(json_encode(array('ruta' => $archivo )));
         }else{
-            return $this->render('default/informaColombia.html.twig');
+            return $this->render('default/experian.html.twig');
+        }
+    } 
+    
+    /**
+     * @Route("/informaColombia" , name="informaColombia" )
+     */
+    public function informaColombiaAction() {
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $em =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
+        
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+        
+        $util = new UtilitiesController();
+        $fecha = new \DateTime();
+        $fecActual = $fecha->format('Ymd');
+
+        $codMuni = $util->municipios();
+        $municipios = $codMuni['municipios'];
+        if(isset($_POST['generar'])){
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            $sqlInforma1 = "SELECT 
+                                mei.matricula,
+                                mei.razonsocial,
+                                mei.idclase,
+                                mei.nit,
+                                mei.organizacion,
+                                mei.categoria,
+                                mei.ctrestmatricula,
+                                mei.fecmatricula,
+                                mei.fecrenovacion,
+                                mei.feccancelacion,
+                                mei.fecvigencia,
+                                mei.ultanoren,
+                                mei.ciiu1,
+                                mei.ciiu2,
+                                mei.ciiu3,
+                                mei.personal,
+                                mei.capaut,
+                                mei.capsus,
+                                (SELECT 
+                                        registro
+                                    FROM
+                                        mreg_est_capitales
+                                    WHERE
+                                        matricula = mei.matricula
+                                    ORDER BY fechadatos DESC
+                                    LIMIT 1) AS numreg,
+                                (SELECT 
+                                        fechadatos
+                                    FROM
+                                        mreg_est_capitales
+                                    WHERE
+                                        matricula = mei.matricula
+                                    ORDER BY fechadatos DESC
+                                    LIMIT 1) fechareg,
+                                mei.cappag,
+                                mei.actcte,
+                                mei.actfij,
+                                mei.actotr,
+                                mei.actval,
+                                mei.acttot,
+                                mei.actvin,
+                                mei.actsinaju,
+                                mei.pascte,
+                                mei.paslar,
+                                mei.pastot,
+                                mei.pattot,
+                                mei.paspat,
+                                mei.ingope AS ventas,
+                                mei.cosven,
+                                mei.utinet,
+                                mei.utiope,
+                                mei.dircom,
+                                mei.muncom,
+                                mei.telcom1,
+                                mei.faxcom,
+                                mei.emailcom,
+                                mei.cantest,
+                                mei.cprazsoc,
+                                mei.cpnumnit,
+                                mei.cpdircom,
+                                mei.cpcodmun,
+                                (SELECT 
+                                        id
+                                    FROM
+                                        mreg_est_inscripciones
+                                    WHERE
+                                        matricula = mei.matricula
+                                            AND acto = '0510'
+                                    LIMIT 1) AS liquidacion,
+                                mer.fecoperacion,
+                                mer.horaoperacion
+                            FROM
+                                mreg_est_inscritos mei
+                                    INNER JOIN
+                                mreg_est_recibos mer ON mei.matricula = mer.matricula
+                            WHERE
+                                mer.fecoperacion BETWEEN '$fecIni' AND '$fecEnd'
+                            AND (mer.servicio LIKE '010202%'
+                                    OR mer.servicio LIKE '010203%'
+                                    OR mer.servicio LIKE '0103%')
+                            AND mer.ctranulacion = '0'
+                            AND mei.matricula !='' 
+                            GROUP BY mei.matricula ";    
+            
+            
+            $info1 = $em->getConnection()->prepare($sqlInforma1);
+            $info1->execute();
+            $datosInforma1 = $info1->fetchAll();
+            $infomaData = array();
+            
+            $contReg = 0; 
+            $contRegCert = 0; 
+            $contRegRepLeg = 0; 
+            
+            for($i=0;$i<sizeof($datosInforma1);$i++){
+                if($datosInforma1[$i]['organizacion'] !=='02'){
+                    $contReg++;
+                    $arreglo = '';
+                    $matricula = $util->preparaInforma($datosInforma1[$i]['matricula'], 'entero', 8);
+                    $arreglo.= $matricula['dato'];
+                    $arreglo.= $util->preparaInforma('', 'string', 11);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['razonsocial'], 'string', 260);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['idclase'], 'string', 1);
+                    $id = $util->preparaInforma(substr($datosInforma1[$i]['nit'], 0, 9), 'entero', 14);
+                    $arreglo.= $id['dato'];
+                    if(substr($datosInforma1[$i]['nit'],-1,1)==''){
+                        $dvv=0;
+                    }else{
+                        $dvv=substr($datosInforma1[$i]['nit'],-1,1);
+                    }
+                    $dv = $util->preparaInforma($dvv, 'entero', 1);
+                    $arreglo.= $dv['dato'];
+                    $catg = $util->preparaInforma($datosInforma1[$i]['organizacion'], 'entero', 2);
+                    $arreglo.= $catg['dato'];
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['categoria'], 'string', 1);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['ctrestmatricula'], 'string', 2);
+                    $fecMat = $util->preparaInforma($datosInforma1[$i]['fecmatricula'], 'entero', 8);
+                    $arreglo.= $fecMat['dato'];
+                    $fecRen = $util->preparaInforma($datosInforma1[$i]['fecrenovacion'], 'entero', 8);
+                    $arreglo.= $fecRen['dato'];
+                    $fecVig = $util->preparaInforma($datosInforma1[$i]['fecvigencia'], 'entero', 8);
+                    $arreglo.= $fecVig['dato'];
+                    $ciiu1 = substr($datosInforma1[$i]['ciiu1'],1);
+                    $arreglo.= $util->preparaInforma($ciiu1, 'ciiu', 7);
+                    $ciiu2 = substr($datosInforma1[$i]['ciiu2'],1);
+                    $arreglo.= $util->preparaInforma($ciiu2, 'ciiu', 7);
+                    $ciiu3 = substr($datosInforma1[$i]['ciiu3'],1);
+                    $arreglo.= $util->preparaInforma($ciiu3, 'ciiu', 7);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['personal'], 'string', 6);
+                    $capaut = $util->preparaInforma($datosInforma1[$i]['capaut'], 'entero', 17);
+                    $arreglo.= $capaut['dato'];
+                    $capsus = $util->preparaInforma($datosInforma1[$i]['capsus'], 'entero', 17);
+                    $arreglo.= $capsus['dato'];
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['numreg'], 'string', 8);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['fechareg'], 'string', 8);
+                    $cappag = $util->preparaInforma($datosInforma1[$i]['cappag'], 'entero', 17);
+                    $arreglo.= $cappag['dato'];
+                    $actcte = $util->preparaInforma($datosInforma1[$i]['actcte'], 'entero', 17);
+                    $arreglo.= $actcte['dato'];
+                    $actfij = $util->preparaInforma($datosInforma1[$i]['actfij'], 'entero', 17);
+                    $arreglo.= $actfij['dato'];
+                    $actotr = $util->preparaInforma($datosInforma1[$i]['actotr'], 'entero', 17);
+                    $arreglo.= $actotr['dato'];
+                    $actval = $util->preparaInforma($datosInforma1[$i]['actval'], 'entero', 17);
+                    $arreglo.= $actval['dato'];
+                    $acttot = $util->preparaInforma($datosInforma1[$i]['acttot'], 'entero', 17);
+                    $arreglo.= $acttot['dato'];
+                    $actsinaju = $util->preparaInforma($datosInforma1[$i]['actsinaju'], 'entero', 17);
+                    $arreglo.= $actsinaju['dato'];
+                    $pascte = $util->preparaInforma($datosInforma1[$i]['pascte'], 'entero', 17);
+                    $arreglo.= $pascte['dato'];
+                    $paslar = $util->preparaInforma($datosInforma1[$i]['paslar'], 'entero', 17);
+                    $arreglo.= $paslar['dato'];
+                    $pastot = $util->preparaInforma($datosInforma1[$i]['pastot'], 'entero', 17);
+                    $arreglo.= $pastot['dato'];
+                    $pattot = $util->preparaInforma($datosInforma1[$i]['pattot'], 'entero', 17);
+                    $arreglo.= $pattot['signo'];
+                    $arreglo.= $pattot['dato'];
+                    $paspat = $util->preparaInforma($datosInforma1[$i]['paspat'], 'entero', 17);
+                    $arreglo.= $paspat['dato'];
+                    $ventas = $util->preparaInforma($datosInforma1[$i]['ventas'], 'entero', 17);
+                    $arreglo.= $ventas['signo'];
+                    $arreglo.= $ventas['dato'];
+                    $cosven = $util->preparaInforma($datosInforma1[$i]['cosven'], 'entero', 17);
+                    $arreglo.= $cosven['signo'];
+                    $arreglo.= $cosven['dato'];  
+                    $utinet = $util->preparaInforma($datosInforma1[$i]['utinet'], 'entero', 17);
+                    $arreglo.= $utinet['signo'];
+                    $arreglo.= $utinet['dato'];                
+                    $utiope = $util->preparaInforma($datosInforma1[$i]['utiope'], 'entero', 17);
+                    $arreglo.= $utiope['signo'];
+                    $arreglo.= $utiope['dato'];
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['dircom'], 'string', 65);
+                    if(key_exists($datosInforma1[$i]['muncom'], $municipios)){
+                        $muncom = $datosInforma1[$i]['muncom'];
+                        if($muncom=='')$muncom='0000';
+                        $arreglo.= $util->preparaInforma($municipios[$muncom], 'string', 25);
+                    }else{
+                        $arreglo.= $util->preparaInforma('', 'string', 25);
+                    }
+                    $arreglo.= $util->preparaInforma(0, 'string', 10);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['telcom1'], 'string', 10);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['faxcom'], 'string', 10);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['emailcom'], 'string', 50);
+                    $cantest = $util->preparaInforma($datosInforma1[$i]['cantest'], 'entero', 5);
+                    $arreglo.= $cantest['dato'];
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['cprazsoc'], 'string', 65);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['cpnumnit'], 'string', 11);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['cpdircom'], 'string', 65);
+                    if(key_exists($datosInforma1[$i]['cpcodmun'], $municipios)){
+                        $indexMun = $datosInforma1[$i]['cpcodmun'];
+                    }else{
+                        $indexMun='0000';
+                    }
+                    $arreglo.= $util->preparaInforma($municipios[$indexMun], 'string', 25);
+                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['liquidacion'], 'string', 1);
+
+                    $infomaData[] = $arreglo;
+                
+                    if($datosInforma1[$i]['organizacion']!=='01' && $datosInforma1[$i]['organizacion']!=='02' && $datosInforma1[$i]['organizacion']!=='12'  && $datosInforma1[$i]['organizacion']!=='14' ){
+                        $sqlVinculos = "SELECT mev.matricula, mev.nombre, mev.idclase, mev.numid, mev.idcargo, mev.vinculo, mev.descargo, mev.cuotasref, mev.valorref FROM mreg_est_vinculos mev WHERE mev.matricula=:matricula";
+                        $info2 = $em->getConnection()->prepare($sqlVinculos);
+                        $info2->execute(array('matricula'=>$datosInforma1[$i]['matricula']));
+                        $resultVinculos = $info2->fetchAll();
+
+
+                        for($j=0;$j<sizeof($resultVinculos);$j++){
+                            $vinculos = '';
+                            $matricula = $util->preparaInforma($resultVinculos[$j]['matricula'], 'entero', 8);
+                            $vinculos .= $matricula['dato'];
+                            $vinculos .= $util->preparaInforma($resultVinculos[$j]['nombre'], 'string', 65);
+                            $idclase = $util->preparaInforma($resultVinculos[$j]['idclase'], 'entero', 1);
+                            $vinculos .= $idclase['dato'];
+                            $numid = $util->preparaInforma($resultVinculos[$j]['numid'], 'entero', 11);
+                            $vinculos .= $numid['dato'];
+
+                            $ctrCargo = substr($resultVinculos[$j]['vinculo'],0,3);
+                            if($ctrCargo=='217'){
+                                $vctrcargo = 3;
+                            }elseif($ctrCargo=='214'){
+                                $vctrcargo = 1;
+                            }elseif($ctrCargo=='216'){
+                                $vctrcargo = 4;
+                            }else{
+                                $vctrcargo = 2;
+                            }
+                            $vlrCtrCargo = $util->preparaInforma($vctrcargo, 'entero', 2);
+                            $vinculos .= $vlrCtrCargo['dato'];
+                            $vlrVinculo = $util->preparaInforma($resultVinculos[$j]['vinculo'], 'entero', 4);
+                            $vinculos .= $vlrVinculo['dato'];
+                            $vlrCargo = $util->preparaInforma($resultVinculos[$j]['idcargo'], 'entero', 4);
+                            $vinculos .= $vlrCargo['dato'];
+                            $vinculos .= $util->preparaInforma($resultVinculos[$j]['descargo'], 'string', 65);
+                            $cuotasref = $resultVinculos[$j]['cuotasref'].'00';
+                            $vlrcuotasref = $util->preparaInforma($cuotasref, 'entero', 19);
+                            $vinculos .= $vlrcuotasref['dato'];
+                            $valorref = $resultVinculos[$j]['valorref'].'00';
+                            $vlrValorref = $util->preparaInforma($valorref, 'entero', 19);
+                            $vinculos .= $vlrValorref['dato'];
+                            $contRegRepLeg++;
+                            $infoVinculos[] = $vinculos;
+                        }
+                    }
+
+                    $sqlCertificas = "SELECT mecerti.matricula, mecerti.idcertifica, mecerti.texto "
+                            . "FROM mreg_est_certificas mecerti "
+                            . "WHERE mecerti.matricula=:matricula "
+                            . "ORDER BY mecerti.matricula, mecerti.id ASC ";
+                    $info3 = $em->getConnection()->prepare($sqlCertificas);
+                    $info3->execute(array('matricula'=>$datosInforma1[$i]['matricula']));
+                    $resultCertificas = $info3->fetchAll();                    
+
+                    for($k=0;$k<sizeof($resultCertificas);$k++){
+
+
+                        $longCertifica = strlen($resultCertificas[$k]['texto']);
+                        $consec = 1;
+    //                    for($n=0;$n<=$longCertifica;$n++){
+
+                            $matricula = $util->preparaInforma($resultCertificas[$k]['matricula'], 'entero', 8);
+                            for($n=0;$n<$longCertifica;$n++){
+                                $certificas = '';
+                                $certificas .= $matricula['dato'];
+                                $certificas .= $resultCertificas[$k]['idcertifica'];
+                                $contConse = $util->preparaInforma($consec, 'entero', 4);
+                                $certificas .= $contConse['dato'];
+                                $partCertifica = substr($resultCertificas[$k]['texto'], $n, 65);
+                                $certificas .= $util->preparaInforma($partCertifica, 'string', 65);
+                                $n=$n+64;
+                                $consec++;
+                                $contRegCert++;
+                                $infoCertifica[] = $certificas;
+                            }
+
+
+
+                    }
+
+
+                }elseif($datosInforma1[$i]['organizacion']=='02'){
+                    $sqlPropie = "SELECT mep.matriculapropietario, (CASE
+                                    WHEN mep.tipoidentificacion !='' THEN mep.nit
+                                    WHEN mep.nit ='' THEN mep.identificacion
+                                    ELSE ''
+                                END) AS 'idPropietario',
+                                mep.tipoidentificacion,
+                                mep.codigocamara,
+                                mep.apellido1
+                                FROM mreg_est_propietarios mep
+                                WHERE mep.matricula=:matricula 
+                                AND mep.estado='V' ";
+                    $prop03 = $em->getConnection()->prepare($sqlPropie);
+                    $prop03->execute(array('matricula'=>$datosInforma1[$i]['matricula']));
+                    $propiet = $prop03->fetchAll();  
+                    if(sizeof($propiet)>0){
+                        $propietario = '';
+                        if($propiet[0]['codigocamara']=='55'){
+                            $matProp = $util->preparaInforma($propiet[0]['matriculapropietario'], 'entero', 8);
+                            $propietario.= $matProp['dato'];
+                        }else{
+                            $matProp= $util->preparaInforma(0, 'entero', 8);
+                            $propietario.= $matProp['dato'];
+                        }
+                        $matricula = $util->preparaInforma($datosInforma1[$i]['matricula'], 'entero', 8);
+                        $propietario.= $matricula['dato'];
+                        
+                        if($propiet[0]['tipoidentificacion']==''){
+                            $tipo=0;
+                        }else{
+                            $tipo=$propiet[0]['tipoidentificacion'];
+                        }
+                        $propietario.= $tipo;
+                        
+                        if($propiet[0]['apellido1']!=''){
+                            $idProp = $util->preparaInforma($propiet[0]['idPropietario'], 'entero', 14);
+                            $propietario.= $idProp['dato'];
+                            $propietario.= 0;
+                        }else{
+                            $idProp = $util->preparaInforma($propiet[0]['idPropietario'], 'entero', 15);
+                            $propietario.= $idProp['dato'];
+                        }
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['fecmatricula'], 'string', 8);
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['razonsocial'], 'string', 130);
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['dircom'], 'string', 65);                      
+                        if(key_exists($datosInforma1[$i]['muncom'],$municipios)){
+                            $propietario.= $util->preparaInforma($municipios[$datosInforma1[$i]['muncom']], 'string', 25);
+                        }else{
+                            $propietario.= $util->preparaInforma($datosInforma1[$i]['muncom'], 'string', 25);
+                        }
+
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['telcom1'], 'string', 10);
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['ctrestmatricula'], 'string', 2);
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['feccancelacion'], 'string', 8);
+                        $ciiu1 = substr($datosInforma1[$i]['ciiu1'],1);
+                        $propietario.= $util->preparaInforma($ciiu1, 'ciiu', 7);
+                        $personal = $util->preparaInforma($datosInforma1[$i]['personal'], 'entero', 6);
+                        $propietario.=$personal['dato'];
+                        $actEst = $util->preparaInforma($datosInforma1[$i]['actvin'], 'entero', 17);
+                        $propietario.= $actEst['dato'];
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['ultanoren'], 'string', 4);
+                        $propietario.= $util->preparaInforma($datosInforma1[$i]['fecoperacion'], 'string', 8);
+                        $propietario.= $util->preparaInforma(substr($datosInforma1[$i]['horaoperacion'],0,6), 'string', 6);
+                        $propietario.= $util->preparaInforma(' ', 'string', 1);
+
+                        $informaEst[] =  $propietario;
+                    }        
+                }
+            }
+            $infomaData[] = '********'.$contReg;
+            $infoVinculos[] = '********'.$contRegRepLeg;
+            $infoCertifica[] = '********'.$contRegCert;
+            $content = implode("\n", $infomaData);
+            $informe = $this->renderView('informa1.txt.twig',array('infomaData'=>$content));
+            
+            $logs = new Logs();
+            $logs->setFecha($fecha);
+            $logs->setModulo('informaColombia');
+            $logs->setQuery('Genera Archivos: '.$sqlInforma1);
+            $logs->setUsuario($usuario->getUsername());
+            $logs->setIp($ipaddress);
+
+            $logem->persist($logs);
+            $logem->flush($logs);
+                       
+            $fs = new Filesystem();
+            $archivo = $this->container->getParameter('kernel.root_dir').'/data/informes/informa1.txt';
+
+            try {
+                $fs->dumpFile($archivo, $informe);
+            } catch (IOExceptionInterface $e) {
+                echo "Se ha producido un error al crear el archivo ".$e->getPath();
+            }
+            
+            $contentVinc = implode("\n", $infoVinculos);
+            $informeVinc = $this->renderView('informa1.txt.twig',array('infomaData'=>$contentVinc));
+            
+                       
+            $fsv = new Filesystem();
+            $archivoVinc = $this->container->getParameter('kernel.root_dir').'/data/informes/informa2.txt';
+
+            try {
+                $fsv->dumpFile($archivoVinc, $informeVinc);
+            } catch (IOExceptionInterface $e) {
+                echo "Se ha producido un error al crear el archivo ".$e->getPath();
+            }
+            
+//            Lineas para crear informa3.txt
+            
+            $contentCert = implode("\n", $infoCertifica);
+            $informeCert = $this->renderView('informa1.txt.twig',array('infomaData'=>$contentCert));
+            
+                       
+            $fsc = new Filesystem();
+            $archivoCert = $this->container->getParameter('kernel.root_dir').'/data/informes/informa3.txt';
+
+            try {
+                $fsc->dumpFile($archivoCert, $informeCert);
+            } catch (IOExceptionInterface $e) {
+                echo "Se ha producido un error al crear el archivo ".$e->getPath();
+            }
+            
+            //            Lineas para crear informa4.txt
+            
+            $contentEst = implode("\n", $informaEst);
+            $informeEst = $this->renderView('informa1.txt.twig',array('infomaData'=>$contentEst));
+            
+                       
+            $fEst = new Filesystem();
+            $archivoEst = $this->container->getParameter('kernel.root_dir').'/data/informes/informa4.txt';
+
+            try {
+                $fEst->dumpFile($archivoEst, $informeEst);
+            } catch (IOExceptionInterface $e) {
+                echo "Se ha producido un error al crear el archivo ".$e->getPath();
+            }
+            
+//            se agregan archivos para el zip
+           $informaName = 'informaColombia'.$fecActual.'.zip' ;
+           $zip = new \ZipArchive();
+           $archivoZip = $this->container->getParameter('kernel.root_dir').'/data/informes/'.$informaName;
+           
+            if ($zip->open($archivoZip, \ZipArchive::CREATE) !== TRUE) {
+            exit("cannot open <$archivoZip>\n");
+            }
+
+            $zip->addFile($archivo, "informa1.txt");
+
+            $zip->addFile($archivoVinc, "informa2.txt");
+            
+            $zip->addFile($archivoCert, "informa3.txt");
+            
+            $zip->addFile($archivoEst, "informa4.txt");
+
+            $zip->close();
+            header('Content-Type', 'application/zip');
+            header('Content-disposition: attachment; filename="'.$informaName.'"');
+            header('Content-Length: ' . filesize($archivoZip));
+            readfile($archivoZip);
+            return new Response(json_encode(array('ruta' => $archivo )));
+        }else{
+            return $this->render('default/informaColombia.html.twig',array('ip'=>$ipaddress));
         }
     } 
 
