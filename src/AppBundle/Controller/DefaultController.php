@@ -992,6 +992,10 @@ class DefaultController extends Controller
         $logem =  $this->getDoctrine()->getManager();
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+        $utilities = new UtilitiesController();
+        
+        $listMun = $utilities->municipios();
+        $municipios = $listMun['municipios'];
         
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -1027,7 +1031,9 @@ class DefaultController extends Controller
                             mei.ciiu1,
                             mei.personal,
                             mei.acttot,
+                            mei.acttot AS 'clasificacion',
                             mei.muncom,
+                            mei.dircom,
                             mei.telcom1,                            
                             inscrip.registro,
                             inscrip.noticia,
@@ -1075,12 +1081,17 @@ class DefaultController extends Controller
                 $resultadoLibros[$i]['noticia'] = utf8_decode($resultadoLibros[$i]['noticia']);
                 $resultadoLibros[$i]['acto'] = utf8_decode($resultadoLibros[$i]['acto']);
                 $resultadoLibros[$i]['libro'] = utf8_decode($resultadoLibros[$i]['libro']);
+                if(key_exists($resultadoLibros[$i]['muncom'], $municipios)){
+                   $resultadoLibros[$i]['muncom'] = $municipios[$resultadoLibros[$i]['muncom']]; 
+                }                
+                $resultadoLibros[$i]['clasificacion'] = $utilities->rangoActivos($SIIem, $resultadoLibros[$i]['acttot']);
+                 
             }
             
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $columns = ['ID','FECHA INSCRIPCION','MATRICULA','EST. MAT','ORGANIZACION','CATEGORIA','FEC. MATRICULA','FEC. CONSTITUCION','FEC. RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','CIIU','PERSONAL','ACTIVOS','MUNICIPIO','TELEFONO','NUM. REGISTRO','NOTICIA','OPERADOR','OPERACION','ID. ACTO','ACTO','ID. LIBRO','LIBRO'];
+                $columns = ['ID','FEC INSCRIPCION','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','CIIU','PERSONAL','CLASIFICACION','ACTIVOS','MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','OPERADOR','OPERACION','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
                 $logs = new Logs();
@@ -1093,7 +1104,6 @@ class DefaultController extends Controller
                 $logem->persist($logs);
                 $logem->flush($logs);
                 
-                $utilities = new UtilitiesController();
                 $response = $utilities->exportExcel( $resultadoLibros, $columns,$nomExcel);
                 return $response;
             }else{

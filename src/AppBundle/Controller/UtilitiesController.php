@@ -19,6 +19,17 @@ class UtilitiesController extends Controller
         
         return $municipios;
     }
+    
+    public function rangoActivos($em,$param) {
+        $fecha = new \DateTime();
+        $anno = $fecha->format('Y');
+        $clasifica = $em->getConnection()->prepare("SELECT descripcion FROM AS_clasificacionEmpresarial where (rango_final>=:acttot AND rango_inicial<=:acttot) AND anno_clasificacion=:anno ;");
+
+        $params = array('acttot' => $param , 'anno' => $anno);    
+        $clasifica->execute($params);
+        $resultado = $clasifica->fetchAll();
+        return utf8_decode($resultado[0]['descripcion']);
+    }
 
 
     public function construirTablaResumen($results, $categoria, $tablaDetalle,$arregloTotales,$arregloMatMun) {
@@ -288,12 +299,12 @@ class UtilitiesController extends Controller
     public function exportExcel($resultados,$columns,$nomExcel) {
         
         if($columns!=''){    
-            $rows[] = implode(';', $columns);
+            $rows[] = '"'.implode('";"', $columns).'"';
         }    
         foreach ($resultados as $event) {
             $data = $event;
 
-            $rows[] = implode(';', $data);
+            $rows[] = '"'.implode('";"', $data).'"';
         }
 
 
@@ -306,7 +317,7 @@ class UtilitiesController extends Controller
                                         ResponseHeaderBag::DISPOSITION_ATTACHMENT,
                                         $nomExcel.$fecExcel.'.csv'
                                     );
-        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Type', 'text/csv');
         $response->headers->set('Pragma', 'public');
         $response->headers->set('Cache-Control', 'maxage=1');
         $response->headers->set('Content-Disposition', $dispositionHeader);
