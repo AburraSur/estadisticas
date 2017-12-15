@@ -13,9 +13,19 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UtilitiesController extends Controller
 {
-    public function municipios(){
-        $municipios['codigos'] = array('05129','05266','05360','05380','05631');
-        $municipios['municipios'] = array('05129'=>'CALDAS','05266'=>'ENVIGADO','05360'=>'ITAGUI','05380'=>'LA ESTRELLA','05631'=>'SABANETA','otroDom' => 'otroDomicilio','0000'=>'');
+    public function municipios($em){
+        
+        $sqlMun = "SELECT basmun.codigomunicipio, basmun.ciudad FROM bas_municipios basmun ";
+        
+        $mun = $em->getConnection()->prepare($sqlMun);
+        $mun->execute();
+        $muni = $mun->fetchAll();
+        for($i=0;$i<sizeof($muni);$i++){
+            $codigos[] = $muni[$i]['codigomunicipio'];
+            $ciudad[$muni[$i]['codigomunicipio']] = $muni[$i]['ciudad'];
+        }
+        $municipios['codigos'] = $codigos;
+        $municipios['municipios'] = $ciudad;
         
         return $municipios;
     }
