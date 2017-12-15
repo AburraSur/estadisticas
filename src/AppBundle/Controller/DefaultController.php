@@ -27,7 +27,7 @@ class DefaultController extends Controller
         if($rol){
             return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
         }else{
-            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
+            return new RedirectResponse($router->generate('extraccionMatriculados'), 307);
         }
     }
     
@@ -994,7 +994,7 @@ class DefaultController extends Controller
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         $utilities = new UtilitiesController();
         
-        $listMun = $utilities->municipios();
+        $listMun = $utilities->municipios($SIIem);
         $municipios = $listMun['municipios'];
         
             $fechaInicial = explode("-", $_POST['dateInit']);
@@ -1016,7 +1016,6 @@ class DefaultController extends Controller
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
             $sqlMat = "SELECT 
-                            inscrip.id,
                             inscrip.fecharegistro,
                             inscrip.matricula,
                             mei.ctrestmatricula,
@@ -1037,8 +1036,6 @@ class DefaultController extends Controller
                             mei.telcom1,                            
                             inscrip.registro,
                             inscrip.noticia,
-                            inscrip.operador,
-                            inscrip.numerooperacion,
                             actos.idacto,
                             actos.nombre AS 'acto',
                             libros.idlibro,
@@ -1091,7 +1088,7 @@ class DefaultController extends Controller
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $columns = ['ID','FEC INSCRIPCION','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','CIIU','PERSONAL','CLASIFICACION','ACTIVOS','MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','OPERADOR','OPERACION','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
+                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','CIIU','PERSONAL','ACTIVOS',utf8_decode('TAMAÑO'),'MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
                 $logs = new Logs();
@@ -1684,7 +1681,7 @@ class DefaultController extends Controller
                 $resultados = $stmt->fetchAll();
                 $totalFiltered = $totalData = sizeof($resultados);
                 
-                $utilMuni = $utilities->municipios();
+                $utilMuni = $utilities->municipios($em);
                 $municipios = $utilMuni['municipios'];
                 
                 $sqlESAL= "SELECT mce.id, mce.descripcion FROM mreg_clase_esadl mce ";
@@ -1889,7 +1886,7 @@ class DefaultController extends Controller
         $fecha = new \DateTime();
         $fecActual = $fecha->format('Ymd');
 
-        $codMuni = $util->municipios();
+        $codMuni = $util->municipios($em);
         $municipios = $codMuni['municipios'];
         if(isset($_POST['generar'])){
             
@@ -2279,7 +2276,7 @@ class DefaultController extends Controller
         $fecha = new \DateTime();
         $fecActual = $fecha->format('Ymd');
 
-        $codMuni = $util->municipios();
+        $codMuni = $util->municipios($em);
         $municipios = $codMuni['municipios'];
         if(isset($_POST['generar'])){
             
