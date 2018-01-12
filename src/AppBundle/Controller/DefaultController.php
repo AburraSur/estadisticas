@@ -927,7 +927,7 @@ class DefaultController extends Controller
             foreach ($libros as $key => $value) {
                 $actos = implode("','", $value);
                 if($sw==0){
-                    $sqlMat.="AND (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
+                    $sqlMat.="AND ((inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
                     $sw++;
                 }else{
                     $sqlMat.="OR (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
@@ -936,7 +936,7 @@ class DefaultController extends Controller
                 
             }
             
-            $sqlMat.="GROUP BY inscrip.id";
+            $sqlMat.=") GROUP BY inscrip.id";
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stLibros = $SIIem->getConnection()->prepare($sqlMat);
 //            Ejecución de las consultas
