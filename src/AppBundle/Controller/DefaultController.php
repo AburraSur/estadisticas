@@ -1027,6 +1027,8 @@ class DefaultController extends Controller
                             mei.ultanoren,
                             mei.numid AS 'identificacion',    
                             mei.razonsocial AS 'comerciante',
+                            mei.ciiu1 AS 'sector21',
+                            mei.ciiu1 AS 'sector9',
                             mei.ciiu1,
                             mei.personal,
                             mei.acttot,
@@ -1035,7 +1037,9 @@ class DefaultController extends Controller
                             mei.dircom,
                             mei.telcom1,                            
                             inscrip.registro,
-                            inscrip.noticia,
+                            inscrip.noticia,                                                     
+                            inscrip.operador,
+                            inscrip.numerooperacion,
                             actos.idacto,
                             actos.nombre AS 'acto',
                             libros.idlibro,
@@ -1056,7 +1060,7 @@ class DefaultController extends Controller
             foreach ($libros as $key => $value) {
                 $actos = implode("','", $value);
                 if($sw==0){
-                    $sqlMat.="AND (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
+                    $sqlMat.="AND ((inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
                     $sw++;
                 }else{
                     $sqlMat.="OR (inscrip.libro='$key' AND inscrip.acto IN('$actos')) ";
@@ -1065,7 +1069,7 @@ class DefaultController extends Controller
                 
             }
             
-            $sqlMat.=" GROUP BY inscrip.id ";
+            $sqlMat.=") GROUP BY inscrip.id ";
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stLibros = $SIIem->getConnection()->prepare($sqlMat);
 //            Ejecución de las consultas
@@ -1081,14 +1085,50 @@ class DefaultController extends Controller
                 if(key_exists($resultadoLibros[$i]['muncom'], $municipios)){
                    $resultadoLibros[$i]['muncom'] = $municipios[$resultadoLibros[$i]['muncom']]; 
                 }                
-                $resultadoLibros[$i]['clasificacion'] = $utilities->rangoActivos($SIIem, $resultadoLibros[$i]['acttot']);
-                 
+                $resultadoLibros[$i]['clasificacion'] = $utilities->rangoActivos($SIIem, $resultadoLibros[$i]['clasificacion']);
+                
+                $resultadoLibros[$i]['sector21'] = substr($resultadoLibros[$i]['ciiu1'], 0, 1);
+                $sec9 = substr($resultadoLibros[$i]['ciiu1'], 1, 2);
+                switch (true) {
+                    case ($sec9 >=1) && ($sec9<=3):
+                        $resultadoLibros[$i]['sector9'] = 1;
+                        break;
+                    case ($sec9 >=5) && ($sec9<=9):
+                        $resultadoLibros[$i]['sector9'] = 2;
+                        break;
+                    case ($sec9 >=10) && ($sec9<=33):
+                        $resultadoLibros[$i]['sector9'] = 3;
+                        break;
+                    case ($sec9 >=35) && ($sec9<=39):
+                        $resultadoLibros[$i]['sector9'] = 4;
+                        break;
+                    case ($sec9 >=41) && ($sec9<=43):
+                        $resultadoLibros[$i]['sector9'] = 5;
+                        break;
+                    case ($sec9 >=45) && ($sec9<=47):
+                        $resultadoLibros[$i]['sector9'] = 6;
+                        break;
+                    case ($sec9 >=49) && ($sec9<=63):
+                        $resultadoLibros[$i]['sector9'] = 7;
+                        break;
+                    case ($sec9 >=64) && ($sec9<=68):
+                        $resultadoLibros[$i]['sector9'] = 8;
+                        break;
+                    case ($sec9 >=69) && ($sec9<=99):
+                        $resultadoLibros[$i]['sector9'] = 9;
+                        break;
+
+                    default:
+                        $resultadoLibros[$i]['sector9'] = 6;
+                        break;
+                }
+                
             }
             
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','CIIU','PERSONAL','ACTIVOS',utf8_decode('TAMAÑO'),'MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
+                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','SECTOR21','SECTOR9','CIIU','PERSONAL','ACTIVOS','TAMANNO','MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
                 $logs = new Logs();
@@ -1991,7 +2031,12 @@ class DefaultController extends Controller
                     $arreglo.= $matricula['dato'];
                     $arreglo.= $util->preparaInforma('', 'string', 11);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['razonsocial'], 'string', 260);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['idclase'], 'string', 1);
+                    if($datosInforma1[$i]['idclase']>0){
+                        $idclase = $datosInforma1[$i]['idclase'];
+                    }else{
+                        $idclase = '0';
+                    }
+                    $arreglo.= $util->preparaInforma($idclase, 'string', 1);
                     $id = $util->preparaInforma(substr($datosInforma1[$i]['nit'], 0, 9), 'entero', 14);
                     $arreglo.= $id['dato'];
                     if(substr($datosInforma1[$i]['nit'],-1,1)==''){
@@ -2003,7 +2048,12 @@ class DefaultController extends Controller
                     $arreglo.= $dv['dato'];
                     $catg = $util->preparaInforma($datosInforma1[$i]['organizacion'], 'entero', 2);
                     $arreglo.= $catg['dato'];
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['categoria'], 'string', 1);
+                    if($datosInforma1[$i]['categoria']>0){
+                        $categoria = $datosInforma1[$i]['categoria'];
+                    }else{
+                        $categoria = '0';
+                    }
+                    $arreglo.= $util->preparaInforma($categoria, 'string', 1);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['ctrestmatricula'], 'string', 2);
                     $fecMat = $util->preparaInforma($datosInforma1[$i]['fecmatricula'], 'entero', 8);
                     $arreglo.= $fecMat['dato'];
@@ -2064,14 +2114,17 @@ class DefaultController extends Controller
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['dircom'], 'string', 65);
                     if(key_exists($datosInforma1[$i]['muncom'], $municipios)){
                         $muncom = $datosInforma1[$i]['muncom'];
-                        if($muncom=='')$muncom='0000';
+                        if($muncom=='')$muncom='05360';
                         $arreglo.= $util->preparaInforma($municipios[$muncom], 'string', 25);
                     }else{
                         $arreglo.= $util->preparaInforma('', 'string', 25);
                     }
                     $arreglo.= $util->preparaInforma(0, 'string', 10);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['telcom1'], 'string', 10);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['faxcom'], 'string', 10);
+                    
+                    $telcom1 = $util->preparaInforma($datosInforma1[$i]['telcom1'], 'entero', 10);
+                    $arreglo.= $telcom1['dato'];
+                    $faxcom = $util->preparaInforma($datosInforma1[$i]['faxcom'], 'entero', 10);
+                    $arreglo.= $faxcom['dato'];
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['emailcom'], 'string', 50);
                     $cantest = $util->preparaInforma($datosInforma1[$i]['cantest'], 'entero', 5);
                     $arreglo.= $cantest['dato'];
@@ -2081,7 +2134,7 @@ class DefaultController extends Controller
                     if(key_exists($datosInforma1[$i]['cpcodmun'], $municipios)){
                         $indexMun = $datosInforma1[$i]['cpcodmun'];
                     }else{
-                        $indexMun='0000';
+                        $indexMun='05360';
                     }
                     $arreglo.= $util->preparaInforma($municipios[$indexMun], 'string', 25);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['liquidacion'], 'string', 1);
@@ -2100,8 +2153,12 @@ class DefaultController extends Controller
                             $matricula = $util->preparaInforma($resultVinculos[$j]['matricula'], 'entero', 8);
                             $vinculos .= $matricula['dato'];
                             $vinculos .= $util->preparaInforma($resultVinculos[$j]['nombre'], 'string', 65);
-                            $idclase = $util->preparaInforma($resultVinculos[$j]['idclase'], 'entero', 1);
-                            $vinculos .= $idclase['dato'];
+                            if($resultVinculos[$j]['idclase']>0){
+                                $idclase = $resultVinculos[$j]['idclase'];
+                            }else{
+                                $idclase = '0';
+                            }
+                            $vinculos.= $util->preparaInforma($idclase, 'string', 1);
                             $numid = $util->preparaInforma($resultVinculos[$j]['numid'], 'entero', 11);
                             $vinculos .= $numid['dato'];
 
@@ -2386,7 +2443,12 @@ class DefaultController extends Controller
                     $arreglo.= $matricula['dato'];
                     $arreglo.= $util->preparaInforma('', 'string', 11);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['razonsocial'], 'string', 260);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['idclase'], 'string', 1);
+                    if($datosInforma1[$i]['idclase']>0){
+                        $idclase = $datosInforma1[$i]['idclase'];
+                    }else{
+                        $idclase = '0';
+                    }
+                    $arreglo.= $util->preparaInforma($idclase, 'string', 1);
                     $id = $util->preparaInforma(substr($datosInforma1[$i]['nit'], 0, 9), 'entero', 14);
                     $arreglo.= $id['dato'];
                     if(substr($datosInforma1[$i]['nit'],-1,1)==''){
@@ -2398,7 +2460,13 @@ class DefaultController extends Controller
                     $arreglo.= $dv['dato'];
                     $catg = $util->preparaInforma($datosInforma1[$i]['organizacion'], 'entero', 2);
                     $arreglo.= $catg['dato'];
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['categoria'], 'string', 1);
+                    if($datosInforma1[$i]['categoria']>0){
+                        $categoria = $datosInforma1[$i]['categoria'];
+                    }else{
+                        $categoria = '0';
+                    }
+                    $arreglo.= $util->preparaInforma($categoria, 'string', 1);
+//                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['categoria'], 'string', 1);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['ctrestmatricula'], 'string', 2);
                     $fecMat = $util->preparaInforma($datosInforma1[$i]['fecmatricula'], 'entero', 8);
                     $arreglo.= $fecMat['dato'];
@@ -2459,14 +2527,16 @@ class DefaultController extends Controller
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['dircom'], 'string', 65);
                     if(key_exists($datosInforma1[$i]['muncom'], $municipios)){
                         $muncom = $datosInforma1[$i]['muncom'];
-                        if($muncom=='')$muncom='0000';
+                        if($muncom=='')$muncom='05360';
                         $arreglo.= $util->preparaInforma($municipios[$muncom], 'string', 25);
                     }else{
                         $arreglo.= $util->preparaInforma('', 'string', 25);
                     }
                     $arreglo.= $util->preparaInforma(0, 'string', 10);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['telcom1'], 'string', 10);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['faxcom'], 'string', 10);
+                    $telcom1 = $util->preparaInforma($datosInforma1[$i]['telcom1'], 'entero', 10);
+                    $arreglo.= $telcom1['dato'];
+                    $faxcom = $util->preparaInforma($datosInforma1[$i]['faxcom'], 'entero', 10);
+                    $arreglo.= $faxcom['dato'];
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['emailcom'], 'string', 50);
                     $cantest = $util->preparaInforma($datosInforma1[$i]['cantest'], 'entero', 5);
                     $arreglo.= $cantest['dato'];
@@ -2476,7 +2546,7 @@ class DefaultController extends Controller
                     if(key_exists($datosInforma1[$i]['cpcodmun'], $municipios)){
                         $indexMun = $datosInforma1[$i]['cpcodmun'];
                     }else{
-                        $indexMun='0000';
+                        $indexMun='05360';
                     }
                     $arreglo.= $util->preparaInforma($municipios[$indexMun], 'string', 25);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['liquidacion'], 'string', 1);
@@ -2495,8 +2565,14 @@ class DefaultController extends Controller
                             $matricula = $util->preparaInforma($resultVinculos[$j]['matricula'], 'entero', 8);
                             $vinculos .= $matricula['dato'];
                             $vinculos .= $util->preparaInforma($resultVinculos[$j]['nombre'], 'string', 65);
-                            $idclase = $util->preparaInforma($resultVinculos[$j]['idclase'], 'entero', 1);
-                            $vinculos .= $idclase['dato'];
+//                            $idclase = $util->preparaInforma($resultVinculos[$j]['idclase'], 'entero', 1);
+//                            $vinculos .= $idclase['dato'];
+                            if($resultVinculos[$j]['idclase']>0){
+                                $idclase = $resultVinculos[$j]['idclase'];
+                            }else{
+                                $idclase = '0';
+                            }
+                            $vinculos.= $util->preparaInforma($idclase, 'string', 1);
                             $numid = $util->preparaInforma($resultVinculos[$j]['numid'], 'entero', 11);
                             $vinculos .= $numid['dato'];
 
@@ -2613,8 +2689,8 @@ class DefaultController extends Controller
                         }else{
                             $propietario.= $util->preparaInforma($datosInforma1[$i]['muncom'], 'string', 25);
                         }
-
-                        $propietario.= $util->preparaInforma($datosInforma1[$i]['telcom1'], 'string', 10);
+                        $telcom1 = $util->preparaInforma($datosInforma1[$i]['telcom1'], 'entero', 10);
+                        $propietario.= $telcom1['dato'];
                         $propietario.= $util->preparaInforma($datosInforma1[$i]['ctrestmatricula'], 'string', 2);
                         $propietario.= $util->preparaInforma($datosInforma1[$i]['feccancelacion'], 'string', 8);
                         $ciiu1 = substr($datosInforma1[$i]['ciiu1'],1);

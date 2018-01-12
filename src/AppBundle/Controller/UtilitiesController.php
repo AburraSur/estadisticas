@@ -38,7 +38,12 @@ class UtilitiesController extends Controller
         $params = array('acttot' => $param , 'anno' => $anno);    
         $clasifica->execute($params);
         $resultado = $clasifica->fetchAll();
-        return utf8_decode($resultado[0]['descripcion']);
+        if(sizeof($resultado)>0){
+            return ($resultado[0]['descripcion']);
+        }else{
+            return ('N/A');
+        }
+        
     }
 
 
@@ -364,9 +369,12 @@ class UtilitiesController extends Controller
         
         
         if($tipo=='string'){
-            if(strpos($dato,"Ñ")){
-                $long++;                
-            }
+//            if(strpos($dato,"Ñ")){
+//                $long++;                
+//            }
+            $dato = str_replace("´","'",$dato);
+            $addLong = substr_count($dato, 'Ñ');
+            $long = $long+$addLong;
             $dato = str_pad($dato, $long);
             $resultado=$dato;
         }elseif($tipo=='ciiu'){
