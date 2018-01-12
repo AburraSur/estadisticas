@@ -964,7 +964,7 @@ class DefaultController extends Controller
                         . "<td>".$NomLibros[$idlibro]."</td>"
                         . "<td>".$key."</td>"
                         . "<td>".$NomActos[$key]."</td>"
-                        . "<td>".$value."</td>";
+                        . "<td>".number_format($value,"0","",".")."</td>";
                 }
             }
            
@@ -1037,9 +1037,7 @@ class DefaultController extends Controller
                             mei.dircom,
                             mei.telcom1,                            
                             inscrip.registro,
-                            inscrip.noticia,                                                     
-                            inscrip.operador,
-                            inscrip.numerooperacion,
+                            inscrip.noticia,         
                             actos.idacto,
                             actos.nombre AS 'acto',
                             libros.idlibro,
@@ -1149,9 +1147,7 @@ class DefaultController extends Controller
                         $sqlMat.=" OR inscrip.matricula LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR identificacion LIKE '".$_POST['search']['value']."%' ";       
                         $sqlMat.=" OR razonsocial LIKE '".$_POST['search']['value']."%' ";    
-                        $sqlMat.=" OR inscrip.noticia LIKE '".$_POST['search']['value']."%' ";     
-                        $sqlMat.=" OR inscrip.operador LIKE '".$_POST['search']['value']."%' ";    
-                        $sqlMat.=" OR inscrip.numerooperacion LIKE '".$_POST['search']['value']."%' ";    
+                        $sqlMat.=" OR inscrip.noticia LIKE '".$_POST['search']['value']."%' ";      
                         $sqlMat.=" OR actos.nombre LIKE '".$_POST['search']['value']."%' ";    
                         $sqlMat.=" OR libros.nombre LIKE '".$_POST['search']['value']."%' )";    
                 }
@@ -1180,8 +1176,6 @@ class DefaultController extends Controller
                     $nestedData[] = $resultadoLibros[$i]['identificacion'];                    
                     $nestedData[] = $resultadoLibros[$i]['comerciante'];
                     $nestedData[] = $resultadoLibros[$i]['noticia'];
-                    $nestedData[] = $resultadoLibros[$i]['operador'];
-                    $nestedData[] = $resultadoLibros[$i]['numerooperacion'];
                     $nestedData[] = $resultadoLibros[$i]['idlibro'];
                     $nestedData[] = $resultadoLibros[$i]['libro'];
                     $nestedData[] = $resultadoLibros[$i]['idacto'];
