@@ -1,0 +1,19 @@
+{% extends 'base2.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        
+        <h2><span class="glyphicon glyphicon-tags" aria-hidden="true"></span> Crear Programa</h2>
+        {{ form_start(form) }}
+          <div class="form-group">
+            {{ form_label(form.linea) }}
+            {{ form_widget(form.linea) }}
+          </div>
+          <div class="form-group">
+            {{ form_label(form.descripcion) }}
+            {{ form_widget(form.descripcion) }}
+          </div> 
+          
+        {{ form_end(form) }}
+    </div>
+{% endblock body%}

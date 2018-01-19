@@ -20,10 +20,17 @@
     </body>
     {% block javascripts %}
             {% javascripts 
-                '@AppBundle/Resources/public/js/*' %}
+                '@AppBundle/Resources/public/js/jquery.js'
+                '@AppBundle/Resources/public/js/jquery.ui.js'
+                '@AppBundle/Resources/public/js/jquery-1.12.4.js'
+                '@AppBundle/Resources/public/js/jquery.dataTables.min.js'
+                '@AppBundle/Resources/public/js/dataTables.buttons.min.js'
+                '@AppBundle/Resources/public/js/bootstrap.min.js'
+                '@AppBundle/Resources/public/js/bootstrap-select.js'
+                '@AppBundle/Resources/public/js/bootstrap-datepicker.js'
+                '@AppBundle/Resources/public/js/bootstrap-datepicker.min.js'
+                '@AppBundle/Resources/public/js/bootstrap-datepicker.es.min.js'%}
                 <script src="{{ asset_url }}"></script>
             {% endjavascripts %}
-            
-            
-        {% endblock %} 
+        {% endblock %}
 </html>

@@ -1,0 +1,71 @@
+{% extends 'base1.html.twig' %}
+{% block content %}    
+    <div class="container">    
+        
+    <div id="loginbox" class="mainbox col-md-6 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+        
+        <div class="row">                
+            <div class="text-center">
+                {% image '@AppBundle/Resources/public/css/images/ccas.svg' %}
+                    <img src="{{ asset_url }}" alt="logoCCAS" />
+                {% endimage %}
+            </div>
+        </div>
+        
+        <div class="panel panel-default" >
+            <div class="panel-body" >
+                <div class="panel-title text-center">
+                    <label>
+                        Códigos de Facturación PAT
+                    </label>    
+                </div>                    
+                <div class="form-group">
+                    <label for="programa">
+                        Programa
+                    </label>                       
+                    {{ programas|raw }} 
+                </div>    
+                <div class="form-group">  
+                     <label for="actividad">
+                        Actividad
+                    </label> 
+                    <select name="actividad" id="actividad" class="selectpicker form-control" data-live-search="true" title="Seleccione una actividad" ></select>
+                        
+                </div>
+                <div class="form-group" id="codPAT" >
+                    
+                </div>    
+            </div>                     
+        </div>  
+    </div>
+</div>
+{% endblock content%}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(document).ready(function() { 
+            $('.selectpicker').selectpicker();
+            
+            $('#programa').change(function(){
+                var programa = $(this).val();
+                $.ajax({
+                    url: '{{ path('patFacturacion') }}',
+                    type: 'POST',
+                    data: {programa:programa},
+                    success: function(data){
+                        var obj = JSON.parse(data);
+                        $('#actividad').html(obj.actividades);
+                        $('#actividad').selectpicker('refresh');
+                    }
+                });
+            });
+            
+            $('#actividad').change(function(){
+                var cod = $(this).val();
+                $('#codPAT').html('<button class="btn btn-info form-control" >El código PAT es el: '+cod+'</button>');
+            });
+        });
+    </script>    
+{% endblock javascripts %}    
+    
+    

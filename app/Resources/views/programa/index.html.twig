@@ -1,0 +1,55 @@
+{% extends 'base2.html.twig' %}
+{% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %}
+{% block body %}
+    <div class="container">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                 <h2><span class="glyphicon glyphicon-tags" aria-hidden="true"></span> Programa</h2>
+            </div>
+            <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >  
+                <div class="col-md-12">
+                    <a href="{{ path('programa_new') }}" class="btn btn-primary pull-right" >Nuevo Programa</a>
+                </div>
+                <table id="listParametros" class="table table-striped table-bordered table-condensed table-hover " cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for programas in programa %}
+                        <tr>
+                            <td><a href="{{ path('programa_show', { 'id': programas.id }) }}">{{ programas.id }}</a></td>
+                            <td>{{ programas.descripcion }}</td>
+                            <td>
+                                <a href="{{ path('programa_edit', { 'id': programas.id }) }}" class="btn btn-primary" >Editar</a>         
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+             </div>
+         </div>
+    </div>
+    
+{% endblock body %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts 
+        '@AppBundle/Resources/public/datatable/js/*' %}
+        <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    <script>
+        $(document).ready(function(){
+            var table = $('#listParametros').DataTable();
+        });
+    </script>
+    
+{% endblock javascripts %}    

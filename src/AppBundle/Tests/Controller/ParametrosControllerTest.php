@@ -4,7 +4,7 @@ namespace AppBundle\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-class ParametrosControllerTest extends WebTestCase
+class ProgramaControllerTest extends WebTestCase
 {
     /*
     public function testCompleteScenario()
@@ -13,13 +13,13 @@ class ParametrosControllerTest extends WebTestCase
         $client = static::createClient();
 
         // Create a new entry in the database
-        $crawler = $client->request('GET', '/parametros/');
-        $this->assertEquals(200, $client->getResponse()->getStatusCode(), "Unexpected HTTP status code for GET /parametros/");
+        $crawler = $client->request('GET', '/programa/');
+        $this->assertEquals(200, $client->getResponse()->getStatusCode(), "Unexpected HTTP status code for GET /programa/");
         $crawler = $client->click($crawler->selectLink('Create a new entry')->link());
 
         // Fill in the form and submit it
         $form = $crawler->selectButton('Create')->form(array(
-            'appbundle_parametros[field_name]'  => 'Test',
+            'appbundle_programa[field_name]'  => 'Test',
             // ... other fields to fill
         ));
 
@@ -33,7 +33,7 @@ class ParametrosControllerTest extends WebTestCase
         $crawler = $client->click($crawler->selectLink('Edit')->link());
 
         $form = $crawler->selectButton('Update')->form(array(
-            'appbundle_parametros[field_name]'  => 'Foo',
+            'appbundle_programa[field_name]'  => 'Foo',
             // ... other fields to fill
         ));
 

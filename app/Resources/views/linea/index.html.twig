@@ -1,0 +1,57 @@
+{% extends 'base2.html.twig' %}
+{% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %}
+{% block body %}
+    <div class="container">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                 <h2><span class="glyphicon glyphicon-tags" aria-hidden="true"></span> Linea</h2>
+            </div>
+            <div class="panel-body table-responsive" id="tabla_matriculados" style="width:100%;" >  
+                <div class="col-md-12">
+                    <a href="{{ path('linea_new') }}" class="btn btn-primary pull-right" >Nueva Linea</a>
+                </div>
+                <table id="listParametros" class="table table-striped table-bordered table-condensed table-hover " cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Descripción</th>
+                            <th>Vigencia</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for linea in lineas %}
+                        <tr>
+                            <td><a href="{{ path('linea_show', { 'id': linea.id }) }}">{{ linea.id }}</a></td>
+                            <td>{{ linea.descripcion }}</td>
+                            <td>{{ linea.vigencia}}</td>
+                            <td>
+                                <a href="{{ path('linea_edit', { 'id': linea.id }) }}" class="btn btn-primary" >Editar</a>         
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+             </div>
+         </div>
+    </div>
+    
+{% endblock body %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts 
+        '@AppBundle/Resources/public/datatable/js/*' %}
+        <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    <script>
+        $(document).ready(function(){
+            var table = $('#listParametros').DataTable();
+        });
+    </script>
+    
+{% endblock javascripts %}    
