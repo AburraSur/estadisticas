@@ -2797,5 +2797,38 @@ class DefaultController extends Controller
             return $this->render('default/informaColombia.html.twig',array('ip'=>$ipaddress));
         }
     } 
-
+    
+    /**
+     * @Route("/patFacturacion" , name="patFacturacion" )
+     */
+    public function patFacturacionAction() {
+        $em =  $this->getDoctrine()->getManager();
+        $year = date('Y');
+        if(isset($_POST['programa'])){
+            $sqlActividad = $em->createQuery("SELECT ac.codigo, ac.descripcion FROM AppBundle:Actividad ac WHERE ac.programa=:idprog ")->setParameter('idprog',$_POST['programa']);
+            $resultActividad = $sqlActividad->getResult();
+            $actividades = '';
+            for($i=0;$i<sizeof($resultActividad);$i++){
+                $actividades .= "<option value='".$resultActividad[$i]['codigo']."' >".$resultActividad[$i]['descripcion']."</option>";
+            }
+            
+            return new Response(json_encode(array('actividades' => $actividades )));
+        }else{
+            $sqlProgr = $em->createQuery("SELECT ln.id AS idLinea,ln.descripcion AS linea,pg.id AS idProg, pg.descripcion AS programa FROM AppBundle:Programa pg JOIN pg.linea ln WHERE ln.vigencia=:year ")->setParameter('year',$year);
+            $result = $sqlProgr->getResult();
+            
+            $listProgramas = '<select name="programa" id="programa" class="selectpicker form-control" data-live-search="true" title="Seleccione un programa" ><optgroup label="'.$result[0]['linea'].'" >';
+            $auxLinea = $result[0]['idLinea'];  
+            for($i=0;$i<sizeof($result);$i++){
+                if($auxLinea != $result[$i]['idLinea']){
+                    $listProgramas = '</optgroup><optgroup label="'.$result[$i]['linea'].'" >';
+                    $auxLinea = $result[$i]['idLinea'];
+                }
+                $listProgramas.="<option value='".$result[$i]['idProg']."' >".$result[$i]['programa']."</option>";
+            }
+            $listProgramas.= "</opygroup></select>";
+            
+            return $this->render('default/patFacturacion.html.twig',array('programas'=>$listProgramas));
+        }
+    }
 }

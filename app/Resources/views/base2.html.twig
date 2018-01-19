@@ -50,6 +50,12 @@
                             <a href="{{ path('extraccionMatriculados') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción Bases de Datos</a>
                         </li>
                     </ul>
+                {% elseif app.user == 'pat' %}    
+                    <ul class="nav navbar-nav side-nav">
+                        <li class="active" >
+                            <a href="{{ path('patFacturacion') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>PAT Facturación</a>
+                        </li>
+                    </ul>
                 {% else %}    
                 
                     <ul class="nav navbar-nav side-nav">

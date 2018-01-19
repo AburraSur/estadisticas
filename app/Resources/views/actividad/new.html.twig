@@ -1,0 +1,23 @@
+{% extends 'base2.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        
+        <h2><span class="glyphicon glyphicon-tags" aria-hidden="true"></span> Crear Actividad</h2>
+        {{ form_start(form) }}
+          <div class="form-group">
+            {{ form_label(form.programa) }}
+            {{ form_widget(form.programa) }}
+          </div>
+          <div class="form-group">
+            {{ form_label(form.descripcion) }}
+            {{ form_widget(form.descripcion) }}
+          </div> 
+          <div class="form-group">
+            {{ form_label(form.codigo) }}
+            {{ form_widget(form.codigo) }}
+          </div> 
+          
+        {{ form_end(form) }}
+    </div>
+{% endblock body%}

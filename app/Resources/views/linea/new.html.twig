@@ -1,0 +1,22 @@
+{% extends 'base1.html.twig' %}
+
+{% block content %}
+    <div class="container">
+        
+        <h2><span class="glyphicon glyphicon-tags" aria-hidden="true"></span> Crear Linea</h2>
+        {{ form_start(form) }}
+          <div class="form-group">
+            {{ form_label(form.descripcion) }}
+            {{ form_widget(form.descripcion) }}
+          </div>
+          <div class="form-group">
+            {{ form_label(form.vigencia) }}
+            {{ form_widget(form.vigencia) }}
+          </div> 
+          <div class="form-group">
+            <input type="submit" value="Create" />
+          </div>
+          
+        {{ form_end(form) }}
+    </div>
+{% endblock content%}
