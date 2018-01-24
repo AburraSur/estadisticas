@@ -1448,229 +1448,231 @@ class DefaultController extends Controller
 
                 $i=0;
                 foreach($_POST['organizacion'] as $organiza){
-                    if($organiza==0){
-                        $condiOrga = " (mei.organizacion = '01') ";
-                    }elseif($organiza==1){
-                        $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1')) ";
-                    }elseif($organiza==2){
-                        $condiOrga = " (mei.organizacion = '02') ";
-                    }elseif($organiza==3){
-                        $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND mei.categoria IN ('2','3')) ";
-                    }elseif($organiza==4){
-                        $condiOrga = " mei.organizacion IN ('12','14') ";
-                    }elseif($organiza==5){
-                        $sqlExtracMatri = "SELECT 
-                                mei.matricula,
-                                mei.proponente,
-                                mei.organizacion,
-                                mei.organizacion as 'descorganiza',
-                                mei.categoria,
-                                mei.ctrestmatricula,
-                                mei.ctrestdatos,
-                                mei.nombre1,
-                                mei.nombre2,
-                                mei.apellido1,
-                                mei.apellido2,
-                                mei.idclase,
-                                mei.numid AS 'numidMat',
-                                mei.nit AS 'nitMat',
-                                mei.razonsocial AS 'razonsocialMat',
-                                mei.fecmatricula AS 'FEC-MATRICULA',
-                                mei.fecrenovacion AS 'FEC-RENOVACION',
-                                mei.ultanoren,
-                                mei.feccancelacion AS 'FEC-CANCELACION',
-                                mei.fecconstitucion,
-                                mei.fecdisolucion,
-                                mei.fecliquidacion,
-                                mei.fecvigencia,
-                                mep.identificacion AS 'idPropietario',
-                                mep.razonsocial AS 'NombrePropietario',
-                                mei.dircom,
-                                mei.barriocom,
-                                mei.muncom,
-                                mei.telcom1,
-                                mei.telcom2,
-                                mei.telcom3,
-                                mei.emailcom,
-                                mei.dirnot,
-                                mei.munnot,
-                                mei.telnot,
-                                mei.telnot2,
-                                mei.emailnot,
-                                mei.ciiu1,
-                                mei.ciiu2,
-                                mei.ciiu3,
-                                mei.ciiu4,
-                                mei.personal,
-                                mei.ctrlibroscomercio,
-                                mei.ctrafiliacion,
-                                mei.ctrembargo,
-                                mei.ctrimpexp,
-                                mei.ctrtipolocal,
-                                mei.ctrfun,
-                                mei.ctrubi,
-                                mei.ctrclasegenesadl,
-                                mei.ctrclasegenesadl AS 'descgenesal',
-                                mei.ctrclaseespeesadl,
-                                mei.ctrclaseespeesadl  AS 'descespesal',
-                                mei.ctrclaseeconsoli,
-                                mei.ctrbenart7,
-                                mei.ctrbenley1780,
-                                mei.ctrtipopropiedad,
-                                mei.tamanoempresa,
-                                mei.actcte,
-                                mei.actnocte,
-                                mei.actfij,
-                                mei.actval,
-                                mei.actotr,
-                                mei.acttot,
-                                mei.pascte,
-                                mei.paslar,
-                                mei.pastot,
-                                mei.pattot,
-                                mei.patrimonio,
-                                mei.paspat,
-                                mei.ingope,
-                                mei.ingnoope,
-                                mei.gasope,
-                                mei.gasnoope,
-                                mei.utiope,
-                                mei.utinet,                                
-                                mei.anodatos,
-                                mei.fecdatos,
-                                mei.capaut,
-                                mei.capsus,
-                                mei.cappag,
-                                mei.capsoc,
-                                mei.apolab,
-                                mei.apolabadi,
-                                mei.apodin,
-                                mei.apotra,
-                                mei.apoact,
-                                mei.apotot,
-                                mei.actvin,
-                                mei.capesadl,
-                                mei.cantest,
-                                mei.anorenaflia,
-                                mei.fecactaaflia,
-                                mei.fecrenaflia,
-                                mei.valpagaflia,
-                                mem.nomprop
-                            FROM
-                                mreg_est_inscritos mei
-                            LEFT JOIN mreg_est_propietarios mep ON mep.matricula = mei.matricula
-                            LEFT JOIN mreg_est_matriculados mem ON mem.matricula = mei.matricula 
-                            $where 
-                            AND mei.ctrestmatricula IN $estado"; 
-                        
-                            $condiOrga = "AND ((mei.organizacion = '02')
-                            AND mep.codigocamara != '55'
-                            AND mep.estado='V' ";
-                            
-                            
-                            $columns=['MATRICULA',
-                                        'PROPONENTE',
-                                        'ORGANIZACION',
-                                        'DESC.ORGANIZACION',
-                                        'CATEGORIA',
-                                        'EST-MATRICULA',
-                                        'EST_DATOS',
-                                        'NOMBRE 1',
-                                        'NOMBRE 2',
-                                        'APELLIDO 1',
-                                        'APELLIDO 2',
-                                        'CLASE-ID',
-                                        'IDENTIFICACION',
-                                        'NIT',
-                                        'RAZON SOCIAL',
-                                        'FEC-MATRICULA',
-                                        'FEC-RENOVACION',
-                                        'ULT-ANO_REN',
-                                        'FEC-CANCELACION',
-                                        'FEC-CONSTITUCION',
-                                        'FEC-DISOLUCION',
-                                        'FEC-LIQUIDACION',
-                                        'FEC-VIGENCIA',
-                                        'ID. PROPIETARIO',
-                                        'PROPIETARIO',
-                                        'DIR-COMERCIAL',
-                                        'BARRIO-COMERCIAL',
-                                        'MUN-COMERCIAL',
-                                        'TEL-COM-1',
-                                        'TEL-COM-2',
-                                        'TEL-COM-3',
-                                        'EMAIL-COMERCIAL',
-                                        'DIR-NOTIFICACION',
-                                        'MUN-NOTIFICACION',
-                                        'TEL-NOTF-1',
-                                        'TEL-NOTF-2',
-                                        'EMAIL-NOTIFICACION',
-                                        'CIIU-1',
-                                        'CIIU-2',
-                                        'CIIU-3',
-                                        'CIIU-4',
-                                        'PERSONAL',
-                                        'LIBROS-COMERCIO',
-                                        'CTR-AFILIACION',
-                                        'CTR-EMBARGO',
-                                        'IMPORTA-EXPORTA',
-                                        'TIPO-LOCAL',
-                                        'TIEMPO-FUN',
-                                        'UBICACION',
-                                        'CLA-GEN-ESADL',
-                                        'DESCRIP. CLA-GEN-ESADL',
-                                        'CLA-ESPE-ESADL',
-                                        'DESCRIP. CLA-ESPE-ESADL',
-                                        'CLA-ECON-SOLI',
-                                        'BEN-ART-7',
-                                        'BEN-LEY-1780',
-                                        'TIPO-PROPIEDAD',
-                                        'TAM-EMPRESA',
-                                        'ACTIVO-CORRIENTE',
-                                        'ACTIVO-NO-CORRIENTE',
-                                        'ACTIVO-FIJO',
-                                        'ACTIVO-VALORIZ',
-                                        'ACTIVO-OTROS',
-                                        'ACTIVO-TOTAL',
-                                        'PASIVO-CORRIENTE',
-                                        'PASIVO-LRG-PLAZO',
-                                        'PASIVO-TOTAL',
-                                        'PATRIMONIO TOTAL',
-                                        'PATRIMONIO',
-                                        'PASIVO+PATRIM',
-                                        'ING-OPERACIONES',
-                                        'ING-NO-OPERACIONALES',
-                                        'GAS-OPERACIONALES',
-                                        'GAS-NO-OPERAC.',
-                                        'UTIL-OPERACIONAL',
-                                        'UTIL-NETA',
-                                        'ANIO-DATOS',
-                                        'FECHA-DATOS',
-                                        'CAPITAL-AUTORIZ.',
-                                        'CAPITAL-SUSCRITO',
-                                        'CAPITAL-PAGADO',
-                                        'CAPITAL-SOCIAL',
-                                        'APORTE-LABORAL',
-                                        'APORTE-LABORAL-ADI',
-                                        'APORTE-DINERO',
-                                        'APORTE-TRABAJO',
-                                        'APORTE-ACTIVOS',
-                                        'APORTE-TOTAL',
-                                        'VLR-ESTABLEC.',
-                                        'PATRIM-ESADL.',
-                                        'CANT-ESTABLECIM.',
-                                        'ANIO-REN-AFIL',
-                                        'FEC-AFIL.',
-                                        'FEC-ULT-PAG-AFIL',
-                                        'VAL-ULT-PAG-AFIL',
-                                        'NOMPROPIETARIO'
-                                        ];
-                    }
-                    if($i==0){
-                        $sqlExtracMatri.= $condiOrga;
-                    }else {
-                        $sqlExtracMatri.=" OR $condiOrga";
-                    }
+                    if($organiza != ''){
+                        if($organiza==0){
+                            $condiOrga = " (mei.organizacion = '01') ";
+                        }elseif($organiza==1){
+                            $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1')) ";
+                        }elseif($organiza==2){
+                            $condiOrga = " (mei.organizacion = '02') ";
+                        }elseif($organiza==3){
+                            $condiOrga = " (mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND mei.categoria IN ('2','3')) ";
+                        }elseif($organiza==4){
+                            $condiOrga = " mei.organizacion IN ('12','14') ";
+                        }elseif($organiza==5){
+                            $sqlExtracMatri = "SELECT 
+                                    mei.matricula,
+                                    mei.proponente,
+                                    mei.organizacion,
+                                    mei.organizacion as 'descorganiza',
+                                    mei.categoria,
+                                    mei.ctrestmatricula,
+                                    mei.ctrestdatos,
+                                    mei.nombre1,
+                                    mei.nombre2,
+                                    mei.apellido1,
+                                    mei.apellido2,
+                                    mei.idclase,
+                                    mei.numid AS 'numidMat',
+                                    mei.nit AS 'nitMat',
+                                    mei.razonsocial AS 'razonsocialMat',
+                                    mei.fecmatricula AS 'FEC-MATRICULA',
+                                    mei.fecrenovacion AS 'FEC-RENOVACION',
+                                    mei.ultanoren,
+                                    mei.feccancelacion AS 'FEC-CANCELACION',
+                                    mei.fecconstitucion,
+                                    mei.fecdisolucion,
+                                    mei.fecliquidacion,
+                                    mei.fecvigencia,
+                                    mep.identificacion AS 'idPropietario',
+                                    mep.razonsocial AS 'NombrePropietario',
+                                    mei.dircom,
+                                    mei.barriocom,
+                                    mei.muncom,
+                                    mei.telcom1,
+                                    mei.telcom2,
+                                    mei.telcom3,
+                                    mei.emailcom,
+                                    mei.dirnot,
+                                    mei.munnot,
+                                    mei.telnot,
+                                    mei.telnot2,
+                                    mei.emailnot,
+                                    mei.ciiu1,
+                                    mei.ciiu2,
+                                    mei.ciiu3,
+                                    mei.ciiu4,
+                                    mei.personal,
+                                    mei.ctrlibroscomercio,
+                                    mei.ctrafiliacion,
+                                    mei.ctrembargo,
+                                    mei.ctrimpexp,
+                                    mei.ctrtipolocal,
+                                    mei.ctrfun,
+                                    mei.ctrubi,
+                                    mei.ctrclasegenesadl,
+                                    mei.ctrclasegenesadl AS 'descgenesal',
+                                    mei.ctrclaseespeesadl,
+                                    mei.ctrclaseespeesadl  AS 'descespesal',
+                                    mei.ctrclaseeconsoli,
+                                    mei.ctrbenart7,
+                                    mei.ctrbenley1780,
+                                    mei.ctrtipopropiedad,
+                                    mei.tamanoempresa,
+                                    mei.actcte,
+                                    mei.actnocte,
+                                    mei.actfij,
+                                    mei.actval,
+                                    mei.actotr,
+                                    mei.acttot,
+                                    mei.pascte,
+                                    mei.paslar,
+                                    mei.pastot,
+                                    mei.pattot,
+                                    mei.patrimonio,
+                                    mei.paspat,
+                                    mei.ingope,
+                                    mei.ingnoope,
+                                    mei.gasope,
+                                    mei.gasnoope,
+                                    mei.utiope,
+                                    mei.utinet,                                
+                                    mei.anodatos,
+                                    mei.fecdatos,
+                                    mei.capaut,
+                                    mei.capsus,
+                                    mei.cappag,
+                                    mei.capsoc,
+                                    mei.apolab,
+                                    mei.apolabadi,
+                                    mei.apodin,
+                                    mei.apotra,
+                                    mei.apoact,
+                                    mei.apotot,
+                                    mei.actvin,
+                                    mei.capesadl,
+                                    mei.cantest,
+                                    mei.anorenaflia,
+                                    mei.fecactaaflia,
+                                    mei.fecrenaflia,
+                                    mei.valpagaflia,
+                                    mem.nomprop
+                                FROM
+                                    mreg_est_inscritos mei
+                                LEFT JOIN mreg_est_propietarios mep ON mep.matricula = mei.matricula
+                                LEFT JOIN mreg_est_matriculados mem ON mem.matricula = mei.matricula 
+                                $where 
+                                AND mei.ctrestmatricula IN $estado"; 
+
+                                $condiOrga = "AND ((mei.organizacion = '02')
+                                AND mep.codigocamara != '55'
+                                AND mep.estado='V' ";
+
+
+                                $columns=['MATRICULA',
+                                            'PROPONENTE',
+                                            'ORGANIZACION',
+                                            'DESC.ORGANIZACION',
+                                            'CATEGORIA',
+                                            'EST-MATRICULA',
+                                            'EST_DATOS',
+                                            'NOMBRE 1',
+                                            'NOMBRE 2',
+                                            'APELLIDO 1',
+                                            'APELLIDO 2',
+                                            'CLASE-ID',
+                                            'IDENTIFICACION',
+                                            'NIT',
+                                            'RAZON SOCIAL',
+                                            'FEC-MATRICULA',
+                                            'FEC-RENOVACION',
+                                            'ULT-ANO_REN',
+                                            'FEC-CANCELACION',
+                                            'FEC-CONSTITUCION',
+                                            'FEC-DISOLUCION',
+                                            'FEC-LIQUIDACION',
+                                            'FEC-VIGENCIA',
+                                            'ID. PROPIETARIO',
+                                            'PROPIETARIO',
+                                            'DIR-COMERCIAL',
+                                            'BARRIO-COMERCIAL',
+                                            'MUN-COMERCIAL',
+                                            'TEL-COM-1',
+                                            'TEL-COM-2',
+                                            'TEL-COM-3',
+                                            'EMAIL-COMERCIAL',
+                                            'DIR-NOTIFICACION',
+                                            'MUN-NOTIFICACION',
+                                            'TEL-NOTF-1',
+                                            'TEL-NOTF-2',
+                                            'EMAIL-NOTIFICACION',
+                                            'CIIU-1',
+                                            'CIIU-2',
+                                            'CIIU-3',
+                                            'CIIU-4',
+                                            'PERSONAL',
+                                            'LIBROS-COMERCIO',
+                                            'CTR-AFILIACION',
+                                            'CTR-EMBARGO',
+                                            'IMPORTA-EXPORTA',
+                                            'TIPO-LOCAL',
+                                            'TIEMPO-FUN',
+                                            'UBICACION',
+                                            'CLA-GEN-ESADL',
+                                            'DESCRIP. CLA-GEN-ESADL',
+                                            'CLA-ESPE-ESADL',
+                                            'DESCRIP. CLA-ESPE-ESADL',
+                                            'CLA-ECON-SOLI',
+                                            'BEN-ART-7',
+                                            'BEN-LEY-1780',
+                                            'TIPO-PROPIEDAD',
+                                            'TAM-EMPRESA',
+                                            'ACTIVO-CORRIENTE',
+                                            'ACTIVO-NO-CORRIENTE',
+                                            'ACTIVO-FIJO',
+                                            'ACTIVO-VALORIZ',
+                                            'ACTIVO-OTROS',
+                                            'ACTIVO-TOTAL',
+                                            'PASIVO-CORRIENTE',
+                                            'PASIVO-LRG-PLAZO',
+                                            'PASIVO-TOTAL',
+                                            'PATRIMONIO TOTAL',
+                                            'PATRIMONIO',
+                                            'PASIVO+PATRIM',
+                                            'ING-OPERACIONES',
+                                            'ING-NO-OPERACIONALES',
+                                            'GAS-OPERACIONALES',
+                                            'GAS-NO-OPERAC.',
+                                            'UTIL-OPERACIONAL',
+                                            'UTIL-NETA',
+                                            'ANIO-DATOS',
+                                            'FECHA-DATOS',
+                                            'CAPITAL-AUTORIZ.',
+                                            'CAPITAL-SUSCRITO',
+                                            'CAPITAL-PAGADO',
+                                            'CAPITAL-SOCIAL',
+                                            'APORTE-LABORAL',
+                                            'APORTE-LABORAL-ADI',
+                                            'APORTE-DINERO',
+                                            'APORTE-TRABAJO',
+                                            'APORTE-ACTIVOS',
+                                            'APORTE-TOTAL',
+                                            'VLR-ESTABLEC.',
+                                            'PATRIM-ESADL.',
+                                            'CANT-ESTABLECIM.',
+                                            'ANIO-REN-AFIL',
+                                            'FEC-AFIL.',
+                                            'FEC-ULT-PAG-AFIL',
+                                            'VAL-ULT-PAG-AFIL',
+                                            'NOMPROPIETARIO'
+                                            ];
+                        }
+                        if($i==0){
+                            $sqlExtracMatri.= $condiOrga;
+                        }else {
+                            $sqlExtracMatri.=" OR $condiOrga";
+                        }
+                    }    
                     $i++;
                 }
                 
@@ -2814,19 +2816,19 @@ class DefaultController extends Controller
             
             return new Response(json_encode(array('actividades' => $actividades )));
         }else{
-            $sqlProgr = $em->createQuery("SELECT ln.id AS idLinea,ln.descripcion AS linea,pg.id AS idProg, pg.descripcion AS programa FROM AppBundle:Programa pg JOIN pg.linea ln WHERE ln.vigencia=:year ")->setParameter('year',$year);
+            $sqlProgr = $em->createQuery("SELECT ln.id AS idLinea,ln.descripcion AS linea,pg.id AS idProg, pg.descripcion AS programa FROM AppBundle:Programa pg JOIN pg.linea ln WHERE ln.vigencia=:year ORDER BY ln.id ASC ")->setParameter('year',$year);
             $result = $sqlProgr->getResult();
             
             $listProgramas = '<select name="programa" id="programa" class="selectpicker form-control" data-live-search="true" title="Seleccione un programa" ><optgroup label="'.$result[0]['linea'].'" >';
             $auxLinea = $result[0]['idLinea'];  
             for($i=0;$i<sizeof($result);$i++){
                 if($auxLinea != $result[$i]['idLinea']){
-                    $listProgramas = '</optgroup><optgroup label="'.$result[$i]['linea'].'" >';
+                    $listProgramas .= '</optgroup><optgroup label="'.$result[$i]['linea'].'" >';
                     $auxLinea = $result[$i]['idLinea'];
                 }
                 $listProgramas.="<option value='".$result[$i]['idProg']."' >".$result[$i]['programa']."</option>";
             }
-            $listProgramas.= "</opygroup></select>";
+            $listProgramas.= "</optgroup></select>";
             
             return $this->render('default/patFacturacion.html.twig',array('programas'=>$listProgramas));
         }
