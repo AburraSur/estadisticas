@@ -1695,8 +1695,9 @@ class DefaultController extends Controller
                 
                 $fechaWhere = $_POST['tipoFecha'];
                 $muncom = "'".implode("','",$_POST['municipio'])."'";
-                $activoIni = str_replace(",", "", $_POST['activoIni']);
-                $activoFinal = str_replace(",", "", $_POST['activoFinal']);
+                $replace = array(",",".");
+                $activoIni = str_replace($replace, "", $_POST['activoIni']);
+                $activoFinal = str_replace($replace, "", $_POST['activoFinal']);
                    
                 $sqlExtracMatri.=")";
                 if($_POST['tipoFecha']!='all'){
