@@ -1220,6 +1220,10 @@ class DefaultController extends Controller
         $em =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();   
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $datosAfiliados = '';
+        if($usuario->hasRole('ROLE_AFILIADOS')){
+            $datosAfiliados = ', mei.telaflia, mei.diraflia, mei.munaflia, mei.contaflia, mei.dircontaflia, mei.muncontaflia ';
+        }
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $utilities = new UtilitiesController();
@@ -1263,11 +1267,17 @@ class DefaultController extends Controller
                                 mev.numid AS idRepLegal,
                                 mev.nombre AS RepresentanteLegal,
                                 (CASE
-                                    WHEN mei.organizacion = '02' AND mep.nit !='' THEN mep.nit
-                                    WHEN mei.organizacion = '02' AND mep.nit ='' THEN mep.identificacion
-                                    ELSE ''
+                                    WHEN mei.organizacion ='02' AND mep.nit='' AND mep.identificacion='' 
+                                        THEN (select ins.nit from mreg_est_inscritos ins inner join mreg_est_propietarios mep ON ins.matricula=mep.matriculapropietario where mep.matricula=mei.matricula and mep.estado='V')
+                                    WHEN mei.organizacion = '02' AND mep.nit != ''
+                                        THEN mep.nit
+                                    WHEN mei.organizacion = '02' AND mep.nit = '' 
+                                        THEN mep.identificacion 
+                                    ELSE mep.matriculapropietario
                                 END) AS 'idPropietario',
-                                (CASE WHEN mei.organizacion='02' THEN mep.razonsocial 
+                                (CASE 
+                                    WHEN mei.organizacion='02' 
+                                        THEN mep.razonsocial 
                                     ELSE inscritos.razonsocial 
                                 END) AS 'NombrePropietario',
                                 mei.dircom,
@@ -1339,13 +1349,14 @@ class DefaultController extends Controller
                                 mei.fecactaaflia,
                                 mei.fecrenaflia,
                                 mei.valpagaflia
+                                $datosAfiliados
                         FROM
                             mreg_est_inscritos mei
-                        LEFT JOIN mreg_est_vinculos mev ON mei.matricula = mev.matricula 
                         LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
                         LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
+                        LEFT JOIN mreg_est_vinculos mev ON (mep.matriculapropietario = mev.matricula AND mev.vinculo IN (2170 , 2600, 4170) AND mev.estado='V' )
                         $where
-                        AND mei.ctrestmatricula IN $estado 
+                        AND mei.ctrestmatricula IN $estado  
                         AND (";
             
                         $columns=['MATRICULA',
@@ -1445,6 +1456,14 @@ class DefaultController extends Controller
                                     'FEC-ULT-PAG-AFIL',
                                     'VAL-ULT-PAG-AFIL'
                                     ];
+                        if($usuario->hasRole('ROLE_AFILIADOS')){
+                            $columns[] = 'TEL-AFILIADO';
+                            $columns[] = 'DIR-AFILIADO';
+                            $columns[] = 'MUN-AFILIADO';
+                            $columns[] = 'CONTACTO-AFIL';
+                            $columns[] = 'DIR-CONT-AFIL';
+                            $columns[] = 'MUN-CONT-AFIL';                            
+                        }
 
                 $i=0;
                 foreach($_POST['organizacion'] as $organiza){
@@ -1762,6 +1781,16 @@ class DefaultController extends Controller
                     if(key_exists($resultados[$i]['descespesal'] , $claseEspecial)){
                         $resultados[$i]['descespesal'] = $claseEspecial[$resultados[$i]['descespesal']];
                     } 
+                    
+                    if($usuario->hasRole('ROLE_AFILIADOS')){
+                        if(key_exists($resultados[$i]['munaflia'] , $municipios)){
+                            $resultados[$i]['munaflia'] = $municipios[$resultados[$i]['munaflia']];
+                        } 
+                        
+                        if(key_exists($resultados[$i]['muncontaflia'] , $municipios)){
+                            $resultados[$i]['muncontaflia'] = $municipios[$resultados[$i]['muncontaflia']];
+                        } 
+                    }
                     
                     
                 }
