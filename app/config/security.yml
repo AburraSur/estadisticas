@@ -5,6 +5,10 @@ security:
     role_hierarchy:
         ROLE_ADMIN:       ROLE_USER
         ROLE_SUPER_ADMIN: ROLE_ADMIN
+        ROLE_AFILIADOS: ROLE_AFILIADOS
+        ROLE_CONTROLINTERNO: ROLE_CONTROLINTERNO
+        ROLE_PRESIDENCIA: ROLE_PRESIDENCIA
+        ROLE_ADMINISTRATIVO: ROLE_ADMINISTRATIVO
  
     providers:
         fos_userbundle:
