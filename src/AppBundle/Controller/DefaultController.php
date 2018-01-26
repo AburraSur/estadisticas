@@ -1267,9 +1267,7 @@ class DefaultController extends Controller
                                 mev.numid AS idRepLegal,
                                 mev.nombre AS RepresentanteLegal,
                                 (CASE
-                                    WHEN mei.organizacion ='02' AND mep.nit='' AND mep.identificacion='' 
-                                        THEN (select ins.nit from mreg_est_inscritos ins inner join mreg_est_propietarios mep ON ins.matricula=mep.matriculapropietario where mep.matricula=mei.matricula and mep.estado='V')
-                                    WHEN mei.organizacion = '02' AND mep.nit != ''
+                                   WHEN mei.organizacion = '02' AND mep.nit != ''
                                         THEN mep.nit
                                     WHEN mei.organizacion = '02' AND mep.nit = '' 
                                         THEN mep.identificacion 
