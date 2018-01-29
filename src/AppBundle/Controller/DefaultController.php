@@ -1781,6 +1781,22 @@ class DefaultController extends Controller
                         $resultados[$i]['descespesal'] = $claseEspecial[$resultados[$i]['descespesal']];
                     } 
                     
+                    /*
+                     * Si la organizacion no es un establecimiento, es necesario consultar los representantes legales de las sociedades aparte para
+                     * poder tener los datos tanto de establecimientos como de sociedades
+                     */
+                    
+                    if($resultados[$i]['organizacion'] !='02'){
+                        $sqlRepLegal= "SELECT mev.numid, mev.nombre from mreg_est_vinculos mev where mev.matricula='".$resultados[$i]['matricula']."' ";
+                        $emRepLegal = $em->getConnection()->prepare($sqlRepLegal);
+                        $emRepLegal->execute();
+                        $repLegal = $emRepLegal->fetchAll();
+                        if(sizeof($repLegal)>0){
+                            $resultados[$i]['idRepLegal'] = $repLegal[0]['numid'];
+                            $resultados[$i]['RepresentanteLegal'] = $repLegal[0]['nombre'];
+                        }
+                    }
+                    
                     if($usuario->hasRole('ROLE_AFILIADOS')){
                         if(key_exists($resultados[$i]['munaflia'] , $municipios)){
                             $resultados[$i]['munaflia'] = $municipios[$resultados[$i]['munaflia']];
