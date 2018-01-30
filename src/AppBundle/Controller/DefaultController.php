@@ -1787,7 +1787,7 @@ class DefaultController extends Controller
                      */
                     
                     if($resultados[$i]['organizacion'] !='02'){
-                        $sqlRepLegal= "SELECT mev.numid, mev.nombre from mreg_est_vinculos mev where mev.matricula='".$resultados[$i]['matricula']."' ";
+                        $sqlRepLegal= "SELECT mev.numid, mev.nombre from mreg_est_vinculos mev where mev.matricula='".$resultados[$i]['matricula']."' AND mev.vinculo IN (2170 , 2600, 4170) ";
                         $emRepLegal = $em->getConnection()->prepare($sqlRepLegal);
                         $emRepLegal->execute();
                         $repLegal = $emRepLegal->fetchAll();

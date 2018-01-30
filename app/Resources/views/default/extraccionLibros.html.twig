@@ -155,7 +155,7 @@
                 var libroActo = $('#acto').val();
                 $('#libroActo').val(libroActo);
                 $.blockUI({
-                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Este proceso puede tardar unos minutos, por favor espere...</div>'
                 });          
                                   
                     
@@ -173,6 +173,9 @@
                                 "url": '{{ path('extraeLibroActosDetalle') }}',
                                 "type": 'POST',
                                 "data": {dateInit:fecIni , dateEnd:fecEnd , libroActo:libroActo, excel: '0'},
+                            },
+                            "fnDrawCallback": function () {
+                                $.unblockUI();
                             }
                         } );
 

@@ -246,7 +246,7 @@
                 var conterror=0;
                 
                 $.blockUI({
-                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Este proceso puede tardar unos minutos, por favor espere...</div>'
                 });  
                 $('.required').each(function(){
                     var valc = $(this).prop('value');
@@ -323,13 +323,13 @@
                         },
                         "fnDrawCallback": function () {
                             var number = this.fnSettings().fnRecordsTotal();
-                            $('.periodo').html('Total Registros: '+new Intl.NumberFormat().format(number)  );
+                            $('.periodo').html('Total Registros: '+new Intl.NumberFormat().format(number)  );                            
+                            $('#excelB').removeClass('hide');
+                            $.unblockUI();
                         }
                         
                     } );
                     
-                    $('#excelB').removeClass('hide');
-                    setTimeout($.unblockUI,3000);
                     return false;
                 }else{
                     $.blockUI({
