@@ -1264,8 +1264,14 @@ class DefaultController extends Controller
                                 mei.fecdisolucion,
                                 mei.fecliquidacion,
                                 mei.fecvigencia,
-                                mev.numid AS idRepLegal,
-                                mev.nombre AS RepresentanteLegal,
+                                (CASE 
+                                    when mev.numid IS NULL then mev2.numid
+                                    else mev.numid       
+                                END) AS 'idRepLegal',
+                                (CASE 
+                                    when mev.nombre IS NULL then mev2.nombre
+                                    else mev.nombre       
+                                END) AS 'RepresentanteLegal',
                                 (CASE
                                    WHEN mei.organizacion = '02' AND mep.nit != ''
                                         THEN mep.nit
@@ -1353,6 +1359,7 @@ class DefaultController extends Controller
                         LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
                         LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
                         LEFT JOIN mreg_est_vinculos mev ON (mep.matriculapropietario = mev.matricula AND mev.vinculo IN (2170 , 2600, 4170) AND mev.estado='V' )
+                        LEFT JOIN mreg_est_vinculos mev2 ON (mei.matricula = mev2.matricula AND mev2.vinculo IN (2170 , 2600, 4170) AND mev2.estado='V' )
                         $where
                         AND mei.ctrestmatricula IN $estado  
                         AND (";
@@ -1784,18 +1791,8 @@ class DefaultController extends Controller
                     /*
                      * Si la organizacion no es un establecimiento, es necesario consultar los representantes legales de las sociedades aparte para
                      * poder tener los datos tanto de establecimientos como de sociedades
-                     */
+                     */                    
                     
-                    if($resultados[$i]['organizacion'] !='02'){
-                        $sqlRepLegal= "SELECT mev.numid, mev.nombre from mreg_est_vinculos mev where mev.matricula='".$resultados[$i]['matricula']."' AND mev.vinculo IN (2170 , 2600, 4170) ";
-                        $emRepLegal = $em->getConnection()->prepare($sqlRepLegal);
-                        $emRepLegal->execute();
-                        $repLegal = $emRepLegal->fetchAll();
-                        if(sizeof($repLegal)>0){
-                            $resultados[$i]['idRepLegal'] = $repLegal[0]['numid'];
-                            $resultados[$i]['RepresentanteLegal'] = $repLegal[0]['nombre'];
-                        }
-                    }
                     
                     if($usuario->hasRole('ROLE_AFILIADOS')){
                         if(key_exists($resultados[$i]['munaflia'] , $municipios)){
