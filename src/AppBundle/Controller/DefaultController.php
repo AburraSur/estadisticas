@@ -1357,7 +1357,7 @@ class DefaultController extends Controller
                         FROM
                             mreg_est_inscritos mei
                         LEFT JOIN mreg_est_inscritos inscritos ON mei.matricula = inscritos.matricula
-                        LEFT JOIN mreg_est_propietarios mep ON mei.matricula = mep.matricula
+                        LEFT JOIN mreg_est_propietarios mep ON (mei.matricula = mep.matricula AND mep.estado='V')
                         LEFT JOIN mreg_est_vinculos mev ON (mep.matriculapropietario = mev.matricula AND mev.vinculo IN (2170 , 2600, 4170) AND mev.estado='V' )
                         LEFT JOIN mreg_est_vinculos mev2 ON (mei.matricula = mev2.matricula AND mev2.vinculo IN (2170 , 2600, 4170) AND mev2.estado='V' )
                         $where
