@@ -24,8 +24,15 @@ class DefaultController extends Controller
         // replace this example code with whatever you need
         $router = $this->container->get('router');
         $rol = $this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN');
+        
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $logem =  $this->getDoctrine()->getManager();
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $menu = $usuario->getMenus();
+//        print_r($menu);
         if($rol){
-            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
+//            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
+            return $this->render('default/estadisticasGenerales.html.twig',array('menu'=>$menu));
         }else{
             return new RedirectResponse($router->generate('extraccionMatriculados'), 307);
         }
