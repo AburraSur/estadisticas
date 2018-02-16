@@ -317,7 +317,7 @@ class UtilitiesController extends Controller
             $rows[] = '"'.implode('";"', $columns).'"';
         }    
         foreach ($resultados as $event) {
-            $data = $event;
+            $data = array_map("utf8_decode", $event );
 
             $rows[] = '"'.implode('";"', $data).'"';
         }
@@ -332,7 +332,7 @@ class UtilitiesController extends Controller
                                         ResponseHeaderBag::DISPOSITION_ATTACHMENT,
                                         $nomExcel.$fecExcel.'.csv'
                                     );
-        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Type', 'text/csv', 'charset=utf-8');
         $response->headers->set('Pragma', 'public');
         $response->headers->set('Cache-Control', 'maxage=1');
         $response->headers->set('Content-Disposition', $dispositionHeader);
@@ -359,6 +359,17 @@ class UtilitiesController extends Controller
         return $response;
     }
     
+    public function tipoId($em) {
+        $sqlTipoId = $em->getConnection()->prepare("SELECT mti.id, mti.descripcion FROM mreg_tipoidentificacion mti ORDER BY id ASC ");
+        $sqlTipoId->execute();
+        $tipoId = $sqlTipoId->fetchAll();
+        
+        for($i=0;$i<sizeof($tipoId);$i++){
+            $tipoIdentificacion[$tipoId[$i]['id']] = $tipoId[$i]['descripcion'];
+        }
+        
+        return $tipoIdentificacion;
+    }
     
     //    funcion para dar formato a los diferentes datos que conforman los archivos para informaColombia, los string agregan espacios en blanco a la derecha,
 //    los entero agregan 0 a la izquierda y a su vez comprueban si son + o -

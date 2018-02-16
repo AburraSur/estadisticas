@@ -1,0 +1,133 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h2 class="h2" ><span class="glyphicon glyphicon-user" aria-hidden="true"></span>Extracción de Proponentes <span class="periodo pull-right" ></span></h2>
+        </div>    
+        <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
+            <form id="extraccionForm" method="POST" action="{{ path('extraccionProponentes') }}" >
+                <div class="col-md-12">
+                    <div class=" form-group col-md-2">
+                        <select name="estado" id="estado" class="form-control selectpicker required" data-style="btn-primary" title="Estado del Proponente" >
+                            <option value="'00','02'">Activos/Inactivos</option>  
+                            <option value="'01'">Cancelados</option>  
+                        </select>    
+                    </div>
+                    <div class="form-group col-md-2">
+                        <select name="tipoFecha" id="tipoFecha" class="form-control selectpicker required" data-style="btn-primary" data-live-search="true"  title="Tipo Fecha" >
+                            <option value="mep.fechaultimaactualizacion">Actualización</option>  
+                            <option value="mep.fechacancelacion">Cancelación</option>  
+                            <option value="mep.fechaultimainscripcion">Inscripción</option>
+                            <option value="mep.fechaultimarenovacion">Renovación</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                            <input name="dateInit" id="dateInit" readonly class="fecReq form-control datepicker" placeholder="Fecha Inicial" data-date-end-date="0d">
+                        </div>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                            <input name="dateEnd" id="dateEnd" readonly class="fecReq form-control datepicker" placeholder="Fecha Final" data-date-end-date="0d">
+                        </div>
+                    </div>
+                    <div class=" form-group col-md-2">
+                        <button class="btn btn-success hide col-md-4" id="excelB" ><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</button>        
+                        <input type="hidden" name="excel" id="excel" value="1" />
+                        <a href="#" class="btn btn-primary col-md-4" id="search" >Generar</a>
+                        <a class="btn btn-primary  col-md-4" id="clear" >Limpiar</a>
+                    </div>    
+                </div>
+            </form> 
+            <table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive extraccionesProponentes' cellspacing='0' width='100%'>
+                <thead>
+                    <tr>
+                        <th>Num. Proponente</th>
+                        <th>Matricula</th>
+                        <th>Tipo Id</th>
+                        <th>Identificación</th>
+                        <th>Razón Social </th>
+                        <th>Sigla</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>Num. Proponente</th>
+                        <th>Matricula</th>
+                        <th>Tipo Id</th>
+                        <th>Identificación</th>
+                        <th>Razón Social </th>
+                        <th>Sigla</th>
+                    </tr>
+                </tfoot>
+            </table>    
+        </div>    
+    </div>    
+                                        
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts 
+        '@AppBundle/Resources/public/datatable/js/*'%}
+        <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    <script>
+        $(document).ready(function(){
+            $('#extraccion').dataTable({
+                searching: false,
+            });    
+            
+            $('#search').click(function(){
+                var tablaProponentes = $('#extraccion').dataTable().fnDestroy();
+                var estado = $('#estado').val();
+                var tipoFecha = $('#tipoFecha').val();
+                var dateInit = $('#dateInit').val();
+                var dateEnd = $('#dateEnd').val();
+                
+                var tablaProponentes = $('#extraccion').DataTable( {
+                    dom: 'Bfrtip',                    
+                    searching: false,
+                    language: {
+                         info:           "Mostrando elementos del _START_ al _END_ de <span id='totalReg'>_TOTAL_ registros</span>",
+                         infoEmpty:      "Consulta sin registros",
+                         loadingRecords: "Chargement en cours...",
+                         zeroRecords:    "Consulta sin registros",
+                         emptyTable:     "",
+                         paginate: {
+                             first:      "Primero",
+                             previous:   "Previo",
+                             next:       "Siguiente",
+                             last:       "Ultimo"
+                         },
+                    },    
+                    buttons: [],
+                    "ordering": false,
+                    "processing": false,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": '{{ path('extraccionProponentes') }}',
+                        "type": 'POST',
+                        "data": {estado:estado,tipoFecha:tipoFecha,dateInit:dateInit,dateEnd:dateEnd,excel: '0'},
+                    },
+                    "fnDrawCallback": function () {
+                        var number = this.fnSettings().fnRecordsTotal();
+                        $('.periodo').html('Total Registros: '+new Intl.NumberFormat().format(number)  );                            
+                        $('#excelB').removeClass('hide');
+                        $.unblockUI();
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+{% endblock javascripts %}    
+
+{# empty Twig template #}

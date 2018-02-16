@@ -132,19 +132,6 @@
                             <th>FEC-MATRICULA</th>
                             <th>FEC-RENOVACIÓN</th>
                             <th>FEC-CANCELACIÓN</th>
-                            {#<th>DIR-COMERCIAL</th>
-                            <th>MUNICIPIO</th>
-                            <th>TEL-COM-1</th>
-                            <th>TEL-COM-2</th>
-                            <th>TEL-COM-3</th>
-                            <th>EMAIL-COM</th>
-                            <th>CIIU</th>
-                            <th>ACTIVO TOTAL</th>
-                            <th>VLR-ESTABLECIMIENTO</th>
-                            <th>ID. Rep. Legal</th>
-                            <th>Representante Legal</th>
-                            <th>ID. Propietario</th>
-                            <th>Propietario</th>#}
                         </tr>
                     </thead>
                     <tfoot>
@@ -159,19 +146,6 @@
                             <th>FEC-MATRICULA</th>
                             <th>FEC-RENOVACIÓN</th>
                             <th>FEC-CANCELACIÓN</th>
-                            {#<th>DIR-COMERCIAL</th>
-                            <th>MUNICIPIO</th>
-                            <th>TEL-COM-1</th>
-                            <th>TEL-COM-2</th>
-                            <th>TEL-COM-3</th>
-                            <th>EMAIL-COM</th>
-                            <th>CIIU</th>
-                            <th>ACTIVO TOTAL</th>
-                            <th>VLR-ESTABLECIMIENTO</th>
-                            <th>ID. Rep. Legal</th>
-                            <th>Representante Legal</th>
-                            <th>ID. Propietario</th>
-                            <th>Propietario</th>#}
                         </tr>
                     </tfoot>
                 </table>    
@@ -187,14 +161,7 @@
             {% endjavascripts %}
     <script>
         $(document).ready(function() {              
-            $('#extraccion').dataTable();
-            
-            /*$('.datepicker').datepicker({
-                language: 'es',
-                autoclose: true,
-                format: 'yyyy-mm-dd',
-                
-            });  */                     
+            $('#extraccion').dataTable();                
             $('.selectpicker').selectpicker();
             
             $('#tipoFecha').change(function(){
