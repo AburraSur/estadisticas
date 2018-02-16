@@ -213,19 +213,9 @@ class DefaultController extends Controller
                 }
                 
                 
-                foreach ($valueExcel as $key => $value) {
-                    
-                }
+                
 
                 $nomExcel = 'ResumenMatRenCan';
-//                $columns[] = 'Municipio';
-//                $columns[]= 'P. Naturales';
-//                $columns[]= 'Establecimientos';
-//                $columns[]= 'Sociedades';
-//                $columns[]= 'Agencias - Sucursales';
-//                $columns[]= 'ESAL';
-//                $columns[]= 'Civil';
-//                $columns[]= 'Total';
                 
                 $utilities = new UtilitiesController();
                 $response = $utilities->exportExcel( $arrayExcel, '',$nomExcel);
@@ -426,8 +416,6 @@ class DefaultController extends Controller
 
             
             $nomExcel = 'ExtraccionMatRenCan';
-            /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$excelReg, 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
-            return $response;*/
             $utilities = new UtilitiesController();
             $response = $utilities->exportExcel( $excelReg, '',$nomExcel);
             return $response;
@@ -783,7 +771,7 @@ class DefaultController extends Controller
                     $resultadosServicios[$i]['sucursal'] = $listaSedes[$sucursal];
                     $codOpera = substr($resultadosServicios[$i]['numerooperacion'], 2,3);
                     $resultadosServicios[$i]['horaoperacion'] = $listaUsuarios[$codOpera];
-                    $resultadosServicios[$i]['Cliente'] = utf8_decode($resultadosServicios[$i]['Cliente']);
+                    $resultadosServicios[$i]['Cliente'] = $resultadosServicios[$i]['Cliente'];
                 }
                 
                 
@@ -1083,10 +1071,10 @@ class DefaultController extends Controller
             $totalData = $totalFiltered = sizeof($resultadoLibros);
             
             for($i=0;$i<sizeof($resultadoLibros);$i++){
-                $resultadoLibros[$i]['comerciante'] = utf8_decode($resultadoLibros[$i]['comerciante']);
-                $resultadoLibros[$i]['noticia'] = utf8_decode($resultadoLibros[$i]['noticia']);
-                $resultadoLibros[$i]['acto'] = utf8_decode($resultadoLibros[$i]['acto']);
-                $resultadoLibros[$i]['libro'] = utf8_decode($resultadoLibros[$i]['libro']);
+                $resultadoLibros[$i]['comerciante'] = $resultadoLibros[$i]['comerciante'];
+                $resultadoLibros[$i]['noticia'] = $resultadoLibros[$i]['noticia'];
+                $resultadoLibros[$i]['acto'] = $resultadoLibros[$i]['acto'];
+                $resultadoLibros[$i]['libro'] = $resultadoLibros[$i]['libro'];
                 if(key_exists($resultadoLibros[$i]['muncom'], $municipios)){
                    $resultadoLibros[$i]['muncom'] = $municipios[$resultadoLibros[$i]['muncom']]; 
                 }                
@@ -1229,7 +1217,7 @@ class DefaultController extends Controller
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $datosAfiliados = '';
         if($usuario->hasRole('ROLE_AFILIADOS')){
-            $datosAfiliados = ', mei.telaflia, mei.diraflia, mei.munaflia, mei.contaflia, mei.dircontaflia, mei.muncontaflia ';
+            $datosAfiliados = ', mei.telaflia, mei.diraflia, mei.munaflia, mei.contaflia, mei.dircontaflia, mei.muncontaflia, mei.numactaaflia, mei.numactacanaflia, mei.fecactacanaflia ';
         }
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
@@ -1267,7 +1255,10 @@ class DefaultController extends Controller
                                 mei.fecrenovacion AS 'FEC-RENOVACION',
                                 mei.ultanoren,
                                 mei.feccancelacion AS 'FEC-CANCELACION',
-                                mei.fecconstitucion,
+                                (CASE 
+                                    when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fecharegistro from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040')
+                                    else mei.fecmatricula
+                                END) AS 'fecconstitucion',
                                 mei.fecdisolucion,
                                 mei.fecliquidacion,
                                 mei.fecvigencia,
@@ -1475,6 +1466,9 @@ class DefaultController extends Controller
                             $columns[] = 'CONTACTO-AFIL';
                             $columns[] = 'DIR-CONT-AFIL';
                             $columns[] = 'MUN-CONT-AFIL';                            
+                            $columns[] = 'NUM-ACTA-AFIL';                            
+                            $columns[] = 'NUM-ACTA-CAN-AFIL';                            
+                            $columns[] = 'FEC-ACTA-CAN-AFIL';                            
                         }
 
                 $i=0;
@@ -1817,12 +1811,12 @@ class DefaultController extends Controller
                 if($_POST['excel']==1){
                     
                     for($i=0;$i<sizeof($resultados);$i++){
-                        $resultados[$i]['razonsocialMat'] = utf8_decode($resultados[$i]['razonsocialMat']);
-                        $resultados[$i]['NombrePropietario'] = utf8_decode($resultados[$i]['NombrePropietario']);
-                        $resultados[$i]['nombre1'] = utf8_decode($resultados[$i]['nombre1']);
-                        $resultados[$i]['nombre2'] = utf8_decode($resultados[$i]['nombre2']);
-                        $resultados[$i]['apellido1'] = utf8_decode($resultados[$i]['apellido1']);
-                        $resultados[$i]['apellido2'] = utf8_decode($resultados[$i]['apellido2']);
+                        $resultados[$i]['razonsocialMat'] = $resultados[$i]['razonsocialMat'];
+                        $resultados[$i]['NombrePropietario'] = $resultados[$i]['NombrePropietario'];
+                        $resultados[$i]['nombre1'] = $resultados[$i]['nombre1'];
+                        $resultados[$i]['nombre2'] = $resultados[$i]['nombre2'];
+                        $resultados[$i]['apellido1'] = $resultados[$i]['apellido1'];
+                        $resultados[$i]['apellido2'] = $resultados[$i]['apellido2'];
                     }
                     
                     $nomExcel = 'ExtraccionMatriculados';
@@ -2854,31 +2848,34 @@ class DefaultController extends Controller
     public function patFacturacionAction() {
         $em =  $this->getDoctrine()->getManager();
         $year = date('Y');
-        if(isset($_POST['programa'])){
-            $sqlActividad = $em->createQuery("SELECT ac.codigo, ac.descripcion FROM AppBundle:Actividad ac WHERE ac.programa=:idprog ")->setParameter('idprog',$_POST['programa']);
+//        if(isset($_POST['programa'])){
+//            $sqlActividad = $em->createQuery("SELECT ac.codigo, ac.descripcion FROM AppBundle:Actividad ac WHERE ac.programa=:idprog ")->setParameter('idprog',$_POST['programa']);
+            $sqlActividad = $em->createQuery("SELECT ac.codigo, ac.descripcion FROM AppBundle:Actividad ac ORDER BY ac.codigo ASC ");
             $resultActividad = $sqlActividad->getResult();
-            $actividades = '';
+//            $actividades = '';
+            $actividades = '<select name="actividad" id="actividad" class="selectpicker form-control" data-live-search="true" title="Seleccione una actividad" >';
             for($i=0;$i<sizeof($resultActividad);$i++){
                 $actividades .= "<option value='".$resultActividad[$i]['codigo']."' >".$resultActividad[$i]['descripcion']."</option>";
             }
-            
-            return new Response(json_encode(array('actividades' => $actividades )));
-        }else{
-            $sqlProgr = $em->createQuery("SELECT ln.id AS idLinea,ln.descripcion AS linea,pg.id AS idProg, pg.descripcion AS programa FROM AppBundle:Programa pg JOIN pg.linea ln WHERE ln.vigencia=:year ORDER BY ln.id ASC ")->setParameter('year',$year);
-            $result = $sqlProgr->getResult();
-            
-            $listProgramas = '<select name="programa" id="programa" class="selectpicker form-control" data-live-search="true" title="Seleccione un programa" ><optgroup label="'.$result[0]['linea'].'" >';
-            $auxLinea = $result[0]['idLinea'];  
-            for($i=0;$i<sizeof($result);$i++){
-                if($auxLinea != $result[$i]['idLinea']){
-                    $listProgramas .= '</optgroup><optgroup label="'.$result[$i]['linea'].'" >';
-                    $auxLinea = $result[$i]['idLinea'];
-                }
-                $listProgramas.="<option value='".$result[$i]['idProg']."' >".$result[$i]['programa']."</option>";
-            }
-            $listProgramas.= "</optgroup></select>";
-            
-            return $this->render('default/patFacturacion.html.twig',array('programas'=>$listProgramas));
-        }
+            $actividades.='</select>';
+            return $this->render('default/patFacturacion.html.twig',array('programas'=>$actividades));
+//            return new Response(json_encode(array('actividades' => $actividades )));
+//        }else{
+//            $sqlProgr = $em->createQuery("SELECT ln.id AS idLinea,ln.descripcion AS linea,pg.id AS idProg, pg.descripcion AS programa FROM AppBundle:Programa pg JOIN pg.linea ln WHERE ln.vigencia=:year ORDER BY ln.id ASC ")->setParameter('year',$year);
+//            $result = $sqlProgr->getResult();
+//            
+//            $listProgramas = '<select name="programa" id="programa" class="selectpicker form-control" data-live-search="true" title="Seleccione un programa" ><optgroup label="'.$result[0]['linea'].'" >';
+//            $auxLinea = $result[0]['idLinea'];  
+//            for($i=0;$i<sizeof($result);$i++){
+//                if($auxLinea != $result[$i]['idLinea']){
+//                    $listProgramas .= '</optgroup><optgroup label="'.$result[$i]['linea'].'" >';
+//                    $auxLinea = $result[$i]['idLinea'];
+//                }
+//                $listProgramas.="<option value='".$result[$i]['idProg']."' >".$result[$i]['programa']."</option>";
+//            }
+//            $listProgramas.= "</optgroup></select>";
+//            
+//            return $this->render('default/patFacturacion.html.twig',array('programas'=>$listProgramas));
+//        }
     }
 }

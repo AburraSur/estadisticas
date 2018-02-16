@@ -49,6 +49,9 @@
                         <li class="active" >
                             <a href="{{ path('extraccionMatriculados') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción Bases de Datos</a>
                         </li>
+                        <li class="active" >
+                            <a href="{{ path('extraccionProponentes') }}"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>Extracción Proponentes</a>
+                        </li>
                     </ul>
                 {% elseif is_granted('ROLE_ADMINISTRATIVO') %}    
                     <ul class="nav navbar-nav side-nav">
@@ -70,6 +73,9 @@
                         </li>
                         <li class="active" >
                             <a href="{{ path('extraccionMatriculados') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción Bases de Datos</a>
+                        </li>
+                        <li class="active" >
+                            <a href="{{ path('extraccionProponentes') }}"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>Extracción Proponentes</a>
                         </li>
                         <li class="active" >
                             <a href="{{ path('informaColombia') }}"><span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>Extracción Informa Colombia</a>
@@ -116,6 +122,7 @@
                         $(':input').val('');
                         $('.selectpicker').selectpicker('refresh');
                         $('.table').dataTable().fnDestroy();
+                        
                         $('.table').dataTable();
                         $('#activoIni').val('0');
                         $('#activoFinal').val('999,999,999,999,999');
