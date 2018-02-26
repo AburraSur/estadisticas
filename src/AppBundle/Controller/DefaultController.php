@@ -15,7 +15,7 @@ use AppBundle\Controller\UtilitiesController;
 use AppBundle\Entity\Logs;
 
 class DefaultController extends Controller
-{
+{    
     /**
      * @Route("/", name="homepage")
      */
@@ -2870,5 +2870,108 @@ class DefaultController extends Controller
 //            
 //            return $this->render('default/patFacturacion.html.twig',array('programas'=>$listProgramas));
 //        }
+    }
+    
+    /**
+     * @Route("/estadisticasComparativas" , name="estadisticasComparativas" ) 
+     */
+    public function estadisticasComparativasAction(){
+        $fecha = new \DateTime();
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $SIIem =  $this->getDoctrine()->getManager('sii');
+        $logem =  $this->getDoctrine()->getManager();
+        
+        $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
+        $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+        
+        $util = new UtilitiesController();
+        if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
+            $fechaInicial = explode("-", $_POST['dateInit']);
+            $fechaFinal = explode("-", $_POST['dateEnd']);
+            
+            $annoComparativo = ($fechaFinal[0]-1);
+            $annoInicial = $fechaFinal[0];
+            $tablaComparativa = "mreg_est_inscritos_$annoComparativo";
+            $fecIniComparativa = $annoComparativo.$fechaInicial[1].$fechaInicial[2];
+            $fecEndComparativa = $annoComparativo.$fechaFinal[1].$fechaFinal[2];
+            
+            $fecIni = str_replace("-", "", $_POST['dateInit']);
+            $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+            
+            $fechas = array( $tablaComparativa=>array($fecIniComparativa,$fecEndComparativa) , 'mreg_est_inscritos'=>array($fecIni,$fecEnd));
+            $annosComp = array( $tablaComparativa=>$annoComparativo , 'mreg_est_inscritos'=>$annoInicial);
+            
+            foreach ($fechas as $key => $value) {
+
+    //          Consulta para los matriculados en el rango de fechas consultado  
+                $sqlMat = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren  "
+                        . "FROM $key inscritos  "
+                        . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                        . "WHERE inscritos.fecmatricula between :fecIni AND :fecEnd  "
+                        . "AND inscritos.ctrestmatricula NOT IN ('NA','NM') "
+                        . "AND inscritos.matricula IS NOT NULL "
+                        . "AND inscritos.matricula !='' ";
+
+    //          Consulta para las matriculas renovadas en el rango de fechas consultado  
+                $sqlRen = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+                        . "FROM $key inscritos  "
+                        . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                        . "WHERE inscritos.fecmatricula < :fecIni "
+                        . "AND inscritos.fecrenovacion between :fecIni AND :fecEnd  "
+                        . "AND inscritos.matricula IS NOT NULL "
+                        . "AND inscritos.matricula !='' "
+                        . "AND inscritos.ultanoren ='".$annosComp[$key]."' ";
+
+    //          Consulta para las matriculas canceladas en el rango de fechas consultado
+                $sqlCan = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+                        . "FROM $key inscritos  "
+                        . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
+                        . "INNER JOIN mreg_est_inscripciones mei ON  inscritos.matricula = mei.matricula "
+                        . "WHERE mei.fecharegistro between :fecIni AND :fecEnd "
+                        //. "AND inscritos.ctrestmatricula IN ('MC','IC','MF') "
+                        . "AND inscritos.ctrestmatricula IN ('MC','IC') "
+                        . "AND inscritos.matricula IS NOT NULL "
+                        . "AND inscritos.matricula !='' "
+                        . "AND libro IN ('RM15' , 'RM51', 'RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
+                        . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
+
+
+                $params = array('fecIni'=>$value[0] , 'fecEnd' => $value[1]);
+
+    //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
+                $stmt = $SIIem->getConnection()->prepare($sqlMat);
+                $strv = $SIIem->getConnection()->prepare($sqlRen);
+                $stcn = $SIIem->getConnection()->prepare($sqlCan);
+
+    //            Ejecución de las consultas
+                $stmt->execute($params);
+                $resultadoMat = $stmt->fetchAll();
+                $strv->execute($params);
+                $resultadoRen = $strv->fetchAll();
+                $stcn->execute($params);           
+                $resultadoCan = $stcn->fetchAll();
+                
+                $totalMat[] = sizeof($resultadoMat);
+                $totalRen[] = sizeof($resultadoRen);
+                $totalCan[] = sizeof($resultadoCan);
+            
+            }
+            
+            
+            $mesesInicial = $util->mes($fechaInicial[1]-1);
+            $mesesFinal = $util->mes($fechaFinal[1]-1);
+            
+            $tablaResultado= "<div class='panel panel-primary' ><div class='panel-heading'><h2 class='h2' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Estadisticas $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." </h2></div>"
+                    . "<div class='panel-body table-responsive' id='tabla_detallada' style='width:100%;' ><table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><td>Matriculados</td><td>".$totalMat[0]."</td><td>".$totalMat[1]."</td></tr>"
+                    . "<tr><td>Renovados</td><td>".$totalRen[0]."</td><td>".$totalRen[1]."</td></tr>"
+                    . "<tr><td>Matriculados + Renovados</td><td>".($totalMat[0]+$totalRen[0])."</td><td>".($totalMat[1]+$totalRen[1])."</td></tr>"
+                    . "<tr><td>Cancelados</td><td>".$totalCan[0]."</td><td>".$totalCan[1]."</td></tr></tbody></table></div></div>";
+            
+            return new Response(json_encode(array('tablaResultado' => $tablaResultado )));
+        }else{
+            return $this->render('default/estadisticasComparativas.html.twig');
+        }    
     }
 }

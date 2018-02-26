@@ -13,6 +13,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UtilitiesController extends Controller
 {
+    public function mes($mesSolicitado){
+        $meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        
+        return $meses[$mesSolicitado];
+    }
+    
     public function municipios($em){
         
         $sqlMun = "SELECT basmun.codigomunicipio, basmun.ciudad FROM bas_municipios basmun ";
