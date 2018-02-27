@@ -13,6 +13,7 @@ use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use ZipArchive;
 use AppBundle\Controller\UtilitiesController;
 use AppBundle\Entity\Logs;
+use Ob\HighchartsBundle\Highcharts\Highchart;
 
 class DefaultController extends Controller
 {    
@@ -29,6 +30,34 @@ class DefaultController extends Controller
         }else{
             return new RedirectResponse($router->generate('extraccionMatriculados'), 307);
         }
+    }
+    
+    /**
+     * @Route("/highCharts", name="highCharts")
+     */
+    public function highChartsAction()
+    {
+        // Chart
+        $series = array(
+            array("name" => '2017',    "data" => array(1,2,4,5,6,3,8)),
+            array("name" => '2018',    "data" => array(1,2,4,5,6,3,4))
+        );
+        
+        $categories = array('Matriculados','Renovados','Matriculados + Renovados','Cancelados');
+
+        $ob = new Highchart();
+        $ob->chart->renderTo('linechart');  // The #id of the div where to render the chart
+        $ob->chart->type('column');
+        $ob->title->text('Chart Title');
+        $ob->xAxis->title(array('text'  => "Horizontal axis title"));
+        $ob->yAxis->title(array('text'  => "Vertical axis title"));
+        $ob->xAxis->categories($categories);
+        $ob->series($series);
+
+        return $this->render('default/highCharts.html.twig', array(
+            'chart' => $ob
+        ));
+        
     }
     
     /**
@@ -2934,6 +2963,12 @@ class DefaultController extends Controller
                         . "AND inscritos.matricula !='' "
                         . "AND libro IN ('RM15' , 'RM51', 'RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
                         . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
+                
+                $sqlTrans = "SELECT idestado, iptramite, valortotal 
+                                FROM mreg_liquidacion
+                                WHERE idestado IN ('09','07','20') AND tipotramite LIKE '%renovacion%'
+                                AND fechaultimamodificacion BETWEEN  :fecIni AND :fecEnd ";
+                
 
 
                 $params = array('fecIni'=>$value[0] , 'fecEnd' => $value[1]);
@@ -2942,6 +2977,7 @@ class DefaultController extends Controller
                 $stmt = $SIIem->getConnection()->prepare($sqlMat);
                 $strv = $SIIem->getConnection()->prepare($sqlRen);
                 $stcn = $SIIem->getConnection()->prepare($sqlCan);
+                $sttn = $SIIem->getConnection()->prepare($sqlTrans);
 
     //            Ejecución de las consultas
                 $stmt->execute($params);
@@ -2950,10 +2986,45 @@ class DefaultController extends Controller
                 $resultadoRen = $strv->fetchAll();
                 $stcn->execute($params);           
                 $resultadoCan = $stcn->fetchAll();
+                $sttn->execute($params);           
+                $resultadoTrans = $sttn->fetchAll();
                 
                 $totalMat[] = sizeof($resultadoMat);
                 $totalRen[] = sizeof($resultadoRen);
                 $totalCan[] = sizeof($resultadoCan);
+                $totalTrans[] = sizeof($resultadoTrans);
+                
+                $pagosEstado[$key] = array('enlinea'=>0,'bancos'=>0,'caja'=>0);
+                $pagosInterExter[$key] = array('internos'=>0,'externos'=>0);
+                
+                for($i=0;$i<sizeof($resultadoTrans);$i++){
+                    switch ($resultadoTrans[$i]['idestado']) {
+                        case '07':
+                            $pagosEstado[$key]['enlinea']=$pagosEstado[$key]['enlinea']+1;
+                            break;
+                        case '09':
+                            $pagosEstado[$key]['caja']=$pagosEstado[$key]['caja']+1;
+                            $ip = explode(".", $resultadoTrans[$i]['iptramite']);
+                            $cadenaIp = $ip[0].".".$ip[1];
+                            switch ($cadenaIp) {
+                                case '192.168':
+                                    $pagosInterExter[$key]['internos']=$pagosInterExter[$key]['internos']+1;
+                                    break;
+                                default:
+                                    $pagosInterExter[$key]['externos']=$pagosInterExter[$key]['externos']+1;
+                                    break;
+                            }
+                            break;
+                        case '20':
+                            $pagosEstado[$key]['bancos']=$pagosEstado[$key]['bancos']+1;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    
+                }
+                
             
             }
             
@@ -2961,15 +3032,41 @@ class DefaultController extends Controller
             $mesesInicial = $util->mes($fechaInicial[1]-1);
             $mesesFinal = $util->mes($fechaFinal[1]-1);
             
-            $tablaResultado= "<div class='panel panel-primary' ><div class='panel-heading'><h2 class='h2' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Estadisticas $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." </h2></div>"
-                    . "<div class='panel-body table-responsive' id='tabla_detallada' style='width:100%;' ><table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+            $tablaResultado= "<table id='tabla_comparativa' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
                     . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
                     . "<tbody><tr><td>Matriculados</td><td>".$totalMat[0]."</td><td>".$totalMat[1]."</td></tr>"
                     . "<tr><td>Renovados</td><td>".$totalRen[0]."</td><td>".$totalRen[1]."</td></tr>"
                     . "<tr><td>Matriculados + Renovados</td><td>".($totalMat[0]+$totalRen[0])."</td><td>".($totalMat[1]+$totalRen[1])."</td></tr>"
-                    . "<tr><td>Cancelados</td><td>".$totalCan[0]."</td><td>".$totalCan[1]."</td></tr></tbody></table></div></div>";
+                    . "<tr><td>Cancelados</td><td>".$totalCan[0]."</td><td>".$totalCan[1]."</td></tr></tbody></table>";
             
-            return new Response(json_encode(array('tablaResultado' => $tablaResultado )));
+            $tablaTransacciones ="<table id='tabla_transacciones' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><td>Total Transacciones</td><td>".$totalTrans[0]."</td><td>".$totalTrans[1]."</td></tr>"
+                    . "<tr><td>Pagadas en linea</td><td>".$pagosEstado[$tablaComparativa]['enlinea']."</td><td>".$pagosEstado['mreg_est_inscritos']['enlinea']."</td></tr>"
+                    . "<tr><td>Pagadas en Bancos</td><td>".$pagosEstado[$tablaComparativa]['bancos']."</td><td>".$pagosEstado['mreg_est_inscritos']['bancos']."</td></tr>"
+                    . "<tr><td>Pagadas en caja</td><td>".$pagosEstado[$tablaComparativa]['caja']."</td><td>".$pagosEstado['mreg_est_inscritos']['caja']."</td></tr>"
+                    . "<tr><td>Pago en caja Tramite Externo</td><td>".$pagosInterExter[$tablaComparativa]['internos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['internos']."</td></tr>"
+                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".$pagosInterExter[$tablaComparativa]['externos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['externos']."</td></tr></tbody></table>";
+            
+            $tablaResultado2= "<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Comparativo $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]."  <a href='#' id='toggle' class='btn btn-primary pull-right' >Cambiar Grafico</a> </h4></div>"
+                    . "<div class='panel-body table-responsive' id='div_tabla_detallada' style='width:100%;' ><table id='tabla_detallada2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><td>Matriculados</td><td>".number_format($totalMat[0],"0","",".")."</td><td>".number_format($totalMat[1],"0","",".")."</td></tr>"
+                    . "<tr><td>Renovados</td><td>".number_format($totalRen[0],"0","",".")."</td><td>".number_format($totalRen[1],"0","",".")."</td></tr>"
+                    . "<tr><th>Matriculados + Renovados</th><th>".number_format(($totalMat[0]+$totalRen[0]),"0","",".")."</th><th>".number_format(($totalMat[1]+$totalRen[1]),"0","",".")."</th></tr>"
+                    . "<tr><td>Cancelados</td><td>".number_format($totalCan[0],"0","",".")."</td><td>".number_format($totalCan[1],"0","",".")."</td></tr></tbody></table></div></div>";
+            
+            $tablaTransacciones2 ="<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Transacciones de Renovación $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." <a href='#' id='toggle2' class='btn btn-primary pull-right' >Cambiar Grafico</a></h4></div>"
+                    . "<div class='panel-body table-responsive' id='div_tabla_transacciones' style='width:100%;' ><table id='tabla_transacciones2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><th>Total Transacciones</th><th>".number_format($totalTrans[0],"0","",".")."</th><th>".number_format($totalTrans[1],"0","",".")."</th></tr>"
+                    . "<tr><td>Pagadas en linea</td><td>".number_format($pagosEstado[$tablaComparativa]['enlinea'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['enlinea'],"0","",".")."</td></tr>"
+                    . "<tr><td>Pagadas en Bancos</td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
+                    . "<tr><th>Pagadas en caja</th><th>".number_format($pagosEstado[$tablaComparativa]['caja'],"0","",".")."</th><th>".number_format($pagosEstado['mreg_est_inscritos']['caja'],"0","",".")."</th></tr>"
+                    . "<tr><td>Pago en caja Tramite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['internos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['internos'],"0","",".")."</td></tr>"
+                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr></tbody></table></div></div>";
+            
+            return new Response(json_encode(array('tablaResultado' => $tablaResultado , 'tablaTransacciones'=>$tablaTransacciones , 'tablaResultado2' => $tablaResultado2 , 'tablaTransacciones2'=>$tablaTransacciones2)));
         }else{
             return $this->render('default/estadisticasComparativas.html.twig');
         }    
