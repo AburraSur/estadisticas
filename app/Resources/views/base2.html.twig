@@ -46,7 +46,16 @@
             <a href="{{ path('fos_user_security_logout') }}" class="pull-right navbar-brand" ><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> Salir</a>
             <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
             <div class="collapse navbar-collapse navbar-ex1-collapse">
-                {% if is_granted('ROLE_AFILIADOS') %}
+                {% if is_granted('ROLE_PRESIDENCIA') %}
+                    <ul class="nav navbar-nav side-nav">
+                        <li class="active" >
+                            <a href="{{ path('estadisticasGenerales') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Estadísticas Generales</a>
+                        </li>
+                        <li class="active" >
+                            <a href="{{ path('extraccionProponentes') }}"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>Estadísticas Comparativas</a>
+                        </li>
+                    </ul>
+                {% elseif is_granted('ROLE_AFILIADOS') %}
                     <ul class="nav navbar-nav side-nav">
                         <li class="active" >
                             <a href="{{ path('extraccionMatriculados') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extracción Bases de Datos</a>
