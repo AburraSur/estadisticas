@@ -81,7 +81,8 @@
                     data: {dateInit:dateInit,dateEnd:dateEnd},
                     success: function(data){
                         console.log(data);
-                        var resp = JSON.parse(data);                        
+                        var resp = JSON.parse(data);  
+                        $('.periodo').html('Reporte Generado a las '+resp.horaGenracionReporte);
                         $('#rawCompare').html(resp.tablaResultado);                     
                         
                         var options = {
@@ -138,8 +139,11 @@
                             optionsTransacciones.data.switchRowsAndColumns = !optionsTransacciones.data.switchRowsAndColumns;                            
                             $('#graficoTransacciones').highcharts(Highcharts.merge(optionsTransacciones));
                             return false;
+                        });                        
+                        $('.detBancos').click(function(){
+                            $('.detBancos').toggle('slow');
+                            return false;
                         });
-                        
                         $.unblockUI();                        
                         
                         

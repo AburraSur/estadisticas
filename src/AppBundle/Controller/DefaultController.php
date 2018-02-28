@@ -23,45 +23,21 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
         // replace this example code with whatever you need
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $em =  $this->getDoctrine()->getManager();   
+        $usuario = $em->getRepository('AppBundle:User')->findOneById($user);
         $router = $this->container->get('router');
-        $rol = $this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN');
-        if($rol){
-            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
+        
+        if($usuario->hasRole('ROLE_PRESIDENCIA')){
+            return new RedirectResponse($router->generate('estadisticasComparativas'), 307);
         }else{
-            return new RedirectResponse($router->generate('extraccionMatriculados'), 307);
-        }
-    }
-    
-    /**
-     * @Route("/highCharts", name="highCharts")
-     */
-    public function highChartsAction()
-    {
-        // Chart
-        $series = array(
-            array("name" => '2017',    "data" => array(1,2,4,5,6,3,8)),
-            array("name" => '2018',    "data" => array(1,2,4,5,6,3,4))
-        );
-        
-        $categories = array('Matriculados','Renovados','Matriculados + Renovados','Cancelados');
-
-        $ob = new Highchart();
-        $ob->chart->renderTo('linechart');  // The #id of the div where to render the chart
-        $ob->chart->type('column');
-        $ob->title->text('Chart Title');
-        $ob->xAxis->title(array('text'  => "Horizontal axis title"));
-        $ob->yAxis->title(array('text'  => "Vertical axis title"));
-        $ob->xAxis->categories($categories);
-        $ob->series($series);
-
-        return $this->render('default/highCharts.html.twig', array(
-            'chart' => $ob
-        ));
+            return $this->render('default/index.html.twig');
+        }        
         
     }
-    
+        
     /**
-     * @Route("/", name="estadisticasGenerales")
+     * @Route("/estadisticasGenerales", name="estadisticasGenerales")
      */
     public function estadisticasGeneralesAction(Request $request)
     {
@@ -2909,11 +2885,13 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $horaGenracionReporte = $fecha->format('H:i:s');
         
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $util = new UtilitiesController();
+        $bancos = $util->bancos($SIIem);
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -2964,7 +2942,7 @@ class DefaultController extends Controller
                         . "AND libro IN ('RM15' , 'RM51', 'RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
                         . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
                 
-                $sqlTrans = "SELECT idestado, iptramite, valortotal 
+                $sqlTrans = "SELECT idestado, iptramite, valortotal, idcodban 
                                 FROM mreg_liquidacion
                                 WHERE idestado IN ('09','07','20') AND tipotramite LIKE '%renovacion%'
                                 AND fechaultimamodificacion BETWEEN  :fecIni AND :fecEnd ";
@@ -3017,6 +2995,14 @@ class DefaultController extends Controller
                             break;
                         case '20':
                             $pagosEstado[$key]['bancos']=$pagosEstado[$key]['bancos']+1;
+                            if($key==='mreg_est_inscritos'){
+                                $nomBanco = $bancos[$resultadoTrans[$i]['idcodban']];
+                                if(isset($pagosbancos[$nomBanco])){
+                                    $pagosbancos[$nomBanco]=$pagosbancos[$nomBanco]+1;
+                                }else{
+                                    $pagosbancos[$nomBanco] = 1;
+                                }
+                            }    
                             break;
                         default:
                             break;
@@ -3056,17 +3042,31 @@ class DefaultController extends Controller
                     . "<tr><th>Matriculados + Renovados</th><th>".number_format(($totalMat[0]+$totalRen[0]),"0","",".")."</th><th>".number_format(($totalMat[1]+$totalRen[1]),"0","",".")."</th></tr>"
                     . "<tr><td>Cancelados</td><td>".number_format($totalCan[0],"0","",".")."</td><td>".number_format($totalCan[1],"0","",".")."</td></tr></tbody></table></div></div>";
             
+            $tablaBancos = "<table id='tabla_bancos' class='table table-hover table-striped table-bordered dt-responsive cell-border' cellspacing='0'  ><thead><tr><th>Banco</th><th>Cantidad</th></tr></thead><tbody>";
+            foreach ($pagosbancos as $key => $value) {
+                $tablaBancos.="<tr><td>$key</td><td>$value</td></tr>";
+            }
+            $tablaBancos.="</tbody></table>";
+            
             $tablaTransacciones2 ="<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Transacciones de Renovación $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." <a href='#' id='toggle2' class='btn btn-primary pull-right' >Cambiar Grafico</a></h4></div>"
                     . "<div class='panel-body table-responsive' id='div_tabla_transacciones' style='width:100%;' ><table id='tabla_transacciones2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
                     . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
                     . "<tbody><tr><th>Total Transacciones</th><th>".number_format($totalTrans[0],"0","",".")."</th><th>".number_format($totalTrans[1],"0","",".")."</th></tr>"
                     . "<tr><td>Pagadas en linea</td><td>".number_format($pagosEstado[$tablaComparativa]['enlinea'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['enlinea'],"0","",".")."</td></tr>"
-                    . "<tr><td>Pagadas en Bancos</td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
+                    . "<tr><td>Pagadas en Bancos <span class='glyphicon glyphicon-arrow-down detBancos' aria-hidden='true' ></span><span class='glyphicon glyphicon-arrow-up detBancos' aria-hidden='true' style='display: none;' ></span></td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
+                    . "<tr style='display: none' class='detBancos' ><td>$tablaBancos</td></tr>"
                     . "<tr><th>Pagadas en caja</th><th>".number_format($pagosEstado[$tablaComparativa]['caja'],"0","",".")."</th><th>".number_format($pagosEstado['mreg_est_inscritos']['caja'],"0","",".")."</th></tr>"
                     . "<tr><td>Pago en caja Tramite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr>"
                     . "<tr><td>Pago en caja Asistencia CCAS</td><td>".number_format($pagosInterExter[$tablaComparativa]['internos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['internos'],"0","",".")."</td></tr></tbody></table></div></div>";
             
-            return new Response(json_encode(array('tablaResultado' => $tablaResultado , 'tablaTransacciones'=>$tablaTransacciones , 'tablaResultado2' => $tablaResultado2 , 'tablaTransacciones2'=>$tablaTransacciones2)));
+            
+            return new Response(json_encode(array(
+                'tablaResultado' => $tablaResultado ,
+                'tablaTransacciones'=>$tablaTransacciones ,
+                'tablaResultado2' => $tablaResultado2 ,
+                'tablaTransacciones2'=>$tablaTransacciones2 ,
+                'tablaBancos'=>$tablaBancos,
+                'horaGenracionReporte'=>$horaGenracionReporte )));
         }else{
             return $this->render('default/estadisticasComparativas.html.twig');
         }    

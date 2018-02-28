@@ -19,6 +19,20 @@ class UtilitiesController extends Controller
         return $meses[$mesSolicitado];
     }
     
+    public function bancos($em){
+        
+        $sqlBancos = "SELECT bnc.idcodban, bnc.descripcion FROM AS_codigoBancos bnc ";
+        
+        $bancos = $em->getConnection()->prepare($sqlBancos);
+        $bancos->execute();
+        $listaBancos = $bancos->fetchAll();
+        for($i=0;$i<sizeof($listaBancos);$i++){
+            $bancosCod[$listaBancos[$i]['idcodban']] = $listaBancos[$i]['descripcion'];
+        }
+        
+        return $bancosCod;
+    }
+    
     public function municipios($em){
         
         $sqlMun = "SELECT basmun.codigomunicipio, basmun.ciudad FROM bas_municipios basmun ";
