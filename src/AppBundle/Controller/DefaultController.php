@@ -61,7 +61,7 @@ class DefaultController extends Controller
     }
     
     /**
-     * @Route("/estadisticasGenerales", name="estadisticasGenerales")
+     * @Route("/", name="estadisticasGenerales")
      */
     public function estadisticasGeneralesAction(Request $request)
     {
