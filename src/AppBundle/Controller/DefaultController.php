@@ -3045,8 +3045,8 @@ class DefaultController extends Controller
                     . "<tr><td>Pagadas en linea</td><td>".$pagosEstado[$tablaComparativa]['enlinea']."</td><td>".$pagosEstado['mreg_est_inscritos']['enlinea']."</td></tr>"
                     . "<tr><td>Pagadas en Bancos</td><td>".$pagosEstado[$tablaComparativa]['bancos']."</td><td>".$pagosEstado['mreg_est_inscritos']['bancos']."</td></tr>"
                     . "<tr><td>Pagadas en caja</td><td>".$pagosEstado[$tablaComparativa]['caja']."</td><td>".$pagosEstado['mreg_est_inscritos']['caja']."</td></tr>"
-                    . "<tr><td>Pago en caja Tramite Externo</td><td>".$pagosInterExter[$tablaComparativa]['internos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['internos']."</td></tr>"
-                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".$pagosInterExter[$tablaComparativa]['externos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['externos']."</td></tr></tbody></table>";
+                    . "<tr><td>Pago en caja Tramite Externo</td><td>".$pagosInterExter[$tablaComparativa]['externos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['externos']."</td></tr>"
+                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".$pagosInterExter[$tablaComparativa]['internos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['internos']."</td></tr></tbody></table>";
             
             $tablaResultado2= "<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Comparativo $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]."  <a href='#' id='toggle' class='btn btn-primary pull-right' >Cambiar Grafico</a> </h4></div>"
                     . "<div class='panel-body table-responsive' id='div_tabla_detallada' style='width:100%;' ><table id='tabla_detallada2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
@@ -3063,8 +3063,8 @@ class DefaultController extends Controller
                     . "<tr><td>Pagadas en linea</td><td>".number_format($pagosEstado[$tablaComparativa]['enlinea'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['enlinea'],"0","",".")."</td></tr>"
                     . "<tr><td>Pagadas en Bancos</td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
                     . "<tr><th>Pagadas en caja</th><th>".number_format($pagosEstado[$tablaComparativa]['caja'],"0","",".")."</th><th>".number_format($pagosEstado['mreg_est_inscritos']['caja'],"0","",".")."</th></tr>"
-                    . "<tr><td>Pago en caja Tramite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['internos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['internos'],"0","",".")."</td></tr>"
-                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr></tbody></table></div></div>";
+                    . "<tr><td>Pago en caja Tramite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr>"
+                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".number_format($pagosInterExter[$tablaComparativa]['internos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['internos'],"0","",".")."</td></tr></tbody></table></div></div>";
             
             return new Response(json_encode(array('tablaResultado' => $tablaResultado , 'tablaTransacciones'=>$tablaTransacciones , 'tablaResultado2' => $tablaResultado2 , 'tablaTransacciones2'=>$tablaTransacciones2)));
         }else{
