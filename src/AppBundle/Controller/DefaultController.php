@@ -2971,6 +2971,10 @@ class DefaultController extends Controller
                 $totalRen[] = sizeof($resultadoRen);
                 $totalCan[] = sizeof($resultadoCan);
                 $totalTrans[] = sizeof($resultadoTrans);
+                $valorTotalTrans[$key] = 0;
+                for($i=0;$i<sizeof($resultadoTrans);$i++){
+                    $valorTotalTrans[$key] = $valorTotalTrans[$key]+$resultadoTrans[$i]['valortotal'];
+                }
                 
                 $pagosEstado[$key] = array('enlinea'=>0,'bancos'=>0,'caja'=>0);
                 $pagosInterExter[$key] = array('internos'=>0,'externos'=>0);
@@ -3028,10 +3032,10 @@ class DefaultController extends Controller
             $tablaTransacciones ="<table id='tabla_transacciones' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
                     . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
                     . "<tbody><tr><td>Total Transacciones</td><td>".$totalTrans[0]."</td><td>".$totalTrans[1]."</td></tr>"
-                    . "<tr><td>Pagadas en linea</td><td>".$pagosEstado[$tablaComparativa]['enlinea']."</td><td>".$pagosEstado['mreg_est_inscritos']['enlinea']."</td></tr>"
+                    . "<tr><td>Pagadas en Línea</td><td>".$pagosEstado[$tablaComparativa]['enlinea']."</td><td>".$pagosEstado['mreg_est_inscritos']['enlinea']."</td></tr>"
                     . "<tr><td>Pagadas en Bancos</td><td>".$pagosEstado[$tablaComparativa]['bancos']."</td><td>".$pagosEstado['mreg_est_inscritos']['bancos']."</td></tr>"
-                    . "<tr><td>Pagadas en caja</td><td>".$pagosEstado[$tablaComparativa]['caja']."</td><td>".$pagosEstado['mreg_est_inscritos']['caja']."</td></tr>"
-                    . "<tr><td>Pago en caja Tramite Externo</td><td>".$pagosInterExter[$tablaComparativa]['externos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['externos']."</td></tr>"
+                    . "<tr><td>Pagadas en Caja</td><td>".$pagosEstado[$tablaComparativa]['caja']."</td><td>".$pagosEstado['mreg_est_inscritos']['caja']."</td></tr>"
+                    . "<tr><td>Pago en caja Trámite Externo</td><td>".$pagosInterExter[$tablaComparativa]['externos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['externos']."</td></tr>"
                     . "<tr><td>Pago en caja Asistencia CCAS</td><td>".$pagosInterExter[$tablaComparativa]['internos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['internos']."</td></tr></tbody></table>";
             
             $tablaResultado2= "<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Comparativo $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]."  <a href='#' id='toggle' class='btn btn-primary pull-right' >Cambiar Grafico</a> </h4></div>"
@@ -3042,7 +3046,7 @@ class DefaultController extends Controller
                     . "<tr><th>Matriculados + Renovados</th><th>".number_format(($totalMat[0]+$totalRen[0]),"0","",".")."</th><th>".number_format(($totalMat[1]+$totalRen[1]),"0","",".")."</th></tr>"
                     . "<tr><td>Cancelados</td><td>".number_format($totalCan[0],"0","",".")."</td><td>".number_format($totalCan[1],"0","",".")."</td></tr></tbody></table></div></div>";
             
-            $tablaBancos = "<table id='tabla_bancos' class='table table-hover table-striped table-bordered dt-responsive cell-border' cellspacing='0'  ><thead><tr><th>Banco</th><th>Cantidad</th></tr></thead><tbody>";
+            $tablaBancos = "<table id='tabla_bancos' class='table table-hover table-striped table-bordered dt-responsive cell-border detBancos' cellspacing='0'  style='display: none' ><tbody>";
             foreach ($pagosbancos as $key => $value) {
                 $tablaBancos.="<tr><td>$key</td><td>$value</td></tr>";
             }
@@ -3051,12 +3055,12 @@ class DefaultController extends Controller
             $tablaTransacciones2 ="<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Transacciones de Renovación $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." <a href='#' id='toggle2' class='btn btn-primary pull-right' >Cambiar Grafico</a></h4></div>"
                     . "<div class='panel-body table-responsive' id='div_tabla_transacciones' style='width:100%;' ><table id='tabla_transacciones2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
                     . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
-                    . "<tbody><tr><th>Total Transacciones</th><th>".number_format($totalTrans[0],"0","",".")."</th><th>".number_format($totalTrans[1],"0","",".")."</th></tr>"
-                    . "<tr><td>Pagadas en linea</td><td>".number_format($pagosEstado[$tablaComparativa]['enlinea'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['enlinea'],"0","",".")."</td></tr>"
-                    . "<tr><td>Pagadas en Bancos <span class='glyphicon glyphicon-arrow-down detBancos' aria-hidden='true' ></span><span class='glyphicon glyphicon-arrow-up detBancos' aria-hidden='true' style='display: none;' ></span></td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
-                    . "<tr style='display: none' class='detBancos' ><td>$tablaBancos</td></tr>"
-                    . "<tr><th>Pagadas en caja</th><th>".number_format($pagosEstado[$tablaComparativa]['caja'],"0","",".")."</th><th>".number_format($pagosEstado['mreg_est_inscritos']['caja'],"0","",".")."</th></tr>"
-                    . "<tr><td>Pago en caja Tramite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr>"
+                    . "<tbody><tr><th>Total Transacciones</th><th><span id='totalComparativo' data-toggle='tooltip' title='Total Ingresos: $".number_format($valorTotalTrans[$tablaComparativa],"0","",".")."' >".number_format($totalTrans[0],"0","",".")."</span></th><th><span  id='totalActual' data-toggle='tooltip' title='Total Ingresos: $".number_format($valorTotalTrans['mreg_est_inscritos'],"0","",".")."'>".number_format($totalTrans[1],"0","",".")."</span></th></tr>"
+                    . "<tr><td>Pagadas en Línea</td><td>".number_format($pagosEstado[$tablaComparativa]['enlinea'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['enlinea'],"0","",".")."</td></tr>"
+                    . "<tr><td><h5>Pagadas en Bancos <span class='glyphicon glyphicon-arrow-down detBancos' aria-hidden='true' ></span><span class='glyphicon glyphicon-arrow-up detBancos' aria-hidden='true' style='display: none;' ></span></h5>$tablaBancos</td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
+//                    . "<tr style='display: none' class='detBancos' ><td>$tablaBancos</td></tr>"
+                    . "<tr><th>Pagadas en Caja</th><th>".number_format($pagosEstado[$tablaComparativa]['caja'],"0","",".")."</th><th>".number_format($pagosEstado['mreg_est_inscritos']['caja'],"0","",".")."</th></tr>"
+                    . "<tr><td>Pago en caja Trámite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr>"
                     . "<tr><td>Pago en caja Asistencia CCAS</td><td>".number_format($pagosInterExter[$tablaComparativa]['internos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['internos'],"0","",".")."</td></tr></tbody></table></div></div>";
             
             
