@@ -4,6 +4,11 @@
     {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
         <link rel="stylesheet" href="{{ asset_url }}" />
     {% endstylesheets %}
+    <style>
+        .tooltip-inner{
+            font-size: 18px;
+        }
+    </style>
 {% endblock %} 
 {% block body %}
     <div class="panel panel-primary">
@@ -146,6 +151,7 @@
                         });
                         
                         $('[data-toggle="tooltip"]').tooltip();
+                        
                         
                         $.unblockUI();                        
                         
