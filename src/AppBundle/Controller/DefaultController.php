@@ -74,7 +74,7 @@ class DefaultController extends Controller
                     . "AND inscritos.fecrenovacion between :fecIni AND :fecEnd  "
                     . "AND inscritos.matricula IS NOT NULL "
                     . "AND inscritos.matricula !='' "
-                    . "AND inscritos.ultanoren ='".$fechaFinal[0]."' ";
+                    . "AND inscritos.ultanoren between :annoInicial AND :annoFinal ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
             $sqlCan = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
@@ -91,6 +91,7 @@ class DefaultController extends Controller
             
             
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);
+            $paramsRenovados = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd , 'annoInicial'=>$fechaInicial[0] , 'annoFinal'=>$fechaFinal[0]);
             
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stmt = $SIIem->getConnection()->prepare($sqlMat);
@@ -99,7 +100,7 @@ class DefaultController extends Controller
             
 //            Ejecución de las consultas
             $stmt->execute($params);
-            $strv->execute($params);
+            $strv->execute($paramsRenovados);
             $stcn->execute($params);
             
             $tablaDetalle = " <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
