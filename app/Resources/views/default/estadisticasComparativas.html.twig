@@ -4,11 +4,16 @@
     {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
         <link rel="stylesheet" href="{{ asset_url }}" />
     {% endstylesheets %}
+    <style>
+        .tooltip-inner{
+            font-size: 18px;
+        }
+    </style>
 {% endblock %} 
 {% block body %}
     <div class="panel panel-primary">
         <div class="panel-heading">
-            <h2 class="h2" ><span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>Estadisticas Comparativas<span class="periodo pull-right" ></span></h2>
+            <h2 class="h2" ><span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>Estadísticas Comparativas<span class="periodo pull-right" ></span></h2>
         </div>    
         <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
                 <div class="col-md-12">
@@ -33,10 +38,24 @@
                     <div class="col-md-6" id="comparativoMatRenCan" >
                     
                     </div> 
-                    <div class="col-md-6" id="comparativoTrans" >
+                    <div class="col-md-6" id="graficoMatRenCan" >
                     
                     </div> 
-                </div>             
+                </div>    
+                <div class="col-md-12" >
+                    <div class="col-md-6" id="comparativoTransacciones" >
+                    
+                    </div> 
+                    <div class="col-md-6" id="graficoTransacciones" >
+                    
+                    </div> 
+                </div>
+                <div class="hide" id="rawCompare" >
+
+                </div>
+                <div class="hide" id="rawTrans" >
+
+                </div>
         </div>    
     </div>    
                                         
@@ -54,6 +73,9 @@
             });    
             
             $('#search').click(function(){
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere...</div>'
+                });
                 var tablaProponentes = $('#extraccion').dataTable().fnDestroy();
                 var dateInit = $('#dateInit').val();
                 var dateEnd = $('#dateEnd').val();
@@ -63,8 +85,77 @@
                     type: 'POST',
                     data: {dateInit:dateInit,dateEnd:dateEnd},
                     success: function(data){
-                        var resp = JSON.parse(data);
-                        $('#comparativoMatRenCan').html(resp.tablaResultado);
+                        console.log(data);
+                        var resp = JSON.parse(data);  
+                        $('.periodo').html('Reporte Generado a las '+resp.horaGenracionReporte);
+                        $('#rawCompare').html(resp.tablaResultado);                     
+                        
+                        var options = {
+                             title: {
+                                text: 'Comparativo'
+                            },
+                            data: {
+                                table: document.getElementById('tabla_comparativa'),
+                                switchRowsAndColumns: true
+                            },
+                            chart: {
+                                type: 'column'
+                            },
+                            xAxis: {
+                                allowDecimals: false,
+                            }
+                        };
+                        
+                        
+                        options.data.switchRowsAndColumns = !options.data.switchRowsAndColumns;
+                        $('#graficoMatRenCan').highcharts(Highcharts.merge(options));
+                        
+                        
+                        $('#rawTrans').html(resp.tablaTransacciones); 
+                        var optionsTransacciones = {
+                             title: {
+                                text: 'Transacciones de Renovaci\xf3n'
+                            },
+                            data: {
+                                table: document.getElementById('tabla_transacciones'),
+                                switchRowsAndColumns: true
+                            },
+                            chart: {
+                                type: 'column'
+                            },
+                            xAxis: {
+                                allowDecimals: false,
+                            }
+                        };
+                        optionsTransacciones.data.switchRowsAndColumns = !optionsTransacciones.data.switchRowsAndColumns;
+                        $('#graficoTransacciones').highcharts(Highcharts.merge(optionsTransacciones));       
+                        
+                        
+                        $('#comparativoMatRenCan').html(resp.tablaResultado2);
+                        $('#toggle').click(function () {
+                            options.data.switchRowsAndColumns = !options.data.switchRowsAndColumns;                            
+                            $('#graficoMatRenCan').highcharts(Highcharts.merge(options));
+                            return false;
+                        });
+                        
+                        $('#comparativoTransacciones').html(resp.tablaTransacciones2);
+                        
+                        $('#toggle2').click(function () {
+                            optionsTransacciones.data.switchRowsAndColumns = !optionsTransacciones.data.switchRowsAndColumns;                            
+                            $('#graficoTransacciones').highcharts(Highcharts.merge(optionsTransacciones));
+                            return false;
+                        });                        
+                        $('.detBancos').click(function(){
+                            $('.detBancos').toggle('slow');
+                            return false;
+                        });
+                        
+                        $('[data-toggle="tooltip"]').tooltip();
+                        
+                        
+                        $.unblockUI();                        
+                        
+                        
                     }
                    
                 })

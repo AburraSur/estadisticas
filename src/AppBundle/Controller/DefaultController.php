@@ -13,6 +13,7 @@ use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use ZipArchive;
 use AppBundle\Controller\UtilitiesController;
 use AppBundle\Entity\Logs;
+use Ob\HighchartsBundle\Highcharts\Highchart;
 
 class DefaultController extends Controller
 {    
@@ -22,15 +23,19 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
         // replace this example code with whatever you need
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $em =  $this->getDoctrine()->getManager();   
+        $usuario = $em->getRepository('AppBundle:User')->findOneById($user);
         $router = $this->container->get('router');
-        $rol = $this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN');
-        if($rol){
-            return new RedirectResponse($router->generate('estadisticasGenerales'), 307);
+        
+        if($usuario->hasRole('ROLE_PRESIDENCIA')){
+            return new RedirectResponse($router->generate('estadisticasComparativas'), 307);
         }else{
-            return new RedirectResponse($router->generate('extraccionMatriculados'), 307);
-        }
+            return $this->render('default/index.html.twig');
+        }        
+        
     }
-    
+        
     /**
      * @Route("/estadisticasGenerales", name="estadisticasGenerales")
      */
@@ -69,7 +74,7 @@ class DefaultController extends Controller
                     . "AND inscritos.fecrenovacion between :fecIni AND :fecEnd  "
                     . "AND inscritos.matricula IS NOT NULL "
                     . "AND inscritos.matricula !='' "
-                    . "AND inscritos.ultanoren ='".$fechaFinal[0]."' ";
+                    . "AND inscritos.ultanoren between :annoInicial AND :annoFinal ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
             $sqlCan = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
@@ -86,6 +91,7 @@ class DefaultController extends Controller
             
             
             $params = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd);
+            $paramsRenovados = array('fecIni'=>$fecIni , 'fecEnd' => $fecEnd , 'annoInicial'=>$fechaInicial[0] , 'annoFinal'=>$fechaFinal[0]);
             
 //            Parametrizacion de cada una de las consultas Matriculados-Renovados-Cancelados 
             $stmt = $SIIem->getConnection()->prepare($sqlMat);
@@ -94,7 +100,7 @@ class DefaultController extends Controller
             
 //            Ejecución de las consultas
             $stmt->execute($params);
-            $strv->execute($params);
+            $strv->execute($paramsRenovados);
             $stcn->execute($params);
             
             $tablaDetalle = " <table id='tablaDetalle' class='table table-hover table-striped table-bordered dt-responsive' cellspacing='0' width='100%'>
@@ -1209,8 +1215,8 @@ class DefaultController extends Controller
         $logem =  $this->getDoctrine()->getManager();   
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $datosAfiliados = '';
-        if($usuario->hasRole('ROLE_AFILIADOS')){
-            $datosAfiliados = ', mei.telaflia, mei.diraflia, mei.munaflia, mei.contaflia, mei.dircontaflia, mei.muncontaflia, mei.numactaaflia, mei.numactacanaflia, mei.fecactacanaflia ';
+        if($usuario->hasRole('ROLE_AFILIADOS') || $usuario->hasRole('ROLE_SUPER_ADMIN')){
+            $datosAfiliados = ', mei.telaflia, mei.diraflia, mei.munaflia, mei.contaflia, mei.dircontaflia, mei.muncontaflia, mei.numactaaflia, mei.fecactaaflia, mei.numactacanaflia, mei.fecactacanaflia ';
         }
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
@@ -1249,7 +1255,7 @@ class DefaultController extends Controller
                                 mei.ultanoren,
                                 mei.feccancelacion AS 'FEC-CANCELACION',
                                 (CASE 
-                                    when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fecharegistro from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040')
+                                    when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fechadocumento from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040')
                                     else mei.fecmatricula
                                 END) AS 'fecconstitucion',
                                 mei.fecdisolucion,
@@ -1293,7 +1299,6 @@ class DefaultController extends Controller
                                 mei.ciiu4,
                                 mei.personal,
                                 mei.ctrlibroscomercio,
-                                mei.ctrafiliacion,
                                 mei.ctrembargo,
                                 mei.ctrimpexp,
                                 mei.ctrtipolocal,
@@ -1341,9 +1346,13 @@ class DefaultController extends Controller
                                 mei.capesadl,
                                 mei.cantest,
                                 mei.anorenaflia,
-                                mei.fecactaaflia,
                                 mei.fecrenaflia,
-                                mei.valpagaflia
+                                mei.valpagaflia,
+                                (CASE 
+                                    WHEN mei.ctrafiliacion='1' THEN 'AFILIADO'
+                                    WHEN mei.ctrafiliacion='2' THEN 'DESAFILIADO'
+                                    ELSE 'NO AFILIADO'
+                                END) as ctrafiliacion
                                 $datosAfiliados
                         FROM
                             mreg_est_inscritos mei
@@ -1400,7 +1409,6 @@ class DefaultController extends Controller
                                     'CIIU-4',
                                     'PERSONAL',
                                     'LIBROS-COMERCIO',
-                                    'CTR-AFILIACION',
                                     'CTR-EMBARGO',
                                     'IMPORTA-EXPORTA',
                                     'TIPO-LOCAL',
@@ -1448,19 +1456,20 @@ class DefaultController extends Controller
                                     'PATRIM-ESADL.',
                                     'CANT-ESTABLECIM.',
                                     'ANIO-REN-AFIL',
-                                    'FEC-AFIL.',
                                     'FEC-ULT-PAG-AFIL',
-                                    'VAL-ULT-PAG-AFIL'
+                                    'VAL-ULT-PAG-AFIL',
+                                    'CTR-AFILIACION'
                                     ];
-                        if($usuario->hasRole('ROLE_AFILIADOS')){
+                        if($usuario->hasRole('ROLE_AFILIADOS') || $usuario->hasRole('ROLE_SUPER_ADMIN')){
                             $columns[] = 'TEL-AFILIADO';
                             $columns[] = 'DIR-AFILIADO';
                             $columns[] = 'MUN-AFILIADO';
                             $columns[] = 'CONTACTO-AFIL';
                             $columns[] = 'DIR-CONT-AFIL';
                             $columns[] = 'MUN-CONT-AFIL';                            
-                            $columns[] = 'NUM-ACTA-AFIL';                            
-                            $columns[] = 'NUM-ACTA-CAN-AFIL';                            
+                            $columns[] = 'NUM-ACTA-AFIL';   
+                            $columns[] = 'FEC-ACTA-AFIL';                             
+                            $columns[] = 'NUM-ACTA-CAN-AFIL';                          
                             $columns[] = 'FEC-ACTA-CAN-AFIL';                            
                         }
 
@@ -1718,9 +1727,9 @@ class DefaultController extends Controller
                 } 
                 
                 if($_POST['afiliacion']==1){
-                    $sqlExtracMatri.=" AND mei.ctrafiliacion=1 ";
+                    $sqlExtracMatri.=" AND mei.ctrafiliacion IN ('1','2') ";
                 }elseif($_POST['afiliacion']==2){
-                    $sqlExtracMatri.=" AND mei.ctrafiliacion<>1 ";
+                    $sqlExtracMatri.=" AND mei.ctrafiliacion='0' ";
                 }
                 
                 if($_POST['yearInit']!=''){
@@ -1788,7 +1797,7 @@ class DefaultController extends Controller
                      */                    
                     
                     
-                    if($usuario->hasRole('ROLE_AFILIADOS')){
+                    if($usuario->hasRole('ROLE_AFILIADOS') || $usuario->hasRole('ROLE_SUPER_ADMIN')){
                         if(key_exists($resultados[$i]['munaflia'] , $municipios)){
                             $resultados[$i]['munaflia'] = $municipios[$resultados[$i]['munaflia']];
                         } 
@@ -1798,6 +1807,15 @@ class DefaultController extends Controller
                         } 
                     }
                     
+                    $arrayOrganizaciones = array('03','04','05','06','07','08','09','10','11','16');
+                    
+                    /*if(in_array($resultados[$i]['organizacion'], $arrayOrganizaciones) &&  ($resultados[$i]['categoria']='1')){
+                        $sqlFechaConstitucion = "SELECT meis.fechadocumento from mreg_est_inscripciones meis where meis.matricula=:matricula AND meis.acto='0040' ";
+                        $fechaConstitucionQuery = $em->getConnection()->prepare($sqlFechaConstitucion);
+                        $fechaConstitucionQuery->execute(array('matricula'=>$resultados[$i]['matricula']));
+                        $resultadosFecConstitucion = $fechaConstitucionQuery->fetchAll();
+                        $resultados[$i]['fec']
+                    }*/
                     
                 }
                 
@@ -2880,11 +2898,13 @@ class DefaultController extends Controller
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
+        $horaGenracionReporte = $fecha->format('H:i:s');
         
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         
         $util = new UtilitiesController();
+        $bancos = $util->bancos($SIIem);
         if(isset($_POST['dateInit']) && isset($_POST['dateEnd'])){
             $fechaInicial = explode("-", $_POST['dateInit']);
             $fechaFinal = explode("-", $_POST['dateEnd']);
@@ -2934,6 +2954,12 @@ class DefaultController extends Controller
                         . "AND inscritos.matricula !='' "
                         . "AND libro IN ('RM15' , 'RM51', 'RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
                         . "AND acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
+                
+                $sqlTrans = "SELECT idestado, iptramite, valortotal, idcodban 
+                                FROM mreg_liquidacion
+                                WHERE idestado IN ('09','07','20') AND tipotramite LIKE '%renovacion%'
+                                AND fechaultimamodificacion BETWEEN  :fecIni AND :fecEnd ";
+                
 
 
                 $params = array('fecIni'=>$value[0] , 'fecEnd' => $value[1]);
@@ -2942,6 +2968,7 @@ class DefaultController extends Controller
                 $stmt = $SIIem->getConnection()->prepare($sqlMat);
                 $strv = $SIIem->getConnection()->prepare($sqlRen);
                 $stcn = $SIIem->getConnection()->prepare($sqlCan);
+                $sttn = $SIIem->getConnection()->prepare($sqlTrans);
 
     //            Ejecución de las consultas
                 $stmt->execute($params);
@@ -2950,10 +2977,57 @@ class DefaultController extends Controller
                 $resultadoRen = $strv->fetchAll();
                 $stcn->execute($params);           
                 $resultadoCan = $stcn->fetchAll();
+                $sttn->execute($params);           
+                $resultadoTrans = $sttn->fetchAll();
                 
                 $totalMat[] = sizeof($resultadoMat);
                 $totalRen[] = sizeof($resultadoRen);
                 $totalCan[] = sizeof($resultadoCan);
+                $totalTrans[] = sizeof($resultadoTrans);
+                $valorTotalTrans[$key] = 0;
+                for($i=0;$i<sizeof($resultadoTrans);$i++){
+                    $valorTotalTrans[$key] = $valorTotalTrans[$key]+$resultadoTrans[$i]['valortotal'];
+                }
+                
+                $pagosEstado[$key] = array('enlinea'=>0,'bancos'=>0,'caja'=>0);
+                $pagosInterExter[$key] = array('internos'=>0,'externos'=>0);
+                
+                for($i=0;$i<sizeof($resultadoTrans);$i++){
+                    switch ($resultadoTrans[$i]['idestado']) {
+                        case '07':
+                            $pagosEstado[$key]['enlinea']=$pagosEstado[$key]['enlinea']+1;
+                            break;
+                        case '09':
+                            $pagosEstado[$key]['caja']=$pagosEstado[$key]['caja']+1;
+                            $ip = explode(".", $resultadoTrans[$i]['iptramite']);
+                            $cadenaIp = $ip[0].".".$ip[1];
+                            switch ($cadenaIp) {
+                                case '192.168':
+                                    $pagosInterExter[$key]['internos']=$pagosInterExter[$key]['internos']+1;
+                                    break;
+                                default:
+                                    $pagosInterExter[$key]['externos']=$pagosInterExter[$key]['externos']+1;
+                                    break;
+                            }
+                            break;
+                        case '20':
+                            $pagosEstado[$key]['bancos']=$pagosEstado[$key]['bancos']+1;
+                            if($key==='mreg_est_inscritos'){
+                                $nomBanco = $bancos[$resultadoTrans[$i]['idcodban']];
+                                if(isset($pagosbancos[$nomBanco])){
+                                    $pagosbancos[$nomBanco]=$pagosbancos[$nomBanco]+1;
+                                }else{
+                                    $pagosbancos[$nomBanco] = 1;
+                                }
+                            }    
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    
+                }
+                
             
             }
             
@@ -2961,15 +3035,55 @@ class DefaultController extends Controller
             $mesesInicial = $util->mes($fechaInicial[1]-1);
             $mesesFinal = $util->mes($fechaFinal[1]-1);
             
-            $tablaResultado= "<div class='panel panel-primary' ><div class='panel-heading'><h2 class='h2' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Estadisticas $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." </h2></div>"
-                    . "<div class='panel-body table-responsive' id='tabla_detallada' style='width:100%;' ><table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+            $tablaResultado= "<table id='tabla_comparativa' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
                     . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
                     . "<tbody><tr><td>Matriculados</td><td>".$totalMat[0]."</td><td>".$totalMat[1]."</td></tr>"
                     . "<tr><td>Renovados</td><td>".$totalRen[0]."</td><td>".$totalRen[1]."</td></tr>"
                     . "<tr><td>Matriculados + Renovados</td><td>".($totalMat[0]+$totalRen[0])."</td><td>".($totalMat[1]+$totalRen[1])."</td></tr>"
-                    . "<tr><td>Cancelados</td><td>".$totalCan[0]."</td><td>".$totalCan[1]."</td></tr></tbody></table></div></div>";
+                    . "<tr><td>Cancelados</td><td>".$totalCan[0]."</td><td>".$totalCan[1]."</td></tr></tbody></table>";
             
-            return new Response(json_encode(array('tablaResultado' => $tablaResultado )));
+            $tablaTransacciones ="<table id='tabla_transacciones' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><td>Total Transacciones</td><td>".$totalTrans[0]."</td><td>".$totalTrans[1]."</td></tr>"
+                    . "<tr><td>Pagadas en Línea</td><td>".$pagosEstado[$tablaComparativa]['enlinea']."</td><td>".$pagosEstado['mreg_est_inscritos']['enlinea']."</td></tr>"
+                    . "<tr><td>Pagadas en Bancos</td><td>".$pagosEstado[$tablaComparativa]['bancos']."</td><td>".$pagosEstado['mreg_est_inscritos']['bancos']."</td></tr>"
+                    . "<tr><td>Pagadas en Caja</td><td>".$pagosEstado[$tablaComparativa]['caja']."</td><td>".$pagosEstado['mreg_est_inscritos']['caja']."</td></tr>"
+                    . "<tr><td>Pago en caja Trámite Externo</td><td>".$pagosInterExter[$tablaComparativa]['externos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['externos']."</td></tr>"
+                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".$pagosInterExter[$tablaComparativa]['internos']."</td><td>".$pagosInterExter['mreg_est_inscritos']['internos']."</td></tr></tbody></table>";
+            
+            $tablaResultado2= "<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Comparativo $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]."  <a href='#' id='toggle' class='btn btn-primary pull-right' >Cambiar Grafico</a> </h4></div>"
+                    . "<div class='panel-body table-responsive' id='div_tabla_detallada' style='width:100%;' ><table id='tabla_detallada2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><td>Matriculados</td><td>".number_format($totalMat[0],"0","",".")."</td><td>".number_format($totalMat[1],"0","",".")."</td></tr>"
+                    . "<tr><td>Renovados</td><td>".number_format($totalRen[0],"0","",".")."</td><td>".number_format($totalRen[1],"0","",".")."</td></tr>"
+                    . "<tr><th>Matriculados + Renovados</th><th>".number_format(($totalMat[0]+$totalRen[0]),"0","",".")."</th><th>".number_format(($totalMat[1]+$totalRen[1]),"0","",".")."</th></tr>"
+                    . "<tr><td>Cancelados</td><td>".number_format($totalCan[0],"0","",".")."</td><td>".number_format($totalCan[1],"0","",".")."</td></tr></tbody></table></div></div>";
+            
+            $tablaBancos = "<table id='tabla_bancos' class='table table-hover table-striped table-bordered dt-responsive cell-border detBancos' cellspacing='0'  style='display: none' ><tbody>";
+            foreach ($pagosbancos as $key => $value) {
+                $tablaBancos.="<tr><td>$key</td><td>$value</td></tr>";
+            }
+            $tablaBancos.="</tbody></table>";
+            
+            $tablaTransacciones2 ="<div class='panel panel-primary' ><div class='panel-heading'><h4 class='h4' ><span class='glyphicon glyphicon-user' aria-hidden='true'></span>Transacciones de Renovación $mesesInicial ".$fechaInicial[2]." a $mesesFinal ".$fechaFinal[2]." <a href='#' id='toggle2' class='btn btn-primary pull-right' >Cambiar Grafico</a></h4></div>"
+                    . "<div class='panel-body table-responsive' id='div_tabla_transacciones' style='width:100%;' ><table id='tabla_transacciones2' class='table table-hover table-striped table-bordered dt-responsive cell-border extraccionesProponentes' cellspacing='0' width='100%'>"
+                    . "<thead><tr><th></th><th>$annoComparativo</th><th>$annoInicial</th></tr></thead>"
+                    . "<tbody><tr><th>Total Transacciones</th><th><span id='totalComparativo'  class='tooltipFont' data-toggle='tooltip' title='Total Ingresos: $".number_format($valorTotalTrans[$tablaComparativa],"0","",".")."' >".number_format($totalTrans[0],"0","",".")."</span></th><th><span  id='totalActual' class='tooltipFont' data-toggle='tooltip' title='Total Ingresos: $".number_format($valorTotalTrans['mreg_est_inscritos'],"0","",".")."'>".number_format($totalTrans[1],"0","",".")."</span></th></tr>"
+                    . "<tr><td>Pagadas en Línea</td><td>".number_format($pagosEstado[$tablaComparativa]['enlinea'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['enlinea'],"0","",".")."</td></tr>"
+                    . "<tr><td><h5>Pagadas en Bancos <span class='glyphicon glyphicon-arrow-down detBancos' aria-hidden='true' ></span><span class='glyphicon glyphicon-arrow-up detBancos' aria-hidden='true' style='display: none;' ></span></h5>$tablaBancos</td><td>".number_format($pagosEstado[$tablaComparativa]['bancos'],"0","",".")."</td><td>".number_format($pagosEstado['mreg_est_inscritos']['bancos'],"0","",".")."</td></tr>"
+//                    . "<tr style='display: none' class='detBancos' ><td>$tablaBancos</td></tr>"
+                    . "<tr><th>Pagadas en Caja</th><th>".number_format($pagosEstado[$tablaComparativa]['caja'],"0","",".")."</th><th>".number_format($pagosEstado['mreg_est_inscritos']['caja'],"0","",".")."</th></tr>"
+                    . "<tr><td>Pago en caja Trámite Externo</td><td>".number_format($pagosInterExter[$tablaComparativa]['externos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['externos'],"0","",".")."</td></tr>"
+                    . "<tr><td>Pago en caja Asistencia CCAS</td><td>".number_format($pagosInterExter[$tablaComparativa]['internos'],"0","",".")."</td><td>".number_format($pagosInterExter['mreg_est_inscritos']['internos'],"0","",".")."</td></tr></tbody></table></div></div>";
+            
+            
+            return new Response(json_encode(array(
+                'tablaResultado' => $tablaResultado ,
+                'tablaTransacciones'=>$tablaTransacciones ,
+                'tablaResultado2' => $tablaResultado2 ,
+                'tablaTransacciones2'=>$tablaTransacciones2 ,
+                'tablaBancos'=>$tablaBancos,
+                'horaGenracionReporte'=>$horaGenracionReporte )));
         }else{
             return $this->render('default/estadisticasComparativas.html.twig');
         }    
