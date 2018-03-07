@@ -89,7 +89,11 @@
                         var resp = JSON.parse(data);  
                         $('.periodo').html('Reporte Generado a las '+resp.horaGenracionReporte);
                         $('#rawCompare').html(resp.tablaResultado);                     
-                        
+                        Highcharts.setOptions({
+                                lang: {
+                                        thousandsSep: '.'
+                                }
+                        });
                         var options = {
                              title: {
                                 text: 'Comparativo'
@@ -103,6 +107,13 @@
                             },
                             xAxis: {
                                 allowDecimals: false,
+                            },
+                            plotOptions: {
+                                series: {
+                                    dataLabels: {
+                                        enabled: true
+                                    }
+                                }
                             }
                         };
                         
@@ -125,6 +136,13 @@
                             },
                             xAxis: {
                                 allowDecimals: false,
+                            },
+                            plotOptions: {
+                                series: {
+                                    dataLabels: {
+                                        enabled: true
+                                    }
+                                }
                             }
                         };
                         optionsTransacciones.data.switchRowsAndColumns = !optionsTransacciones.data.switchRowsAndColumns;
