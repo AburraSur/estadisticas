@@ -703,7 +703,7 @@ class DefaultController extends Controller
         $logem =  $this->getDoctrine()->getManager();
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
-        
+        $data = Array();
         $sedes = new UtilitiesController();
         $listaSedes = $sedes->sedes($SIIem);
         $listaUsuarios = $sedes->usuarios($SIIem);
@@ -987,7 +987,7 @@ class DefaultController extends Controller
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $ipaddress = $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         $utilities = new UtilitiesController();
-        
+        $data = Array();
         $listMun = $utilities->municipios($SIIem);
         $municipios = $listMun['municipios'];
         
@@ -1215,6 +1215,7 @@ class DefaultController extends Controller
         $logem =  $this->getDoctrine()->getManager();   
         $usuario = $logem->getRepository('AppBundle:User')->findOneById($user);
         $datosAfiliados = '';
+        $data = Array();
         if($usuario->hasRole('ROLE_AFILIADOS') || $usuario->hasRole('ROLE_SUPER_ADMIN')){
             $datosAfiliados = ', mei.telaflia, mei.diraflia, mei.munaflia, mei.contaflia, mei.dircontaflia, mei.muncontaflia, mei.numactaaflia, mei.fecactaaflia, mei.numactacanaflia, mei.fecactacanaflia ';
         }
@@ -1242,10 +1243,10 @@ class DefaultController extends Controller
                                 mei.categoria,
                                 mei.ctrestmatricula,
                                 mei.ctrestdatos,
-                                mei.nombre1,
-                                mei.nombre2,
-                                mei.apellido1,
-                                mei.apellido2,
+                                CONCAT(mei.nombre1,' ',
+                                mei.nombre2,' ',
+                                mei.apellido1,' ',
+                                mei.apellido2) AS 'nomPerNat',
                                 mei.idclase,
                                 mei.numid AS 'numidMat',
                                 mei.nit AS 'nitMat',
@@ -1265,10 +1266,22 @@ class DefaultController extends Controller
                                     when mev.numid IS NULL then mev2.numid
                                     else mev.numid       
                                 END) AS 'idRepLegal',
+                                CONCAT((CASE 
+                                    when mev.nom1 IS NULL then mev2.nom1
+                                    else mev.nom1       
+                                END),' ',
                                 (CASE 
-                                    when mev.nombre IS NULL then mev2.nombre
-                                    else mev.nombre       
-                                END) AS 'RepresentanteLegal',
+                                    when mev.nom2 IS NULL then mev2.nom2
+                                    else mev.nom2       
+                                END) ,' ',
+                                (CASE 
+                                    when mev.ape1 IS NULL then mev2.ape1
+                                    else mev.ape1       
+                                END) ,' ',
+                                (CASE 
+                                    when mev.ape2 IS NULL then mev2.ape2
+                                    else mev.ape2       
+                                END)) AS 'RepresentanteLegal',
                                 (CASE
                                    WHEN mei.organizacion = '02' AND mep.nit != ''
                                         THEN mep.nit
@@ -1371,10 +1384,7 @@ class DefaultController extends Controller
                                     'CATEGORIA',
                                     'EST-MATRICULA',
                                     'EST_DATOS',
-                                    'NOMBRE 1',
-                                    'NOMBRE 2',
-                                    'APELLIDO 1',
-                                    'APELLIDO 2',
+                                    'NOMBRE COMPLETO',
                                     'CLASE-ID',
                                     'IDENTIFICACION',
                                     'NIT',
@@ -1499,6 +1509,10 @@ class DefaultController extends Controller
                                     mei.nombre2,
                                     mei.apellido1,
                                     mei.apellido2,
+                                    CONCAT(mei.nombre1,' ',
+                                    mei.nombre2,' ',
+                                    mei.apellido1,' ',
+                                    mei.apellido2,) AS 'nomCompleto',
                                     mei.idclase,
                                     mei.numid AS 'numidMat',
                                     mei.nit AS 'nitMat',
@@ -1607,6 +1621,7 @@ class DefaultController extends Controller
                                             'NOMBRE 2',
                                             'APELLIDO 1',
                                             'APELLIDO 2',
+                                            'NOMBRE COMPLETO',
                                             'CLASE-ID',
                                             'IDENTIFICACION',
                                             'NIT',
@@ -1821,14 +1836,14 @@ class DefaultController extends Controller
                 
                 if($_POST['excel']==1){
                     
-                    for($i=0;$i<sizeof($resultados);$i++){
-                        $resultados[$i]['razonsocialMat'] = $resultados[$i]['razonsocialMat'];
-                        $resultados[$i]['NombrePropietario'] = $resultados[$i]['NombrePropietario'];
-                        $resultados[$i]['nombre1'] = $resultados[$i]['nombre1'];
-                        $resultados[$i]['nombre2'] = $resultados[$i]['nombre2'];
-                        $resultados[$i]['apellido1'] = $resultados[$i]['apellido1'];
-                        $resultados[$i]['apellido2'] = $resultados[$i]['apellido2'];
-                    }
+//                    for($i=0;$i<sizeof($resultados);$i++){
+//                        $resultados[$i]['razonsocialMat'] = $resultados[$i]['razonsocialMat'];
+//                        $resultados[$i]['NombrePropietario'] = $resultados[$i]['NombrePropietario'];
+//                        $resultados[$i]['nombre1'] = $resultados[$i]['nombre1'];
+//                        $resultados[$i]['nombre2'] = $resultados[$i]['nombre2'];
+//                        $resultados[$i]['apellido1'] = $resultados[$i]['apellido1'];
+//                        $resultados[$i]['apellido2'] = $resultados[$i]['apellido2'];
+//                    }
                     
                     $nomExcel = 'ExtraccionMatriculados';
                     
