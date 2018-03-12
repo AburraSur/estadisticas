@@ -1247,6 +1247,10 @@ class DefaultController extends Controller
                                 mei.nombre2,' ',
                                 mei.apellido1,' ',
                                 mei.apellido2) AS 'nomPerNat',
+                                mei.nombre1,
+                                mei.nombre2,
+                                mei.apellido1,
+                                mei.apellido2,
                                 mei.idclase,
                                 mei.numid AS 'numidMat',
                                 mei.nit AS 'nitMat',
@@ -1282,6 +1286,22 @@ class DefaultController extends Controller
                                     when mev.ape2 IS NULL then mev2.ape2
                                     else mev.ape2       
                                 END)) AS 'RepresentanteLegal',
+                                (CASE 
+                                    when mev.nom1 IS NULL then mev2.nom1
+                                    else mev.nom1       
+                                END) AS nomRepLegal1,
+                                (CASE 
+                                    when mev.nom2 IS NULL then mev2.nom2
+                                    else mev.nom2       
+                                END) AS nomRepLegal2,
+                                (CASE 
+                                    when mev.ape1 IS NULL then mev2.ape1
+                                    else mev.ape1       
+                                END) AS apeRepLEgal1,
+                                (CASE 
+                                    when mev.ape2 IS NULL then mev2.ape2
+                                    else mev.ape2       
+                                END) AS apeRepLegal2,
                                 (CASE
                                    WHEN mei.organizacion = '02' AND mep.nit != ''
                                         THEN mep.nit
@@ -1385,6 +1405,10 @@ class DefaultController extends Controller
                                     'EST-MATRICULA',
                                     'EST_DATOS',
                                     'NOMBRE COMPLETO',
+                                    'NOMBRE 1',
+                                    'NOMBRE 2',
+                                    'APELLIDO 1',
+                                    'APELLIDO 2',
                                     'CLASE-ID',
                                     'IDENTIFICACION',
                                     'NIT',
@@ -1399,6 +1423,10 @@ class DefaultController extends Controller
                                     'FEC-VIGENCIA',
                                     'ID. REP. LEGAL',
                                     'REPRESENTANTE LEGAL',
+                                    'NOMBRE REP. LEGAL 1',
+                                    'NOMBRE REP. LEGAL 2',
+                                    'APELLIDO REP. LEGAL 1',
+                                    'APELLIDO REP. LEGAL 2',
                                     'ID. PROPIETARIO',
                                     'PROPIETARIO',
                                     'DIR-COMERCIAL',
@@ -1512,7 +1540,7 @@ class DefaultController extends Controller
                                     CONCAT(mei.nombre1,' ',
                                     mei.nombre2,' ',
                                     mei.apellido1,' ',
-                                    mei.apellido2,) AS 'nomCompleto',
+                                    mei.apellido2) AS 'nomCompleto',
                                     mei.idclase,
                                     mei.numid AS 'numidMat',
                                     mei.nit AS 'nitMat',
@@ -2183,8 +2211,8 @@ class DefaultController extends Controller
                     }else{
                         $arreglo.= $util->preparaInforma('', 'string', 25);
                     }
-                    $arreglo.= $util->preparaInforma(0, 'string', 10);
-                    
+                    $zipCode= $util->preparaInforma(0, 'entero', 4);
+                    $arreglo.=$zipCode['dato'];
                     $telcom1 = $util->preparaInforma($datosInforma1[$i]['telcom1'], 'entero', 10);
                     $arreglo.= $telcom1['dato'];
                     $faxcom = $util->preparaInforma($datosInforma1[$i]['faxcom'], 'entero', 10);
@@ -2972,7 +3000,7 @@ class DefaultController extends Controller
                 
                 $sqlTrans = "SELECT idestado, iptramite, valortotal, idcodban 
                                 FROM mreg_liquidacion
-                                WHERE idestado IN ('09','07','20') AND tipotramite LIKE '%renovacion%'
+                                WHERE idestado IN ('09','07','20') AND tipotramite LIKE '%renovacionmat%'
                                 AND fechaultimamodificacion BETWEEN  :fecIni AND :fecEnd ";
                 
 
