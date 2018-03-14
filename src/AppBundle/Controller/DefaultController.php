@@ -1269,23 +1269,11 @@ class DefaultController extends Controller
                                 (CASE 
                                     when mev.numid IS NULL then mev2.numid
                                     else mev.numid       
-                                END) AS 'idRepLegal',
-                                CONCAT((CASE 
-                                    when mev.nom1 IS NULL then mev2.nom1
-                                    else mev.nom1       
-                                END),' ',
+                                END) AS 'idRepLegal',                                
                                 (CASE 
-                                    when mev.nom2 IS NULL then mev2.nom2
-                                    else mev.nom2       
-                                END) ,' ',
-                                (CASE 
-                                    when mev.ape1 IS NULL then mev2.ape1
-                                    else mev.ape1       
-                                END) ,' ',
-                                (CASE 
-                                    when mev.ape2 IS NULL then mev2.ape2
-                                    else mev.ape2       
-                                END)) AS 'RepresentanteLegal',
+                                    when mev.nombre IS NULL then mev2.nombre
+                                    else mev.nombre       
+                                END) AS 'RepresentanteLegal',
                                 (CASE 
                                     when mev.nom1 IS NULL then mev2.nom1
                                     else mev.nom1       
