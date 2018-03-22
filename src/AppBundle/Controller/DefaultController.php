@@ -2612,7 +2612,8 @@ class DefaultController extends Controller
                     }else{
                         $arreglo.= $util->preparaInforma('', 'string', 25);
                     }
-                    $arreglo.= $util->preparaInforma(0, 'string', 10);
+                    $zipCode= $util->preparaInforma(0, 'entero', 4);
+                    $arreglo.=$zipCode['dato'];
                     $telcom1 = $util->preparaInforma($datosInforma1[$i]['telcom1'], 'entero', 10);
                     $arreglo.= $telcom1['dato'];
                     $faxcom = $util->preparaInforma($datosInforma1[$i]['faxcom'], 'entero', 10);
