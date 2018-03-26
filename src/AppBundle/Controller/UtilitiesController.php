@@ -21,7 +21,7 @@ class UtilitiesController extends Controller
     
     public function bancos($em){
         
-        $sqlBancos = "SELECT bnc.idcodban, bnc.descripcion FROM AS_codigoBancos as bnc ";
+        $sqlBancos = "SELECT bnc.idcodban, bnc.descripcion FROM AS_codigoBancos bnc ";
         
         $bancos = $em->getConnection()->prepare($sqlBancos);
         $bancos->execute();
