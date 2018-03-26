@@ -2635,10 +2635,8 @@ class DefaultController extends Controller
                     $gasope = $util->preparaInforma($datosInforma1[$i]['gasope'], 'entero', 17);
                     $arreglo.= $gasope['signo'];
                     $arreglo.= $gasope['dato'];
-                    /**
-                     * falta campo depreciaciones
-                     */
-                    
+                    $depreciacioes = $util->preparaInforma(0, 'entero', 17);
+                    $arreglo.= $depreciacioes['dato'];                   
                     $inventario = $util->preparaInforma($datosInforma1[$i]['invent'], 'entero', 17);
                     $arreglo.= $inventario['signo'];
                     $arreglo.= $inventario['dato'];
@@ -2670,8 +2668,9 @@ class DefaultController extends Controller
                     $arreglo.= $util->preparaInforma($municipios[$indexMun], 'string', 25);
                     $arreglo.= $util->preparaInforma($datosInforma1[$i]['liquidacion'], 'string', 1);
                     /**
-                     * agregar campo de concordato
+                     * campo de concordato
                      */
+                    $arreglo.= $util->preparaInforma(0, 'string', 1);
                     if($datosInforma1[$i]['liquidacion']>0){
                         $arreglo.= $util->preparaInforma(1, 'string', 1);
                     }else{
