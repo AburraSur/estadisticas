@@ -2549,7 +2549,7 @@ class DefaultController extends Controller
                     }else{
                         $idclase = '0';
                     }
-                    $arreglo.= $util->preparaInforma($idclase, 'string', 1);
+                    $arreglo.= $util->preparaInforma($idclase, 'string', 2);
                     $id = $util->preparaInforma(substr($datosInforma1[$i]['nit'], 0, 9), 'entero', 14);
                     $arreglo.= $id['dato'];
                     if(substr($datosInforma1[$i]['nit'],-1,1)==''){
