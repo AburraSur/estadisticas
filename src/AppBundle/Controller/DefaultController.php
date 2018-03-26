@@ -2470,7 +2470,7 @@ class DefaultController extends Controller
                                 mei.pastot,
                                 mei.pattot,
                                 mei.paspat,
-                                mai.balsoc,
+                                mei.balsoc,
                                 mei.ingope AS ventas,
                                 mei.cosven,
                                 mei.gasnoope,
