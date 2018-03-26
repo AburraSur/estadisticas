@@ -3034,7 +3034,12 @@ class DefaultController extends Controller
                             $cadenaIp = $ip[0].".".$ip[1];
                             switch ($cadenaIp) {
                                 case '192.168':
-                                    $pagosInterExter[$key]['internos']=$pagosInterExter[$key]['internos']+1;
+                                    if($resultadoTrans[$i]['iptramite']=='192.168.1.8'){
+                                        $pagosInterExter[$key]['externos']=$pagosInterExter[$key]['externos']+1;
+                                    }else{
+                                        $pagosInterExter[$key]['internos']=$pagosInterExter[$key]['internos']+1;
+                                    }
+                                    
                                     break;
                                 default:
                                     $pagosInterExter[$key]['externos']=$pagosInterExter[$key]['externos']+1;
@@ -3044,7 +3049,12 @@ class DefaultController extends Controller
                         case '20':
                             $pagosEstado[$key]['bancos']=$pagosEstado[$key]['bancos']+1;
                             if($key==='mreg_est_inscritos'){
-                                $nomBanco = $bancos[$resultadoTrans[$i]['idcodban']];
+                                if($resultadoTrans[$i]['idcodban']!=''){
+                                    $nomBanco = $bancos[$resultadoTrans[$i]['idcodban']];
+                                }else{
+                                    $nomBanco = 'Otros';
+                                }
+                                
                                 if(isset($pagosbancos[$nomBanco])){
                                     $pagosbancos[$nomBanco]=$pagosbancos[$nomBanco]+1;
                                 }else{
