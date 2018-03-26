@@ -63,6 +63,9 @@
                         <li>
                             <a href="{{ path('extraccionProponentes') }}"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>Extracción Proponentes</a>
                         </li>
+                        <li>
+                            <a href="{{ path('cambioRepresentantesLegales') }}"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>Cambio de Representantes Legales</a>
+                        </li>
                     </ul>
                 {% elseif is_granted('ROLE_ADMINISTRATIVO') %}    
                     <ul class="nav navbar-nav side-nav">
