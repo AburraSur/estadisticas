@@ -2543,7 +2543,9 @@ class DefaultController extends Controller
                     $matricula = $util->preparaInforma($datosInforma1[$i]['matricula'], 'entero', 8);
                     $arreglo.= $matricula['dato'];
                     $arreglo.= $util->preparaInforma('', 'string', 11);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['razonsocial'], 'string', 260);
+                    $dato = substr(trim($datosInforma1[$i]['razonsocial']),0,260);
+                    $datoFormat = str_replace(array('á','é','í','ó','ú','Á','É','Í','Ó','Ú','ñ','´','°'),array('A','E','I','O','U','A','E','I','O','U','Ñ',"'",'.'),$dato);
+                    $arreglo.= $util->preparaInforma($datoFormat, 'string', 260);
                     if($datosInforma1[$i]['idclase']>0){
                         $idclase = $datosInforma1[$i]['idclase'];
                     }else{
@@ -2632,7 +2634,7 @@ class DefaultController extends Controller
 //                    $arreglo.= $fijnet['dato']; 
 //                    $depreciacioes = $util->preparaInforma(0, 'entero', 17);
 //                    $arreglo.= $depreciacioes['dato'];  
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['dircom'], 'string', 65);
+                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['dircom']),0,65), 'string', 65);
                     if(key_exists($datosInforma1[$i]['muncom'], $municipios)){
                         $muncom = $datosInforma1[$i]['muncom'];
                         if($muncom=='')$muncom='05360';
@@ -2642,16 +2644,16 @@ class DefaultController extends Controller
                     }
                     $zipCode= $util->preparaInforma(0, 'entero', 4);
                     $arreglo.=$zipCode['dato'];
-                    $telcom1 = $util->preparaInforma($datosInforma1[$i]['telcom1'], 'entero', 10);
+                    $telcom1 = $util->preparaInforma(substr(trim($datosInforma1[$i]['telcom1']),0,10), 'entero', 10);
                     $arreglo.= $telcom1['dato'];
-                    $faxcom = $util->preparaInforma($datosInforma1[$i]['faxcom'], 'entero', 10);
+                    $faxcom = $util->preparaInforma(substr(trim($datosInforma1[$i]['faxcom']),0,10), 'entero', 10);
                     $arreglo.= $faxcom['dato'];
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['emailcom'], 'string', 50);
+                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['emailcom']),0,50), 'string', 50);
                     $cantest = $util->preparaInforma($datosInforma1[$i]['cantest'], 'entero', 5);
                     $arreglo.= $cantest['dato'];
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['cprazsoc'], 'string', 65);
+                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['cprazsoc']),0,65), 'string', 65);
                     $arreglo.= $util->preparaInforma(trim($datosInforma1[$i]['cpnumnit']), 'string', 11);
-                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['cpdircom'], 'string', 65);
+                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['cpdircom']),0,65), 'string', 65);
                     if(key_exists($datosInforma1[$i]['cpcodmun'], $municipios)){
 //                        $indexMun = $datosInforma1[$i]['cpcodmun'];
                         $cpcodmun = $municipios[$datosInforma1[$i]['cpcodmun']];
