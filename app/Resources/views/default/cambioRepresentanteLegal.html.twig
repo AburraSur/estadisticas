@@ -1,0 +1,234 @@
+{% extends 'base2.html.twig' %}
+ {% block stylesheets %}
+    {{ parent() }}
+    {% stylesheets 'bundles/app/datatable/css/*' filter='cssrewrite' %}
+        <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %} 
+{% block body %}
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h2 class="h2" ><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>Cambio de Representantes Legales <span class="periodo pull-right" ></span></h2>
+        </div>    
+        <div class="panel-body table-responsive" id="tabla_detallada" style="width:100%;" >
+            <form id="extraccionForm" method="POST" action="{{ path('cambioRepresentantesLegales') }}" >
+                <div class="col-md-12">
+                    <div class="form-group col-md-4">
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                            <input name="dateInit" id="dateInit" readonly class="fecReq form-control datepicker" placeholder="Fecha Inicial" data-date-end-date="0d">
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span></div>
+                            <input name="dateEnd" id="dateEnd" readonly class="fecReq form-control datepicker" placeholder="Fecha Final" data-date-end-date="0d">
+                        </div>
+                    </div>
+                    <div class=" form-group col-md-4">
+                        <button class="btn btn-success hide col-md-4" id="excelB" ><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</button>        
+                        <input type="hidden" name="excel" id="excel" value="1" />
+                        <a href="#" class="btn btn-primary col-md-4" id="search" >Generar</a>
+                        <a class="btn btn-primary  col-md-4" id="clear" >Limpiar</a>
+                    </div>    
+                </div>
+            </form> 
+            <table id='extraccion' class='table table-hover table-striped table-bordered dt-responsive extraccionesProponentes' cellspacing='0' width='100%'>
+                <thead>
+                    <tr>
+                        <th>Num. Registro</th>
+                        <th>fecha Registro</th>
+                        <th>Acto</th>
+                        <th>Matrícula</th>
+                        <th>Identificación</th>
+                        <th>Noticia</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>Num. Registro</th>
+                        <th>fecha Registro</th>
+                        <th>Acto</th>
+                        <th>Matrícula</th>
+                        <th>Identificación</th>
+                        <th>Noticia</th>
+                    </tr>
+                </tfoot>
+            </table>    
+        </div>    
+    </div>  
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+        {% javascripts 
+                '@AppBundle/Resources/public/datatable/js/*'%}
+                <script src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+    <script>
+        $(document).ready(function() {  
+            /*$('.datepicker').datepicker({
+                language: 'es',
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                
+            });
+            $('#dateInit').change(function(){
+                var dato = $(this).val();
+                $('#dateInit2').val(dato);
+                $('#dateEnd').datepicker('setStartDate', dato);
+            });
+            
+            $('#dateEnd').change(function(){
+                var dato = $(this).val();
+                $('#dateEnd2').val(dato);
+            });*/
+            
+            $('.estadisticasGenerales').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            
+            $('#search').click(function(){
+                $('body').trigger('click');
+                var tablaDetalle = $('#tablaDetalle').dataTable().fnDestroy();
+                var fecIni = $('#dateInit').val();
+                var fecEnd = $('#dateEnd').val();
+                $.blockUI({
+                    message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Este proceso puede tardar unos minutos, por favor espere...</div>'
+                });
+                if(fecIni != '' && fecEnd != ''){
+                    
+                    $('#tablaDetalle th').each(function (i) {
+                        if( i==3 ){
+                            var select = $('<select id="codMun"><option value=""><option></option><option value="05129" >CALDAS</option><option value="05266" >ENVIGADO</option><option value="05360" >ITAGUI</option><option value="05380" >LA ESTRELLA</option><option value="05631" >SABANETA</option><option value="otroDom" >otroDomicilio</option></select>');
+                            $(this).html(select);                           
+                        }
+                        if( i==5 ){
+                            var select = $('<select id="estado"><option value=""><option></option><option>MATRICULADO</option><option>RENOVADO</option><option>CANCELADO</option></select>');
+                            $(this).html(select);                           
+                        }
+                        /*else{
+                            var title = $('#tablaDetalle th').eq($(this).index()).text();
+                            $(this).html('<input type="text" />');
+                        }*/
+                    });
+                    
+                    var tablaDetalle = $('#tablaDetalle').DataTable( {
+                       dom: 'Bfrtip',
+                        buttons: [],
+                        "ordering": false,
+                        "processing": true,
+                        "serverSide": true,
+                        "ajax": {
+                            "url": '{{ path('tabladetalle') }}',
+                            "type": 'POST',
+                            "data": {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
+                            
+                        },
+                        "fnDrawCallback": function () {
+                            $.unblockUI();
+                        }
+                    } );
+                    
+                    $('.dataTables_filter').css({ 'display': 'none' });
+                    
+                    $( tablaDetalle.table().container() ).on( 'change', 'select', function () {
+                        $('#municipioHD').val($('#codMun').val());
+                        $('#estadoHD').val($('#estado').val());
+                        tablaDetalle
+                            .column( 1 )
+                            .search( $('#codMun').val() )
+                            .column( 0 )
+                            .search( $('#estado').val() )
+                            .draw();
+                    } );
+                    
+                    
+                    $.ajax({
+                        url: '{{ path('estadisticasGenerales') }}',
+                        type: 'POST',
+                        data: {dateInit:fecIni , dateEnd:fecEnd , excel:'0' },
+                        success: function(data){
+                            $('.excelB').removeClass('hide');
+                            console.log(data);
+                            var resp = JSON.parse(data);
+                            $.unblockUI();
+                            $('.periodo').html('  Periodo: '+fecIni+' Hasta '+fecEnd);
+                            $('.total').html('Total Matriculados + Renovados: '+resp.totalMatRen);
+                            $('#tabla_matriculados').html(resp.tablaMatri.matriculados);
+                            $('#tabla_renovados').html(resp.tablaMatri.renovados);
+                            $('#tabla_cancelados').html(resp.tablaMatri.cancelados);
+                            //$('#tabla_detallada').html(resp.tablaDetalle);
+                            $('#relmatriculados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $('#relrenovados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            $('#relcancelados').DataTable( {
+                                dom: 'Bfrtip',
+                                buttons: [
+                                    'excel'
+                                ]
+                            } ); 
+                            
+                            $('.dt-buttons').html('');
+                            $('.dt-buttons').html('<button class="btn btn-default excelFake"  >Exportar Resumen</button>');
+                            $('#tabla_detallada div.dt-buttons').html('');
+                            $('.excelFake').click(function(){
+                                $('#excelB2').trigger('click');
+                            });
+                        }
+                    })
+                    return false;
+                    
+                     
+                }else{
+                    $.blockUI({
+                        message: '<div class="alert alert-danger" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor ingrese un rango de fechas valido</div>'
+                    });
+                    
+                    setTimeout($.unblockUI,3000);
+                }
+            });
+            
+            $('#formExcel').on('submit',function(){
+                $.blockUI({
+                        message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere esto puede tardar unos minutos....</div>'
+                    });
+
+                    setTimeout($.unblockUI,5000);
+            });
+            
+            $('#formExcel2').on('submit',function(){
+                $.blockUI({
+                        message: '<div class="alert alert-info" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>Por favor espere esto puede tardar unos minutos....</div>'
+                    });
+
+                    setTimeout($.unblockUI,5000);
+            });
+            {#$('#exportExcel').click(function(){
+                $.blockUI({
+                    message: '<div class="alert alert-success" role="alert" style="font-size:20px; margin:0; padding:10px;" ><span class="sr-only">Error:</span>por favor espere...</div>'
+                });
+                    
+                var dateIni = $('#dateInit').val();
+                var dateEnd = $('#dateEnd').val();
+                var muni = $('#codMun').val();
+                var estado = $('#estado').val();
+                window.location.href = './exportGenerales.php?dateIni='+dateIni+'&dateEnd='+dateEnd+'&estado='+estado+'&municipio='+muni;
+                
+                setTimeout($.unblockUI,3000);
+                
+            });#}
+        });
+    </script>
+{% endblock %}

@@ -400,10 +400,6 @@ class UtilitiesController extends Controller
         
         
         if($tipo=='string'){
-//            if(strpos($dato,"Ñ")){
-//                $long++;                
-//            }
-            $dato = str_replace("´","'",$dato);
             $addLong = substr_count($dato, 'Ñ');
             $long = $long+$addLong;
             $dato = str_pad($dato, $long);
