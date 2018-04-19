@@ -1614,6 +1614,7 @@ class DefaultController extends Controller
                                     mei.fecrenaflia,
                                     mei.valpagaflia,
                                     mem.nomprop
+                                    $datosAfiliados
                                 FROM
                                     mreg_est_inscritos mei
                                 LEFT JOIN mreg_est_propietarios mep ON mep.matricula = mei.matricula
@@ -1724,6 +1725,18 @@ class DefaultController extends Controller
                                             'VAL-ULT-PAG-AFIL',
                                             'NOMPROPIETARIO'
                                             ];
+                                if($usuario->hasRole('ROLE_AFILIADOS') || $usuario->hasRole('ROLE_SUPER_ADMIN')){
+                                    $columns[] = 'TEL-AFILIADO';
+                                    $columns[] = 'DIR-AFILIADO';
+                                    $columns[] = 'MUN-AFILIADO';
+                                    $columns[] = 'CONTACTO-AFIL';
+                                    $columns[] = 'DIR-CONT-AFIL';
+                                    $columns[] = 'MUN-CONT-AFIL';                            
+                                    $columns[] = 'NUM-ACTA-AFIL';   
+                                    $columns[] = 'FEC-ACTA-AFIL';                             
+                                    $columns[] = 'NUM-ACTA-CAN-AFIL';                          
+                                    $columns[] = 'FEC-ACTA-CAN-AFIL';                            
+                                }
                         }
                         if($i==0){
                             $sqlExtracMatri.= $condiOrga;
@@ -2425,6 +2438,7 @@ class DefaultController extends Controller
                                 mei.razonsocial,
                                 mei.idclase,
                                 mei.nit,
+                                mei.numid as numident,
                                 mei.organizacion,
                                 mei.categoria,
                                 mei.ctrestmatricula,
@@ -2506,7 +2520,7 @@ class DefaultController extends Controller
                                     when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fechadocumento from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040' order by id ASC limit 1 )
                                     else mei.fecmatricula
                                 END) AS 'fecconstitucion',
-                                mev.idclase,
+                                mev.idclase AS idClase2,
                                 mev.numid,
                                 mev.nombre AS repLegal,
                                 mei.actnocte
@@ -2543,7 +2557,7 @@ class DefaultController extends Controller
                     $matricula = $util->preparaInforma($datosInforma1[$i]['matricula'], 'entero', 8);
                     $arreglo.= $matricula['dato'];
                     $arreglo.= $util->preparaInforma('', 'string', 11);
-                    $dato = substr(trim($datosInforma1[$i]['razonsocial']),0,260);
+                    $dato = trim($datosInforma1[$i]['razonsocial']);
                     $datoFormat = str_replace(array('á','é','í','ó','ú','Á','É','Í','Ó','Ú','ñ','´','°'),array('A','E','I','O','U','A','E','I','O','U','Ñ',"'",'.'),$dato);
                     $arreglo.= $util->preparaInforma($datoFormat, 'string', 260);
                     if($datosInforma1[$i]['idclase']>0){
@@ -2552,15 +2566,19 @@ class DefaultController extends Controller
                         $idclase = '0';
                     }
                     $arreglo.= $util->preparaInforma($idclase, 'string', 1);
-                    $id = $util->preparaInforma(substr($datosInforma1[$i]['nit'], 0, 9), 'entero', 14);
-                    $arreglo.= $id['dato'];
-                    if(substr($datosInforma1[$i]['nit'],-1,1)==''){
-                        $dvv=0;
+                    
+                    if($datosInforma1[$i]['idclase']==2){
+                        $id = $util->preparaInforma($datosInforma1[$i]['nit'], 'entero', 15);
+                        $arreglo.= $id['dato'];
+                        
                     }else{
-                        $dvv=substr($datosInforma1[$i]['nit'],-1,1);
+                        $id = $util->preparaInforma($datosInforma1[$i]['numident'], 'entero', 14);
+                        $arreglo.= $id['dato'];
+                        $arreglo.= 0;
                     }
-                    $dv = $util->preparaInforma($dvv, 'entero', 1);
-                    $arreglo.= $dv['dato'];
+                        
+                   
+                    
                     $catg = $util->preparaInforma($datosInforma1[$i]['organizacion'], 'entero', 2);
                     $arreglo.= $catg['dato'];
                     if($datosInforma1[$i]['categoria']>0){
@@ -2575,6 +2593,9 @@ class DefaultController extends Controller
                     $arreglo.= $fecMat['dato'];
                     $fecRen = $util->preparaInforma($datosInforma1[$i]['fecrenovacion'], 'entero', 8);
                     $arreglo.= $fecRen['dato'];
+                    if($datosInforma1[$i]['fecvigencia']==='99999999'){
+                        $datosInforma1[$i]['fecvigencia'] = '00000000';
+                    }
                     $fecVig = $util->preparaInforma($datosInforma1[$i]['fecvigencia'], 'entero', 8);
                     $arreglo.= $fecVig['dato'];
                     $ciiu1 = substr($datosInforma1[$i]['ciiu1'],1);
@@ -2634,7 +2655,7 @@ class DefaultController extends Controller
 //                    $arreglo.= $fijnet['dato']; 
 //                    $depreciacioes = $util->preparaInforma(0, 'entero', 17);
 //                    $arreglo.= $depreciacioes['dato'];  
-                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['dircom']),0,65), 'string', 65);
+                    $arreglo.= $util->preparaInforma(trim($datosInforma1[$i]['dircom']), 'string', 65);
                     if(key_exists($datosInforma1[$i]['muncom'], $municipios)){
                         $muncom = $datosInforma1[$i]['muncom'];
                         if($muncom=='')$muncom='05360';
@@ -2644,22 +2665,22 @@ class DefaultController extends Controller
                     }
                     $zipCode= $util->preparaInforma(0, 'entero', 4);
                     $arreglo.=$zipCode['dato'];
-                    $telcom1 = $util->preparaInforma(substr(trim($datosInforma1[$i]['telcom1']),0,10), 'entero', 10);
+                    $telcom1 = $util->preparaInforma(trim($datosInforma1[$i]['telcom1']), 'entero', 10);
                     $arreglo.= $telcom1['dato'];
-                    $faxcom = $util->preparaInforma(substr(trim($datosInforma1[$i]['faxcom']),0,10), 'entero', 10);
+                    $faxcom = $util->preparaInforma(trim($datosInforma1[$i]['faxcom']), 'entero', 10);
                     $arreglo.= $faxcom['dato'];
-                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['emailcom']),0,50), 'string', 50);
+                    $arreglo.= $util->preparaInforma(trim($datosInforma1[$i]['emailcom']), 'string', 50);
                     $cantest = $util->preparaInforma($datosInforma1[$i]['cantest'], 'entero', 5);
                     $arreglo.= $cantest['dato'];
-                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['cprazsoc']),0,65), 'string', 65);
+                    $arreglo.= $util->preparaInforma(trim($datosInforma1[$i]['cprazsoc']), 'string', 65);
                     $arreglo.= $util->preparaInforma(trim($datosInforma1[$i]['cpnumnit']), 'string', 11);
-                    $arreglo.= $util->preparaInforma(substr(trim($datosInforma1[$i]['cpdircom']),0,65), 'string', 65);
+                    $arreglo.= $util->preparaInforma(trim($datosInforma1[$i]['cpdircom']), 'string', 65);
                     if(key_exists($datosInforma1[$i]['cpcodmun'], $municipios)){
 //                        $indexMun = $datosInforma1[$i]['cpcodmun'];
                         $cpcodmun = $municipios[$datosInforma1[$i]['cpcodmun']];
                     }else{
 //                        $indexMun='05360';
-                        $cpcodmun = '';
+                        $cpcodmun = ' ';
                     }
                     $arreglo.= $util->preparaInforma($cpcodmun, 'string', 25);
 //                    $arreglo.= $util->preparaInforma($datosInforma1[$i]['liquidacion'], 'string', 1);
