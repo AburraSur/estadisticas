@@ -400,6 +400,7 @@ class UtilitiesController extends Controller
         
         
         if($tipo=='string'){
+            $dato = str_replace("N°", "#", $dato);
             $addLong = substr_count($dato, 'Ñ');
             $long = $long+$addLong;
             $dato = str_pad($dato, $long);
