@@ -13,6 +13,26 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UtilitiesController extends Controller
 {
+    public function mes($mesSolicitado){
+        $meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        
+        return $meses[$mesSolicitado];
+    }
+    
+    public function bancos($em){
+        
+        $sqlBancos = "SELECT bnc.idcodban, bnc.descripcion FROM AS_codigoBancos bnc ";
+        
+        $bancos = $em->getConnection()->prepare($sqlBancos);
+        $bancos->execute();
+        $listaBancos = $bancos->fetchAll();
+        for($i=0;$i<sizeof($listaBancos);$i++){
+            $bancosCod[$listaBancos[$i]['idcodban']] = $listaBancos[$i]['descripcion'];
+        }
+        
+        return $bancosCod;
+    }
+    
     public function municipios($em){
         
         $sqlMun = "SELECT basmun.codigomunicipio, basmun.ciudad FROM bas_municipios basmun ";
@@ -380,10 +400,7 @@ class UtilitiesController extends Controller
         
         
         if($tipo=='string'){
-//            if(strpos($dato,"Ñ")){
-//                $long++;                
-//            }
-            $dato = str_replace("´","'",$dato);
+            $dato = str_replace("N°", "#", $dato);
             $addLong = substr_count($dato, 'Ñ');
             $long = $long+$addLong;
             $dato = str_pad($dato, $long);
