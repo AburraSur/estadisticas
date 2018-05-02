@@ -1244,7 +1244,7 @@ class DefaultController extends Controller
             if($_POST['estadoMat']==1){
                 $where =" WHERE mei.matricula <> '' ";
                 $estado = "('MA','MI','IA')";
-            }if($_POST['estadoMat']==2){
+            }elseif($_POST['estadoMat']==2){
                foreach ($_POST['municipio'] as $value) {
                     $munSinCero = ltrim($value,'0');
                     $munMF[] = "$munSinCero";
