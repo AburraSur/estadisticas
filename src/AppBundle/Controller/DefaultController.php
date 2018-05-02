@@ -43,6 +43,7 @@ class DefaultController extends Controller
     {
         
         $fecha = new \DateTime();
+        $annoConsulta = $fecha->format("Y");
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $SIIem =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();
@@ -77,7 +78,21 @@ class DefaultController extends Controller
                     . "AND inscritos.ultanoren between :annoInicial AND :annoFinal ";
             
 //          Consulta para las matriculas canceladas en el rango de fechas consultado
-            $sqlCan = "SELECT inscritos.matricula, inscritos.organizacion,basorganiza.descripcion, inscritos.categoria, inscritos.muncom, inscritos.razonsocial, inscritos.fecmatricula, inscritos.fecrenovacion, inscritos.feccancelacion, inscritos.ultanoren "
+            $sqlCan = "SELECT 
+                        inscritos.matricula, 
+                        inscritos.organizacion,
+                        basorganiza.descripcion, 
+                        inscritos.categoria, 
+                        (CASE 
+                            WHEN inscritos.ctrestmatricula='MF' 
+                                THEN (select datoanterior from mreg_campos_historicos_$annoConsulta ch INNER where ch.matricula = mei.matricula AND campo='muncom' ) 
+                            ELSE inscritos.muncom
+                        END) AS 'muncom',
+                        inscritos.razonsocial, 
+                        inscritos.fecmatricula, 
+                        inscritos.fecrenovacion, 
+                        inscritos.feccancelacion, 
+                        inscritos.ultanoren "
                     . "FROM mreg_est_inscritos inscritos  "
                     . "INNER JOIN bas_organizacionjuridica basorganiza ON basorganiza.id=inscritos.organizacion "
                     . "INNER JOIN mreg_est_inscripciones mei ON  inscritos.matricula = mei.matricula "
@@ -1210,6 +1225,7 @@ class DefaultController extends Controller
     
     public function extraccionMatriculadosAction() {
         $fecha = new \DateTime();
+        $annoConsulta = $fecha->format("Y");
         $user = $this->get('security.token_storage')->getToken()->getUser();
         $em =  $this->getDoctrine()->getManager('sii');
         $logem =  $this->getDoctrine()->getManager();   
@@ -1227,11 +1243,22 @@ class DefaultController extends Controller
                         
             if($_POST['estadoMat']==1){
                 $where =" WHERE mei.matricula <> '' ";
-                $estado = "('MA','MI','IA','MF')";
+                $estado = "('MA','MI','IA')";
+            }if($_POST['estadoMat']==2){
+               foreach ($_POST['municipio'] as $value) {
+                    $munSinCero = ltrim($value,'0');
+                    $munMF[] = "$munSinCero";
+                }
+                    $muncomMF = "'".implode("','",$munMF)."'";
+                
+                $fecIni = str_replace("-", "", $_POST['dateInit']);
+                $fecEnd = str_replace("-", "", $_POST['dateEnd']);
+                $where =" WHERE mei.matricula IN (SELECT mch.matricula from mreg_campos_historicos_$annoConsulta mch INNER JOIN mreg_est_inscritos mei ON mch.matricula=mei.matricula WHERE mch.datoanterior IN ($muncomMF) AND mei.ctrestmatricula = 'MF' AND mei.feccancelacion BETWEEN '$fecIni' AND '$fecEnd' ) ";
+                $estado = "('MF') ";
             }else{
                 $where =" LEFT JOIN mreg_est_inscripciones insc ON mei.matricula=insc.matricula
                         WHERE mei.matricula <> '' ";
-                $estado = "('MC','IC','MF') AND insc.libro IN ('RM15' , 'RM51','RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
+                $estado = "('MC','IC') AND insc.libro IN ('RM15' , 'RM51','RE51', 'RM53', 'RM54', 'RM55', 'RM13') "
                     . "AND insc.acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300')";
             }
             
@@ -1260,7 +1287,7 @@ class DefaultController extends Controller
                                 mei.ultanoren,
                                 mei.feccancelacion AS 'FEC-CANCELACION',
                                 (CASE 
-                                    when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fechadocumento from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040')
+                                    when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fechadocumento from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040' limit 1)
                                     else mei.fecmatricula
                                 END) AS 'fecconstitucion',
                                 mei.fecdisolucion,
@@ -1760,11 +1787,19 @@ class DefaultController extends Controller
 
                     $fecIni = str_replace("-", "", $_POST['dateInit']);
                     $fecEnd = str_replace("-", "", $_POST['dateEnd']);
-                    $sqlExtracMatri.= " AND $fechaWhere BETWEEN '$fecIni' AND '$fecEnd' ";   
+                    if($_POST['estadoMat']==2){
+                        $sqlExtracMatri.= " AND mei.feccancelacion  BETWEEN '$fecIni' AND '$fecEnd' ";
+                    }else{
+                        $sqlExtracMatri.= " AND $fechaWhere BETWEEN '$fecIni' AND '$fecEnd' ";   
+                    }    
                 }
                       
-                $sqlExtracMatri.= " AND mei.muncom IN ($muncom) "
-                      . " AND ((mei.acttot BETWEEN $activoIni AND $activoFinal ) OR (mei.actvin BETWEEN $activoIni AND $activoFinal)) ";
+                if($_POST['estadoMat']!=2){
+                    $sqlExtracMatri.= " AND mei.muncom IN ($muncom) ";
+                }   
+                
+                $sqlExtracMatri.=  " AND ((mei.acttot BETWEEN $activoIni AND $activoFinal ) OR (mei.actvin BETWEEN $activoIni AND $activoFinal)) ";
+                
                 if(isset($_POST['ciius'][0])){
                     $ciiu = "'".implode("','",$_POST['ciius'])."'";
                     $sqlExtracMatri.=" AND (mei.ciiu1 IN ($ciiu) OR mei.ciiu2 IN ($ciiu) OR mei.ciiu3 IN ($ciiu) OR mei.ciiu4 IN ($ciiu)) ";
