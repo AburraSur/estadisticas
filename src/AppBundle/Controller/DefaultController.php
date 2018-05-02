@@ -85,7 +85,7 @@ class DefaultController extends Controller
                         inscritos.categoria, 
                         (CASE 
                             WHEN inscritos.ctrestmatricula='MF' 
-                                THEN (select datoanterior from mreg_campos_historicos_$annoConsulta ch INNER where ch.matricula = mei.matricula AND campo='muncom' ) 
+                                THEN (select CONCAT('0',datoanterior) from mreg_campos_historicos_$annoConsulta ch where ch.matricula = inscritos.matricula AND ch.campo='muncom' limit 1) 
                             ELSE inscritos.muncom
                         END) AS 'muncom',
                         inscritos.razonsocial, 
