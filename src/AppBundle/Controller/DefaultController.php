@@ -1285,7 +1285,14 @@ class DefaultController extends Controller
                                 mei.fecmatricula AS 'FEC-MATRICULA',
                                 mei.fecrenovacion AS 'FEC-RENOVACION',
                                 mei.ultanoren,
-                                mei.feccancelacion AS 'FEC-CANCELACION',
+                                (CASE 
+                                    when mei.ctrestmatricula IN('MC','IC','MF') then (select insc.fechadocumento 
+                                                                                    from mreg_est_inscripciones insc 
+                                                                                    where insc.matricula=mei.matricula
+                                                                                    AND  insc.libro IN ('RM15' , 'RM51','RE51','RM53','RM54','RM55','RM13')
+                                                                                    AND insc.acto IN ('0180' , '0530','0531','0532','0536','0520','0540','0498','0300') limit 1 )
+                                    else ''                                                
+                                END) AS 'FEC-CANCELACION',
                                 (CASE 
                                     when mei.organizacion IN ('03','04','05','06','07','08','09','10','11','16') AND (mei.categoria='1') then (select fechadocumento from mreg_est_inscripciones where matricula=mei.matricula and libro='RM09' and acto='0040' limit 1)
                                     else mei.fecmatricula
