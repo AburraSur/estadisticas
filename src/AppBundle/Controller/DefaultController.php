@@ -1044,7 +1044,10 @@ class DefaultController extends Controller
                             mei.acttot AS 'clasificacion',
                             mei.muncom,
                             mei.dircom,
-                            mei.telcom1,                            
+                            mei.telcom1,   
+                            mei.ctrclasegenesadl,
+                            mei.ctrclaseespeesadl,
+                            mei.ctrclaseeconsoli,                         
                             inscrip.registro,
                             inscrip.noticia,         
                             actos.idacto,
@@ -1135,7 +1138,7 @@ class DefaultController extends Controller
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','SECTOR21','SECTOR9','CIIU','PERSONAL','ACTIVOS','TAMANNO','MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
+                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','SECTOR21','SECTOR9','CIIU','PERSONAL','ACTIVOS','TAMANNO','MUNICIPIO','DIRECCION','TELEFONO', 'ctrclasegenesadl','ctrclaseespeesadl','ctrclaseeconsoli','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
                 $logs = new Logs();
