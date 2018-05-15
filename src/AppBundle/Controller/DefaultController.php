@@ -748,7 +748,9 @@ class DefaultController extends Controller
                     'Valor'];
             
 //          Consulta para los servicios seleccionados en el rango de fechas consultado  
-            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente',recibos.matricula,recibos.anorenovacion as 'organijuridica',recibos.activos as 'categoria',recibos.sucursal, recibos.operador,recibos.horaoperacion, recibos.numerooperacion,recibos.numerorecibo, recibos.fecoperacion, servicios.idservicio,servicios.nombre as 'Servicio', recibos.cantidad, recibos.valor "
+            $sqlMat = "SELECT recibos.identificacion, recibos.nombre as 'Cliente',recibos.matricula,recibos.anorenovacion as 'organijuridica',recibos.activos as 'categoria',"
+                    . "recibos.sucursal, recibos.operador,recibos.horaoperacion, recibos.numerooperacion,recibos.numerorecibo, recibos.fecoperacion, servicios.idservicio,"
+                    . "servicios.nombre as 'Servicio', recibos.cantidad, recibos.valor "
                     . "FROM mreg_est_recibos recibos "
                     . "INNER JOIN mreg_servicios servicios "
                     . "WHERE recibos.servicio = servicios.idservicio "
@@ -769,12 +771,13 @@ class DefaultController extends Controller
             if($_POST['excel']==1){
                 for($i=0;$i<sizeof($resultadosServicios);$i++){
                     if($resultadosServicios[$i]['matricula']!=''){
-                        $sqlOrg = "SELECT organizacion, categoria FROM mreg_est_matriculados WHERE matricula='".$resultadosServicios[$i]['matricula']."' ";
+                        $sqlOrg = "SELECT organizacion, categoria FROM mreg_est_inscritos WHERE matricula='".$resultadosServicios[$i]['matricula']."' ";
                         $matri = $SIIem->getConnection()->prepare($sqlOrg);
                         $matri->execute();
                         $resultadosOrg = $matri->fetchAll();  
-                        $resultadosServicios[$i]['organijuridica'] = $resultadosOrg[0]['organizacion'];
-                        $resultadosServicios[$i]['categoria'] = $resultadosOrg[0]['categoria'];
+                            
+                            $resultadosServicios[$i]['organijuridica'] = $resultadosOrg[0]['organizacion'];
+                            $resultadosServicios[$i]['categoria'] = $resultadosOrg[0]['categoria'];
                     }else{
                         $resultadosServicios[$i]['matricula']='N/A';
                         $resultadosServicios[$i]['organijuridica'] = 'N/A';
@@ -783,8 +786,8 @@ class DefaultController extends Controller
                     
                     $sucursal = substr($resultadosServicios[$i]['numerooperacion'], 0,2);
                     $resultadosServicios[$i]['sucursal'] = $listaSedes[$sucursal];
-                    $codOpera = substr($resultadosServicios[$i]['numerooperacion'], 2,3);
-                    $resultadosServicios[$i]['horaoperacion'] = $listaUsuarios[$codOpera];
+//                    $codOpera = substr($resultadosServicios[$i]['numerooperacion'], 2,3);
+                    $resultadosServicios[$i]['horaoperacion'] = $listaUsuarios[$resultadosServicios[$i]['operador']];
                     $resultadosServicios[$i]['Cliente'] = $resultadosServicios[$i]['Cliente'];
                 }
                 
@@ -1044,7 +1047,10 @@ class DefaultController extends Controller
                             mei.acttot AS 'clasificacion',
                             mei.muncom,
                             mei.dircom,
-                            mei.telcom1,                            
+                            mei.telcom1, 
+                            mei.ctrclasegenesadl,
+                            mei.ctrclaseespeesadl,
+                            mei.ctrclaseeconsoli,
                             inscrip.registro,
                             inscrip.noticia,         
                             actos.idacto,
@@ -1135,7 +1141,7 @@ class DefaultController extends Controller
             if($_POST['excel']==1){
                 
                 $nomExcel = 'ExtraccionLibros';
-                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','SECTOR21','SECTOR9','CIIU','PERSONAL','ACTIVOS','TAMANNO','MUNICIPIO','DIRECCION','TELEFONO','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
+                $columns = ['FEC REGISTRO','MATRICULA','EST MAT','ORGANIZACION','CATEGORIA','FEC MATRICULA','FEC CONSTITUCION','FEC RENOVACION','UAR','IDENTIFICACION','RAZON SOCIAL','SECTOR21','SECTOR9','CIIU','PERSONAL','ACTIVOS','TAMANNO','MUNICIPIO','DIRECCION','TELEFONO','ctrclasegenesadl','ctrclaseespeesadl','ctrclaseeconsoli','NUM REGISTRO','NOTICIA','ID. ACTO','ACTO','ID LIBRO','LIBRO'];
                 /*$response = $this->forward('AppBundle:Default:exportExcel',array('resultadosServicios'=>$resultadoLibros , 'columnas'=>$columns , 'nomExcel'=>$nomExcel , 'fecIni'=>$_POST['dateInit'] ,  'fecEnd'=>$_POST['dateEnd']));
                 return $response;*/
                 $logs = new Logs();

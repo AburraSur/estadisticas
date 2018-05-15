@@ -313,12 +313,12 @@ class UtilitiesController extends Controller
     
     public function usuarios( $em ){
         
-        $sql = "SELECT idcodigosirepcaja, nombreusuario FROM usuarios ";
+        $sql = "SELECT idusuario, nombreusuario FROM usuarios ";
         $sqlUsuario = $em->getConnection()->prepare($sql);
         $sqlUsuario->execute();
         $usuario = $sqlUsuario->fetchAll();
         for($i=0;$i<sizeof($usuario);$i++){
-            $listaUsuarios[$usuario[$i]['idcodigosirepcaja']] = $usuario[$i]['nombreusuario'];
+            $listaUsuarios[$usuario[$i]['idusuario']] = $usuario[$i]['nombreusuario'];
         }
         return $listaUsuarios;    
     }
