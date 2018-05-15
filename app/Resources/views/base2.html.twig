@@ -74,6 +74,13 @@
                             <a href="{{ path('patFacturacion') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>PAT Facturación</a>
                         </li>
                     </ul>
+
+                {% elseif is_granted('ROLE_CONTROLINTERNO') %}    
+                    <ul class="nav navbar-nav side-nav">
+                        <li>
+                            <a href="{{ path('extraeservicios') }}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>Extrae Servicios</a>
+                        </li>
+                    </ul>
                 {% else %}    
                 
                     <ul class="nav navbar-nav side-nav">
